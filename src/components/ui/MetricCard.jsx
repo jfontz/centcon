@@ -30,7 +30,7 @@ const MetricCard = ({
 
       {/* Value */}
       <div className="flex items-end gap-3">
-        <span className="text-lg font-medium text-zinc-100 tracking-wide">
+        <span className="text-lg font-light text-zinc-100 tracking-widest">
           {value}
         </span>
 
