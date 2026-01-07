@@ -23,14 +23,14 @@ const MetricCard = ({
         <div className="text-zinc-400 group-hover:text-white transition-colors duration-300">
           {icon}
         </div>
-        <span className="text-sm font-montserrat tracking-[0.15em] uppercase text-zinc-500">
+        <span className="text-sm tracking-[0.15em] uppercase text-zinc-500">
           {label}
         </span>
       </div>
 
       {/* Value */}
       <div className="flex items-end gap-3">
-        <span className="text-lg font-montserrat font-medium text-zinc-100 tracking-wide">
+        <span className="text-lg font-medium text-zinc-100 tracking-wide">
           {value}
         </span>
 

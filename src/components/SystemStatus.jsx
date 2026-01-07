@@ -4,7 +4,7 @@ import { runtime, temperature, cpu, memory } from "../assets/icons";
 
 const SystemStatus = () => {
   return (
-    <div className="bg-black text-white font-montserrat">
+    <div className="bg-black text-white">
       {/* System Status Section */}
       <SectionContainer title="System Status" className="max-w-3xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

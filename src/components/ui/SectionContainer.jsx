@@ -11,7 +11,7 @@ const SectionContainer = ({ title, children, className = "" }) => {
     >
       {/* The Section Title */}
       {title && (
-        <h2 className="text-xs font-montserrat font-medium tracking-[0.2em] text-zinc-500 uppercase mb-6">
+        <h2 className="text-xs font-medium tracking-[0.2em] text-zinc-500 uppercase mb-6">
           {title}
         </h2>
       )}
