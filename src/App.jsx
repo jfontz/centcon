@@ -19,10 +19,14 @@ function App() {
           {/* Top: System Controls */}
           <SystemControls />
 
-          <div className="flex w-full gap-5">
-            {/* Middle: System Status (Grid inside a Grid) */}
-            <SystemStatus />
-            <DeviceInformation />
+          <div className="flex flex-col lg:flex-row w-full gap-5 items-stretch">
+            <div className="flex-2">
+              <SystemStatus />
+            </div>
+
+            <div className="flex-1">
+              <DeviceInformation />
+            </div>
           </div>
 
           {/* Bottom: Connected Devices */}
@@ -33,7 +37,10 @@ function App() {
 
         {/* RIGHT COLUMN (Log) */}
         <div className="lg:col-span-4 h-full">
-          <SectionContainer title="Log" className="h-full min-h-[500px]">
+          <SectionContainer
+            title="Log"
+            className="h-full min-h-125 fixed top-0"
+          >
             {/* ConsoleLog component goes here */}
           </SectionContainer>
         </div>
