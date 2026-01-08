@@ -12,7 +12,7 @@ const Header = () => {
           </h1>
 
           {/* Divider */}
-          <div className="h-4 w-px bg-white/10 hidden sm:block"></div>
+          <div className="h-4 w-px bg-white/10 hidden md:block"></div>
 
           {/* Meta Info (Hidden on mobile, shown on md+) */}
           <div className="hidden md:flex items-center gap-3 text-xs tracking-wider font-medium opacity-60">
