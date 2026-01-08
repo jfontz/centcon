@@ -1,5 +1,6 @@
 import { refreshData, logout } from "../../assets/icons";
 import MetaInfo from "./MetaInfo";
+import HeaderButton from "./HeaderButton";
 
 const Header = () => {
   return (
@@ -30,24 +31,19 @@ const Header = () => {
           </div>
 
           {/* Refresh Button */}
-          <button className="group flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 rounded border border-white/10 hover:border-white/30 hover:bg-white/5 transition-all duration-300">
-            <img
-              src={refreshData}
-              alt="Refresh"
-              className="group-hover:rotate-180 transition-transform duration-500 w-4 h-4 sm:w-5 sm:h-5"
-            />
-            <span className="hidden sm:inline text-xs font-medium uppercase tracking-wider">
-              Refresh
-            </span>
-          </button>
+          <HeaderButton
+            icon={refreshData}
+            label="Refresh"
+            rotate
+            hoverClasses="hover:border-white/30 hover:bg-white/5"
+          />
 
           {/* Logout Button */}
-          <button className="group flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 rounded border border-white/10 hover:border-red-500/30 hover:bg-red-500/5 hover:text-red-400 transition-all duration-300">
-            <img src={logout} alt="Logout" className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline text-xs font-medium uppercase tracking-wider">
-              Logout
-            </span>
-          </button>
+          <HeaderButton
+            icon={logout}
+            label="Logout"
+            hoverClasses="hover:border-red-500/30 hover:bg-red-500/5 hover:text-red-400"
+          />
         </div>
       </div>
 
