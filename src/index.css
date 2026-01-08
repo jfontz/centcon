@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+
+/* TODO: Make custom tailwind components and utilities here like:
+
+@layer components {
+    .bordered {
+        @apply border border-gray-300 p-4 rounded-lg;
+    }
+}
+
+@layer utilities {
+  .text-shadow {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+}
+
+
+*/
