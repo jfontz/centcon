@@ -1,6 +1,7 @@
 import { refreshData, logout } from "../../assets/icons";
 import MetaInfo from "./MetaInfo";
 import HeaderButton from "./HeaderButton";
+import StatusBadge from "./StatusBadge";
 
 const Header = () => {
   return (
@@ -22,13 +23,8 @@ const Header = () => {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2 sm:gap-4">
-          {/* Online Badge */}
-          <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-            <span className="text-[9px] sm:text-[10px] font-bold text-green-500 uppercase tracking-widest">
-              Online
-            </span>
-          </div>
+          {/* Status Badge - TODO: replace `status="online"` with dynamic {status} prop */}
+          <StatusBadge status="online" />
 
           {/* Refresh Button */}
           <HeaderButton
