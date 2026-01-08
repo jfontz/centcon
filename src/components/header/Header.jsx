@@ -1,4 +1,5 @@
-import { refreshData, logout } from "../assets/icons";
+import { refreshData, logout } from "../../assets/icons";
+import MetaInfo from "./MetaInfo";
 
 const Header = () => {
   return (
@@ -15,11 +16,7 @@ const Header = () => {
           <div className="h-4 w-px bg-white/10 hidden md:block"></div>
 
           {/* Meta Info (Hidden on mobile, shown on md+) */}
-          <div className="hidden md:flex items-center gap-3 text-xs tracking-wider font-medium opacity-60">
-            <span>192.168.254.254</span>
-            <span>•</span>
-            <span>Last updated: 12s ago</span>
-          </div>
+          <MetaInfo className="hidden md:flex items-center gap-3 text-xs tracking-wider font-medium opacity-60" />
         </div>
 
         {/* Right: Actions */}
@@ -55,13 +52,7 @@ const Header = () => {
       </div>
 
       {/* Mobile Meta Info Bar (Shown only on mobile) */}
-      <div className="md:hidden border-t border-white/10 bg-black/60">
-        <div className="max-w-[1800px] mx-auto px-3 py-2 flex items-center justify-center gap-3 text-[10px] tracking-wider font-medium opacity-60">
-          <span>192.168.254.254</span>
-          <span>•</span>
-          <span>Last updated: 12s ago</span>
-        </div>
-      </div>
+      <MetaInfo className="md:hidden border-t border-white/10 bg-black/60 max-w-[1800px] mx-auto px-3 py-2 flex items-center justify-center gap-3 text-[10px] tracking-wider font-medium opacity-60" />
     </header>
   );
 };
