@@ -7,26 +7,50 @@ const SystemStatus = () => {
     <SectionContainer title="System Status" className="w-full h-full">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
         <MetricCard
-          icon={<img src={runtime} alt="Runtime" className="w-5 h-5" />}
+          icon={
+            <img
+              src={runtime}
+              alt="Runtime"
+              className="w-5 h-5 min-w-5 min-h-5"
+            />
+          }
           label="Runtime"
           value="6d 15h 27m 15s"
         />
 
         <MetricCard
-          icon={<img src={temperature} alt="Runtime" className="w-5 h-5" />}
+          icon={
+            <img
+              src={temperature}
+              alt="Temperature"
+              className="w-5 h-5 min-w-5 min-h-5"
+            />
+          }
           label="Temperature"
           value="48.80 °C"
           subValue="Normal"
         />
 
         <MetricCard
-          icon={<img src={cpu} alt="Cpu usage" className="w-5 h-5" />}
+          icon={
+            <img
+              src={cpu}
+              alt="CPU usage"
+              className="w-5 h-5 min-w-5 min-h-5"
+            />
+          }
           label="CPU Usage"
           value="2%"
         />
 
         <MetricCard
-          icon={<img src={memory} alt="Memory usage" className="w-5 h-5" />}
+          icon={
+            <img
+              src={memory}
+              alt="Memory usage"
+              className="w-5 h-5 min-w-5 min-h-5"
+            />
+          }
           label="Memory Usage"
           value="65%"
         />

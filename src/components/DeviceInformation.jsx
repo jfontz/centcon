@@ -7,13 +7,25 @@ const DeviceInformation = () => {
     <SectionContainer title="Device Information" className="w-full h-full">
       <div className="grid grid-cols-1 gap-4">
         <MetricCard
-          icon={<img src={device} alt="Device model" className="w-5 h-5" />}
+          icon={
+            <img
+              src={device}
+              alt="Device model"
+              className="w-5 h-5 min-w-5 min-h-5"
+            />
+          }
           label="Device Model"
           value="G-1426G-A"
         />
 
         <MetricCard
-          icon={<img src={serial} alt="Model serial" className="w-5 h-5" />}
+          icon={
+            <img
+              src={serial}
+              alt="Model serial"
+              className="w-5 h-5 min-w-5 min-h-5"
+            />
+          }
           label="Model Serial"
           value="ALCLEB48FC61"
         />

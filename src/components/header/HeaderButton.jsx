@@ -5,7 +5,7 @@ const HeaderButton = ({ icon, label, hoverClasses, rotate = false }) => (
     <img
       src={icon}
       alt={label}
-      className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-500 ${
+      className={`w-4 h-4 sm:w-5 sm:h-5 min-w-4 min-h-4 transition-transform duration-500 ${
         rotate ? "group-hover:rotate-180" : ""
       }`}
     />
