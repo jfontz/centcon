@@ -16,3 +16,4 @@ const HeaderButton = ({ icon, label, hoverClasses, rotate = false }) => (
 );
 
 export default HeaderButton;
+// TODO: Update colors for base and hover states after creating custom Tailwind classes and utilities
