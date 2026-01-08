@@ -5,7 +5,7 @@ const SectionContainer = ({ title, children, className = "" }) => {
       relative flex flex-col 
       border border-white/10 
       bg-black/40 backdrop-blur-sm 
-      rounded-xl p-6 
+      rounded-[5px] p-6 
       ${className}
     `}
     >
