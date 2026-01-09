@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @layer utilities {
+
   /* Card */
   .border-card-black {
     border-color: #222222;
@@ -67,6 +68,7 @@
 }
 
 @layer components {
+
   /* Status Pills */
   .status-online {
     color: #28a745;
@@ -130,6 +132,11 @@
   .btn-logout:hover {
     background-color: #050505;
   }
+
+  .btn-header {
+    @apply flex items-center gap-2 px-3 py-1.5 rounded text-xs font-medium transition-all;
+  }
+
 
   /* Cards */
   .card-dark {

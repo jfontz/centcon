@@ -31,14 +31,14 @@ const Header = () => {
             icon={refreshData}
             label="Refresh"
             rotate
-            buttonClass="btn-refresh"
+            buttonClass="btn-header btn-refresh"
           />
 
           {/* Logout Button */}
           <HeaderButton
             icon={logout}
             label="Logout"
-            buttonClass="btn-logout"
+            buttonClass="btn-header btn-logout"
           />
         </div>
       </div>
