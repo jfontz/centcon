@@ -19,14 +19,20 @@ const MetricCard = ({
       </div>
 
       {/* Value */}
-      <div className="flex items-end gap-3">
+      <div className="flex items-center gap-3">
         <span className="text-lg font-light text-zinc-100 tracking-widest">
           {value}
         </span>
 
         {/* Optional Sub-value for temperature */}
         {subValue && (
-          <span className={subValue === "Normal" ? "temp-normal" : `text-[10px] font-normal uppercase tracking-wider mb-1 ${subValueColor}`}>
+          <span
+            className={
+              subValue === "Normal"
+                ? "temp-normal"
+                : `text-[10px] font-normal uppercase tracking-wider mb-1 ${subValueColor}`
+            }
+          >
             {subValue}
           </span>
         )}
