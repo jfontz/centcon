@@ -193,7 +193,6 @@
   .temp-normal {
     @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs;
     color: #28a745;
-    background-color: rgb(40 167 69 / 0.1);
   }
 
   /* Progress Bar */
