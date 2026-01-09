@@ -31,14 +31,14 @@ const Header = () => {
             icon={refreshData}
             label="Refresh"
             rotate
-            hoverClasses="hover:border-white/30 hover:bg-white/5"
+            buttonClass="btn-refresh"
           />
 
           {/* Logout Button */}
           <HeaderButton
             icon={logout}
             label="Logout"
-            hoverClasses="hover:border-red-500/30 hover:bg-red-500/5 hover:text-red-400"
+            buttonClass="btn-logout"
           />
         </div>
       </div>

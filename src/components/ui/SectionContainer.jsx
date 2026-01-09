@@ -1,17 +1,9 @@
 const SectionContainer = ({ title, children, className = "" }) => {
   return (
-    <div
-      className={`
-      relative flex flex-col 
-      border border-white/10 
-      bg-black/40 backdrop-blur-sm 
-      rounded-[5px] p-6 
-      ${className}
-    `}
-    >
+    <div className={`card-dark relative flex flex-col ${className}`}>
       {/* The Section Title */}
       {title && (
-        <h2 className="text-xs font-medium tracking-[0.2em] text-zinc-500 uppercase mb-6">
+        <h2 className="section-header mb-6">
           {title}
         </h2>
       )}
