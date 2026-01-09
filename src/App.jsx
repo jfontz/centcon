@@ -4,6 +4,8 @@ import SectionContainer from "./components/ui/SectionContainer";
 import SystemControls from "./components/SystemControls";
 import SystemStatus from "./components/SystemStatus";
 import DeviceInformation from "./components/DeviceInformation";
+import LogPanel from "./components/LogPanel";
+import ConnectedDevices from "./components/ConnectedDevices";
 
 function App() {
   return (
@@ -30,9 +32,7 @@ function App() {
           </div>
 
           {/* Bottom: Connected Devices */}
-          <SectionContainer title="Connected Devices">
-            {/* Device cards go here */}
-          </SectionContainer>
+          <ConnectedDevices />
         </div>
 
         {/* RIGHT COLUMN (Log) */}
@@ -41,7 +41,7 @@ function App() {
             title="Log"
             className="h-full min-h-125 fixed top-0"
           >
-            {/* ConsoleLog component goes here */}
+            <LogPanel />
           </SectionContainer>
         </div>
       </div>
