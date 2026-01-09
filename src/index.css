@@ -1,19 +1,202 @@
 @import "tailwindcss";
 
-
-/* TODO: Make custom tailwind components and utilities here like:
-
-@layer components {
-    .bordered {
-        @apply border border-gray-300 p-4 rounded-lg;
-    }
-}
-
 @layer utilities {
-  .text-shadow {
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  /* Card */
+  .border-card-black {
+    border-color: #222222;
+  }
+
+  .bg-card-black {
+    background-color: #050505;
+  }
+
+  /* Text colors */
+  .text-status-online {
+    color: #28a745;
+  }
+
+  .text-status-offline {
+    color: #6c757d;
+  }
+
+  .text-status-error {
+    color: #dc3545;
+  }
+
+  .text-gray {
+    color: #858585;
+  }
+
+  .text-green {
+    color: #28a745;
+  }
+
+  .reboot-text {
+    color: #f87171;
+  }
+
+  /* Borders */
+  .border-bg-green {
+    border-color: rgb(40 167 69 / 0.3);
+  }
+
+  .border-status-online {
+    border-color: rgb(40 167 69 / 0.3);
+  }
+
+  .border-status-offline {
+    border-color: rgb(108 117 125 / 0.3);
+  }
+
+  .border-status-error {
+    border-color: rgb(220 53 69 / 0.3);
+  }
+
+  .border-refresh {
+    border-color: rgb(40 167 69 / 0.3);
+  }
+
+  .reboot-border {
+    border-color: rgb(127 29 29 / 0.3);
+  }
+
+  /* Backgrounds */
+  .reboot-bg {
+    background-color: rgb(127 29 29 / 0.1);
   }
 }
 
+@layer components {
+  /* Status Pills */
+  .status-online {
+    color: #28a745;
+    border: 1px solid rgb(40 167 69 / 0.3);
+    background-color: transparent;
+  }
 
-*/
+  .status-offline {
+    color: #6c757d;
+    border: 1px solid rgb(108 117 125 / 0.3);
+    background-color: transparent;
+  }
+
+  .status-error {
+    color: #dc3545;
+    border: 1px solid rgb(220 53 69 / 0.3);
+    background-color: transparent;
+  }
+
+  .status-pill {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm;
+  }
+
+  /* Reboot Card */
+  .reboot-card {
+    color: #f87171;
+    background-color: rgb(127 29 29 / 0.1);
+    border: 1px solid rgb(127 29 29 / 0.3);
+  }
+
+  /* Button Variants */
+  .btn-reboot {
+    @apply flex items-center justify-center gap-2 w-full px-6 py-3 rounded-md text-sm font-medium transition-all;
+    color: #f87171;
+    background-color: rgb(127 29 29 / 0.1);
+    border: 1px solid rgb(127 29 29 / 0.3);
+  }
+
+  .btn-reboot:hover {
+    background-color: rgb(127 29 29 / 0.2);
+  }
+
+  .btn-refresh {
+    @apply flex items-center justify-center gap-2 px-6 py-3 rounded-md text-sm font-medium transition-all;
+    color: #28a745;
+    background-color: transparent;
+    border: 1px solid rgb(40 167 69 / 0.3);
+  }
+
+  .btn-refresh:hover {
+    background-color: rgb(40 167 69 / 0.05);
+  }
+
+  .btn-logout {
+    @apply flex items-center justify-center gap-2 px-6 py-3 rounded-md text-sm font-medium transition-all;
+    color: #858585;
+    background-color: transparent;
+    border: 1px solid #222222;
+  }
+
+  .btn-logout:hover {
+    background-color: #050505;
+  }
+
+  /* Cards */
+  .card-dark {
+    @apply rounded-lg p-6;
+    background-color: #050505;
+    border: 1px solid #222222;
+  }
+
+  .card-stat {
+    @apply rounded-lg p-4;
+    background-color: #050505;
+    border: 1px solid #222222;
+  }
+
+  /* Log Entry Styles */
+  .log-entry {
+    @apply flex items-start gap-3 text-sm;
+    color: #858585;
+  }
+
+  .log-icon {
+    @apply mt-0.5 flex-shrink-0;
+  }
+
+  /* Device Connection Cards */
+  .device-card {
+    @apply rounded-lg p-4;
+    background-color: #050505;
+    border: 1px solid #222222;
+  }
+
+  .device-card:hover {
+    border-color: rgb(40 167 69 / 0.3);
+  }
+
+  /* System Control Buttons */
+  .control-btn {
+    @apply flex items-center justify-center gap-3 w-full px-6 py-4 rounded-md text-sm font-medium transition-all;
+    background-color: transparent;
+    border: 1px solid #222222;
+  }
+
+  .control-btn:hover {
+    background-color: #050505;
+  }
+
+  /* Header/Title Sections */
+  .section-header {
+    @apply text-xs font-medium tracking-[0.2em] uppercase;
+    color: #858585;
+  }
+
+  /* Temperature Badge */
+  .temp-normal {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs;
+    color: #28a745;
+    background-color: rgb(40 167 69 / 0.1);
+  }
+
+  /* Progress Bar */
+  .progress-bar {
+    @apply h-2 rounded-full overflow-hidden;
+    background-color: rgb(108 117 125 / 0.2);
+  }
+
+  .progress-fill {
+    @apply h-full transition-all duration-300;
+    background-color: #28a745;
+  }
+}
