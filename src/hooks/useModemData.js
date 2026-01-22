@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { modemApi } from "../services/modemAPI";
 
-export const useModemData = (autoRefreshInterval = 10000) => {
+export const useModemData = (autoRefreshInterval = 60000) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
