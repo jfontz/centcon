@@ -12,7 +12,10 @@ export const useModemData = (autoRefreshInterval = 60000) => {
 
   const fetchData = useCallback(async () => {
     try {
-      setLoading(true);
+      // Only set loading to true if we don't have data yet (initial load)
+      if (!data) {
+        setLoading(true);
+      }
       setError(null);
 
       const modemData = await modemApi.getData();
@@ -25,9 +28,12 @@ export const useModemData = (autoRefreshInterval = 60000) => {
       setError(err.message);
       setStatus("error");
     } finally {
-      setLoading(false);
+      // Only set loading to false if it was true
+      if (!data) {
+        setLoading(false);
+      }
     }
-  }, []);
+  }, [data]);
 
   // Initial fetch
   useEffect(() => {
