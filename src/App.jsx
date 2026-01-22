@@ -21,6 +21,11 @@ function App() {
             {/* Top: System Controls */}
             <SystemControls />
 
+            {/* Log panel appears 2nd in order in mobile */}
+            <div className="lg:hidden">
+              <LogPanel />
+            </div>
+
             <div className="flex flex-col lg:flex-row w-full gap-5 items-stretch">
               <div className="flex-2">
                 <SystemStatus />
@@ -35,8 +40,8 @@ function App() {
             <ConnectedDevices />
           </div>
 
-          {/* RIGHT COLUMN (Log) */}
-          <div className="lg:col-span-4 h-full flex flex-col min-h-0">
+          {/* RIGHT COLUMN (Log) - visible on desktop only  */}
+          <div className="hidden lg:flex lg:col-span-4 h-full flex-col min-h-">
             <LogPanel />
           </div>
         </div>
