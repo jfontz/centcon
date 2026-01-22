@@ -1,33 +1,28 @@
 import SectionContainer from "./ui/SectionContainer";
-import MetricCard from "./ui/MetricCard";
-import { lan, wifi } from "../assets/icons";
+import LANCard from "./cards/LANCard";
+import WiFi24Card from "./cards/WiFi24Card";
+import WiFi5Card from "./cards/WiFi5Card";
+import { useModem } from "../context/ModemContext";
 
 const ConnectedDevices = () => {
+  const { data, loading } = useModem();
+
+  const devices = data?.connectedDevices || {
+    lan: 0,
+    wifi24: 0,
+    wifi5: 0,
+    total: 0,
+  };
+
   return (
-    <SectionContainer title="Connected Devices (14)" className="w-full h-full">
-      {/* TODO: Replace SectionContainer title with dynamic total connected devices */}
+    <SectionContainer
+      title={`Connected Devices (${loading ? "..." : devices.total})`}
+      className="w-full h-full"
+    >
       <div className="flex-col md:flex-row flex gap-4 h-full">
-        <MetricCard
-          icon={<img src={lan} alt="Lan" className="w-5 h-5 min-w-5 min-h-5" />}
-          label="Wired/LAN"
-          value="1"
-        />
-
-        <MetricCard
-          icon={
-            <img src={wifi} alt="Wifi" className="w-5 h-5 min-w-5 min-h-5" />
-          }
-          label="Wireless 2.4"
-          value="6"
-        />
-
-        <MetricCard
-          icon={
-            <img src={wifi} alt="Wifi" className="w-5 h-5 min-w-5 min-h-5" />
-          }
-          label="Wireless 5.0"
-          value="7"
-        />
+        <LANCard value={devices.lan.toString()} loading={loading} />
+        <WiFi24Card value={devices.wifi24.toString()} loading={loading} />
+        <WiFi5Card value={devices.wifi5.toString()} loading={loading} />
       </div>
     </SectionContainer>
   );
