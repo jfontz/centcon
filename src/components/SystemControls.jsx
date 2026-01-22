@@ -1,4 +1,5 @@
 import SectionContainer from "./ui/SectionContainer";
+import SystemControlButton from "./buttons/SystemControlButton";
 import { reboot, newTab } from "../assets/icons";
 
 const controls = [
@@ -20,10 +21,12 @@ const SystemControls = () => {
       <SectionContainer title="System Controls" className="flex">
         <div className="flex flex-col gap-4">
           {controls.map(({ icon, label, buttonClass }) => (
-            <button key={label} className={buttonClass}>
-              <img src={icon} alt={label} className="w-4.5 h-4.5" />
-              <p>{label}</p>
-            </button>
+            <SystemControlButton
+              key={label}
+              icon={icon}
+              label={label}
+              buttonClass={buttonClass}
+            />
           ))}
         </div>
       </SectionContainer>
