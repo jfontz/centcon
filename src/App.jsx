@@ -8,7 +8,7 @@ import { ModemProvider } from "./context/ModemContext";
 
 function App() {
   return (
-    <ModemProvider refreshInterval={10000}>
+    <ModemProvider>
       <MainLayout>
         {/* The Main Grid 
          - On Mobile: 1 column

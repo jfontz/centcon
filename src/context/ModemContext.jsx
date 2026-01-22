@@ -3,7 +3,7 @@ import { useModemData } from "../hooks/useModemData";
 
 const ModemContext = createContext(null);
 
-export const ModemProvider = ({ children, refreshInterval = 10000 }) => {
+export const ModemProvider = ({ children, refreshInterval }) => {
   const modemState = useModemData(refreshInterval);
 
   return (
