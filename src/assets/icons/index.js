@@ -1,6 +1,7 @@
 // src/assets/icons/index.js
 import check from "./check.svg";
 import cpu from "./cpu.svg";
+import clear from "./clear.svg";
 import device from "./device.svg";
 import hourglass from "./hourglass.svg";
 import lan from "./lan.svg";
@@ -21,6 +22,7 @@ import wifi from "./wifi.svg";
 export {
   check,
   cpu,
+  clear,
   device,
   hourglass,
   lan,
