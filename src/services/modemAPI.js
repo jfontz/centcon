@@ -174,7 +174,8 @@ class ModemApiClient {
     };
   }
 
-    // TODO: remove unused parsers such as parseVoice. Make sure to check for dependencies first.
+  // TODO: remove unused parsers such as parseVoice. Make sure to check for dependencies first.
+  // TODO: Refactor parsers into separate modules (parsers.js / utils.js), remove magic indices, and ensure consistent default values for all data fields.
 
   parseVoice(voiceInfo) {
     if (!voiceInfo) return null;
@@ -199,15 +200,15 @@ class ModemApiClient {
     if (!deviceInfo) return { lan: 0, wifi24: 0, wifi5: 0, total: 0 };
 
     const lan = deviceInfo.filter(
-      (d) => d.InterfaceType === "Ethernet" && d.HostName && d.IPAddress
+      (d) => d.InterfaceType === "Ethernet" && d.HostName && d.IPAddress,
     ).length;
 
     const wifi24 = deviceInfo.filter(
-      (d) => d.InterfaceType === "802.11" && d.HostName && d.IPAddress
+      (d) => d.InterfaceType === "802.11" && d.HostName && d.IPAddress,
     ).length;
 
     const wifi5 = deviceInfo.filter(
-      (d) => d.InterfaceType === "802.11ac" && d.HostName && d.IPAddress
+      (d) => d.InterfaceType === "802.11ac" && d.HostName && d.IPAddress,
     ).length;
 
     return {
