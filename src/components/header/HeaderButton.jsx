@@ -1,4 +1,10 @@
-const HeaderButton = ({ icon, label, buttonClass, rotate = false }) => {
+const HeaderButton = ({
+  icon,
+  label,
+  buttonClass,
+  rotate = false,
+  onClick,
+}) => {
   const getButtonClass = () => {
     if (buttonClass) return buttonClass;
     if (label === "Refresh") return "btn-refresh";
@@ -7,7 +13,7 @@ const HeaderButton = ({ icon, label, buttonClass, rotate = false }) => {
   };
 
   return (
-    <button className={`group ${getButtonClass()}`}>
+    <button className={`group ${getButtonClass()}`} onClick={onClick}>
       <img
         src={icon}
         alt={label}
