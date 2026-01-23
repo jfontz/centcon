@@ -1,17 +1,9 @@
-// ============================================
-// FILE: src/services/modemApi.js
-// ============================================
 // Main API client for fetching modem data
 
 const API_ENDPOINT = "/login_globe.cgi?info";
 
 class ModemApiClient {
-  // Optical conversion constants
-  static OPTICAL_MULTIPLIER = 0.00001;
-  static DB_CONVERSION_FACTOR = 10;
   static TEMP_DIVISOR = 256;
-  static VOLTAGE_MULTIPLIER = 0.0001;
-  static CURRENT_MULTIPLIER = 0.002;
 
   // WiFi interface indices
   static WIFI_24_INDEX = 0;
@@ -26,10 +18,9 @@ class ModemApiClient {
 
   /**
    * Fetch raw modem data from the JSON API
-   * @param {number} retries - Number of retry attempts
    * @returns {Promise<Object>} Raw modem data
    */
-  async fetchModemData(retries = 3) {
+  async fetchModemData() {
     const url = `${this.baseUrl}${API_ENDPOINT}`;
 
     const headers = import.meta.env.DEV
@@ -39,26 +30,17 @@ class ModemApiClient {
           Referer: `http://${this.modemIp}/`,
         };
 
-    for (let i = 0; i < retries; i++) {
-      try {
-        const response = await fetch(url, { method: "GET", headers });
+    try {
+      const response = await fetch(url, { method: "GET", headers });
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        return await response.json();
-      } catch (error) {
-        console.error(`Fetch attempt ${i + 1} failed:`, error);
-
-        if (i === retries - 1) {
-          console.error("Failed to fetch modem data after all retries");
-          throw error;
-        }
-
-        // Wait before retrying (exponential backoff)
-        await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Failed to fetch modem data:", error);
+      throw error;
     }
   }
 
@@ -73,9 +55,7 @@ class ModemApiClient {
       device: this.parseDevice(rawData.onu_info),
       optical: this.parseOptical(rawData.optical_info),
       wan: this.parseWan(rawData.wan_info),
-      voice: this.parseVoice(rawData.voice_info),
       connectedDevices: this.parseConnectedDevices(rawData.device_info),
-      raw: rawData, // Keep raw data for debugging
     };
   }
 
@@ -110,26 +90,9 @@ class ModemApiClient {
   parseOptical(opticalInfo) {
     if (!opticalInfo) return null;
 
-    const toDbm = (mw) => {
-      if (!mw || mw === "0") return null;
-      const mwValue = parseInt(mw) * ModemApiClient.OPTICAL_MULTIPLIER;
-      return (
-        (Math.log(mwValue) / Math.LN10) *
-        ModemApiClient.DB_CONVERSION_FACTOR
-      ).toFixed(2);
-    };
-
     return {
-      txPower: toDbm(opticalInfo.TXPower),
-      rxPower: toDbm(opticalInfo.RXPower),
       temperature: (
         (opticalInfo.TransceiverTemperature || 0) / ModemApiClient.TEMP_DIVISOR
-      ).toFixed(2),
-      voltage: (
-        (opticalInfo.SupplyVoltage || 0) * ModemApiClient.VOLTAGE_MULTIPLIER
-      ).toFixed(2),
-      current: (
-        (opticalInfo.BiasCurrent || 0) * ModemApiClient.CURRENT_MULTIPLIER
       ).toFixed(2),
     };
   }
@@ -138,7 +101,6 @@ class ModemApiClient {
     if (!wanInfo) return null;
 
     let v4Addr = "Empty";
-    let v6Addr = "Empty";
     let wanType = "";
 
     wanInfo.forEach((conn) => {
@@ -170,29 +132,6 @@ class ModemApiClient {
     return {
       type: wanType,
       ipv4: v4Addr,
-      ipv6: v6Addr,
-    };
-  }
-
-  // TODO: remove unused parsers such as parseVoice. Make sure to check for dependencies first.
-  // TODO: Refactor parsers into separate modules (parsers.js / utils.js), remove magic indices, and ensure consistent default values for all data fields.
-
-  parseVoice(voiceInfo) {
-    if (!voiceInfo) return null;
-
-    let voiceNum = "Empty";
-    voiceInfo.forEach((voice) => {
-      if (
-        voice.phNumber &&
-        voice.phNumber !== "Empty" &&
-        voiceNum === "Empty"
-      ) {
-        voiceNum = voice.phNumber;
-      }
-    });
-
-    return {
-      phoneNumber: voiceNum,
     };
   }
 
