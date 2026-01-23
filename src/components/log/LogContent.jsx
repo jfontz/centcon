@@ -33,7 +33,7 @@ const LogContent = ({ logs, logContainerRef, loading, getIcon }) => {
   return (
     <div
       ref={logContainerRef}
-      className="flex-1 overflow-y-auto p-4 space-y-2 min-h-0 border-l border-r border-b border-card-black rounded-lg rounded-t-none"
+      className="log-scrollbar flex-1 overflow-y-auto p-4 space-y-2 min-h-0 border-l border-r border-b border-card-black rounded-lg rounded-t-none"
     >
       {logs.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center text-gray-500">
