@@ -38,32 +38,32 @@
 
   /* Borders */
   .border-bg-green {
-    border-color: rgb(40 167 69 / 0.3);
+    border-color: #28a7454d;
   }
 
   .border-status-online {
-    border-color: rgb(40 167 69 / 0.3);
+    border-color: #28a7454d;
   }
 
   .border-status-offline {
-    border-color: rgb(108 117 125 / 0.3);
+    border-color: #6c757d4d;
   }
 
   .border-status-error {
-    border-color: rgb(220 53 69 / 0.3);
+    border-color: #dc35454d;
   }
 
   .border-refresh {
-    border-color: rgb(40 167 69 / 0.3);
+    border-color: #28a7454d;
   }
 
   .reboot-border {
-    border-color: rgb(127 29 29 / 0.3);
+    border-color: #7f1d1d4d;
   }
 
   /* Backgrounds */
   .reboot-bg {
-    background-color: rgb(127 29 29 / 0.1);
+    background-color: #7f1d1d1a;
   }
 }
 
@@ -72,19 +72,19 @@
   /* Status Pills */
   .status-online {
     color: #28a745;
-    border: 1px solid rgb(40 167 69 / 0.3);
+    border: 1px solid #28a7454d;
     background-color: transparent;
   }
 
   .status-offline {
     color: #6c757d;
-    border: 1px solid rgb(108 117 125 / 0.3);
+    border: 1px solid #6c757d4d;
     background-color: transparent;
   }
 
   .status-error {
     color: #dc3545;
-    border: 1px solid rgb(220 53 69 / 0.3);
+    border: 1px solid #dc35454d;
     background-color: transparent;
   }
 
@@ -95,48 +95,47 @@
   /* Reboot Card */
   .reboot-card {
     color: #f87171;
-    background-color: rgb(127 29 29 / 0.1);
-    border: 1px solid rgb(127 29 29 / 0.3);
+    background-color: #7f1d1d1a;
+    border: 1px solid #7f1d1d4d;
   }
 
   /* Button Variants */
   .btn-reboot {
     @apply flex items-center justify-center gap-2 w-full px-6 py-3 rounded-md text-sm font-medium transition-all cursor-pointer;
     color: #f87171;
-    background-color: rgb(127 29 29 / 0.1);
-    border: 1px solid rgb(127 29 29 / 0.3);
+    background-color: #7f1d1d1a;
+    border: 1px solid #7f1d1d4d;
   }
 
   .btn-reboot:hover {
-    background-color: rgb(127 29 29 / 0.2);
+    background-color: #7f1d1d33;
   }
 
   .btn-refresh {
     @apply flex items-center justify-center gap-2 px-6 py-3 rounded-md text-sm font-medium transition-all cursor-pointer;
     color: #28a745;
     background-color: transparent;
-    border: 1px solid rgb(40 167 69 / 0.3);
+    border: 1px solid #28a7454d;
   }
 
   .btn-refresh:hover {
-    background-color: rgb(40 167 69 / 0.05);
+    background-color: #26894033;
   }
 
   .btn-logout {
-    @apply flex items-center justify-center gap-2 px-6 py-3 rounded-md text-sm font-medium transition-all;
+    @apply flex items-center justify-center gap-2 px-6 py-3 rounded-md text-sm font-medium transition-all cursor-pointer;
     color: #858585;
     background-color: transparent;
     border: 1px solid #222222;
   }
 
   .btn-logout:hover {
-    background-color: #050505;
+    background-color: #2f2f2f33;
   }
 
   .btn-header {
     @apply flex items-center gap-2 px-3 py-1.5 rounded text-xs font-medium transition-all;
   }
-
 
   /* Cards */
   .card-dark {
@@ -169,7 +168,7 @@
   }
 
   .device-card:hover {
-    border-color: rgb(40 167 69 / 0.3);
+    border-color: #28a7454d;
   }
 
   /* System Control Buttons */
@@ -180,7 +179,7 @@
   }
 
   .control-btn:hover {
-    background-color: #050505;
+    background-color: #2f2f2f33;
   }
 
   /* Header/Title Sections */
@@ -198,14 +197,13 @@
   /* Progress Bar */
   .progress-bar {
     @apply h-2 rounded-full overflow-hidden;
-    background-color: rgb(108 117 125 / 0.2);
+    background-color: #6c757d33;
   }
 
   .progress-fill {
     @apply h-full transition-all duration-300;
     background-color: #28a745;
   }
-
 
   /* Dark scrollbar for log panel */
   .log-scrollbar::-webkit-scrollbar {
