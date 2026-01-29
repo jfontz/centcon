@@ -101,7 +101,7 @@
 
   /* Button Variants */
   .btn-reboot {
-    @apply flex items-center justify-center gap-2 w-full px-6 py-3 rounded-md text-sm font-medium transition-all;
+    @apply flex items-center justify-center gap-2 w-full px-6 py-3 rounded-md text-sm font-medium transition-all cursor-pointer;
     color: #f87171;
     background-color: rgb(127 29 29 / 0.1);
     border: 1px solid rgb(127 29 29 / 0.3);
@@ -112,7 +112,7 @@
   }
 
   .btn-refresh {
-    @apply flex items-center justify-center gap-2 px-6 py-3 rounded-md text-sm font-medium transition-all;
+    @apply flex items-center justify-center gap-2 px-6 py-3 rounded-md text-sm font-medium transition-all cursor-pointer;
     color: #28a745;
     background-color: transparent;
     border: 1px solid rgb(40 167 69 / 0.3);
@@ -174,7 +174,7 @@
 
   /* System Control Buttons */
   .control-btn {
-    @apply flex items-center justify-center gap-3 w-full px-6 py-4 rounded-md text-sm font-medium transition-all;
+    @apply flex items-center justify-center gap-3 w-full px-6 py-4 rounded-md text-sm font-medium transition-all cursor-pointer;
     background-color: transparent;
     border: 1px solid #222222;
   }
