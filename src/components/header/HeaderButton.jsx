@@ -13,7 +13,7 @@ const HeaderButton = ({
   };
 
   return (
-    <button className={`group ${getButtonClass()}`} onClick={onClick}>
+    <button className={`group cursor-pointer ${getButtonClass()}`} onClick={onClick}>
       <img
         src={icon}
         alt={label}
