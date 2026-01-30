@@ -24,7 +24,13 @@ export const useModemData = (autoRefreshInterval = 60000) => {
       const modemData = await modemApi.getData();
 
       setData(modemData);
-      setStatus("online");
+
+      if (modemData?.wan?.connected) {
+        setStatus("online");
+      } else {
+        setStatus("offline");
+      }
+
       setLastUpdated(new Date());
 
       if (isInitialLoad.current) {
