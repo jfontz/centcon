@@ -15,7 +15,7 @@ import process from "./process.svg";
 import reboot from "./reboot.svg";
 import refreshData from "./refresh-data.svg";
 import runtime from "./runtime.svg";
-import serial from "./serial.svg";
+import firmware from "./firmware.svg";
 import temperature from "./temperature.svg";
 import wifi from "./wifi.svg";
 
@@ -36,7 +36,7 @@ export {
   reboot,
   refreshData,
   runtime,
-  serial,
+  firmware,
   temperature,
   wifi,
 };
