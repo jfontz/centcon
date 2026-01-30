@@ -103,7 +103,6 @@ class ModemApiClient {
 
     return {
       model: onuInfo.ModelName || "Unknown",
-      serial: onuInfo.SerialNumber || "Unknown",
       software: onuInfo.SoftwareVersion || "Unknown",
       cpuUsage: onuInfo.CPUUsage || 0,
       memoryUsage: parseInt(memUsage),
