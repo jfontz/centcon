@@ -133,44 +133,43 @@ class ModemApiClient {
    * @returns {Object} Object with type (IPoE/PPPoE) and ipv4 address
    */
   parseWan(wanInfo) {
-  let state = {
-    v4Addr: "Empty",
-    wanType: "",
-    connected: false,
-  };
+    let state = {
+      v4Addr: "Empty",
+      wanType: "",
+      connected: false,
+    };
 
-  wanInfo.forEach((conn) => {
-    // Try IPoE connection first
-    const ipoeInfo = extractConnectionInfo(conn, "IPoE", state);
-    if (
-      ipoeInfo &&
-      isValidInternetConnection(ipoeInfo.connection, state.v4Addr)
-    ) {
-      state.v4Addr = ipoeInfo.connection.ExternalIPAddress;
-      state.wanType = ipoeInfo.type;
-      state.connected = true;
-      return;
-    }
+    wanInfo.forEach((conn) => {
+      // Try IPoE connection first
+      const ipoeInfo = extractConnectionInfo(conn, "IPoE", state);
+      if (
+        ipoeInfo &&
+        isValidInternetConnection(ipoeInfo.connection, state.v4Addr)
+      ) {
+        state.v4Addr = ipoeInfo.connection.ExternalIPAddress;
+        state.wanType = ipoeInfo.type;
+        state.connected = true;
+        return;
+      }
 
-    // Fall back to PPPoE if IPoE not found
-    const pppoeInfo = extractConnectionInfo(conn, "PPPoE", state);
-    if (
-      pppoeInfo &&
-      isValidInternetConnection(pppoeInfo.connection, state.v4Addr)
-    ) {
-      state.v4Addr = pppoeInfo.connection.ExternalIPAddress;
-      state.wanType = pppoeInfo.type;
-      state.connected = true;
-    }
-  });
+      // Fall back to PPPoE if IPoE not found
+      const pppoeInfo = extractConnectionInfo(conn, "PPPoE", state);
+      if (
+        pppoeInfo &&
+        isValidInternetConnection(pppoeInfo.connection, state.v4Addr)
+      ) {
+        state.v4Addr = pppoeInfo.connection.ExternalIPAddress;
+        state.wanType = pppoeInfo.type;
+        state.connected = true;
+      }
+    });
 
-  return {
-    type: state.wanType,
-    ipv4: state.v4Addr,
-    connected: state.connected,
-  };
-}
-
+    return {
+      type: state.wanType,
+      ipv4: state.v4Addr,
+      connected: state.connected,
+    };
+  }
 
   /**
    * Parse connected devices information
