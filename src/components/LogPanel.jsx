@@ -28,10 +28,7 @@ const LogPanel = () => {
     const timestamp = new Date().toISOString();
     const newLogs = [];
 
-    // ============================
     // INITIAL STARTUP
-    // ============================
-
     if (logs.length === 0) {
       newLogs.push({
         type: "header",
@@ -46,10 +43,7 @@ const LogPanel = () => {
       });
     }
 
-    // ============================
     // DERIVED STATES
-    // ============================
-
     const modemReachable = status === "online" || status === "offline";
 
     const fiberUp =
@@ -58,15 +52,12 @@ const LogPanel = () => {
 
     const internetUp = Boolean(data?.wan?.connected);
 
-    // ============================
     // MODEM REACHABILITY
-    // ============================
-
     if (prevModemReachable.current === null) {
       prevModemReachable.current = modemReachable;
     } else if (prevModemReachable.current !== modemReachable) {
       newLogs.push({
-        type: modemReachable ? "success" : "error",
+        type: modemReachable ? "success" : "offline",
         text: modemReachable
           ? "Modem reachable"
           : "Modem unreachable (local connection lost)",
@@ -76,10 +67,7 @@ const LogPanel = () => {
       prevModemReachable.current = modemReachable;
     }
 
-    // ============================
     // FIBER / LOS
-    // ============================
-
     if (prevFiberUp.current === null) {
       prevFiberUp.current = fiberUp;
     } else if (prevFiberUp.current !== fiberUp) {
@@ -94,10 +82,7 @@ const LogPanel = () => {
       prevFiberUp.current = fiberUp;
     }
 
-    // ============================
     // INTERNET STATUS
-    // ============================
-
     if (prevInternetUp.current === null) {
       prevInternetUp.current = internetUp;
     } else if (prevInternetUp.current !== internetUp) {
@@ -112,10 +97,7 @@ const LogPanel = () => {
       prevInternetUp.current = internetUp;
     }
 
-    // ============================
     // DEVICE HEALTH WARNINGS
-    // ============================
-
     if (data.device) {
       const { cpuUsage, memoryUsage } = data.device;
 
@@ -136,10 +118,7 @@ const LogPanel = () => {
       }
     }
 
-    // ============================
     // TEMPERATURE WARNING
-    // ============================
-
     if (data.optical?.temperature) {
       const temp = parseFloat(data.optical.temperature);
       if (temp > 70) {
@@ -151,36 +130,19 @@ const LogPanel = () => {
       }
     }
 
-    // ============================
     // PASSIVE STATUS SNAPSHOT
-    // ============================
+    const hasIssues =
+      !modemReachable || !fiberUp || !internetUp || status === "error";
 
-    if (newLogs.length === 0 && !loading && status !== "error") {
-      let summary = "Status check complete — ";
-
-      if (!modemReachable) {
-        summary += "Modem unreachable";
-      } else {
-        summary += "Modem reachable";
-
-        if (fiberUp) summary += ", Fiber OK";
-        else summary += ", Fiber DOWN";
-
-        if (internetUp) summary += ", Internet OK";
-        else summary += ", Internet DOWN";
-      }
-
+    if (!hasIssues && newLogs.length === 0 && !loading) {
       newLogs.push({
         type: "success",
-        text: summary,
+        text: "Status check — All systems operational",
         timestamp,
       });
     }
 
-    // ============================
     // COMMIT LOGS
-    // ============================
-
     if (newLogs.length > 0) {
       setLogs((prev) => [...prev, ...newLogs].slice(-50));
     }
