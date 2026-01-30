@@ -8,6 +8,10 @@ const LogPanel = () => {
   const logContainerRef = useRef(null);
   const prevLogsLengthRef = useRef(0);
   const { data, loading, error, status } = useModem();
+  const prevInternetRef = useRef(null);
+  const prevModemReachable = useRef(null);
+  const prevFiberUp = useRef(null);
+  const prevInternetUp = useRef(null);
 
   // Auto-scroll to bottom only when new logs are added
   useEffect(() => {
@@ -24,13 +28,17 @@ const LogPanel = () => {
     const timestamp = new Date().toISOString();
     const newLogs = [];
 
-    // Initial load
+    // ============================
+    // INITIAL STARTUP
+    // ============================
+
     if (logs.length === 0) {
       newLogs.push({
         type: "header",
         text: "CENTCON Monitoring Started",
         timestamp,
       });
+
       newLogs.push({
         type: "info",
         text: `Connected to modem: ${data.device?.model || "Unknown"}`,
@@ -38,16 +46,76 @@ const LogPanel = () => {
       });
     }
 
-    // Status changes
-    if (status === "online") {
+    // ============================
+    // DERIVED STATES
+    // ============================
+
+    const modemReachable = status === "online" || status === "offline";
+
+    const fiberUp =
+      data?.optical?.temperature !== null &&
+      Number(data?.optical?.temperature) > 0;
+
+    const internetUp = Boolean(data?.wan?.connected);
+
+    // ============================
+    // MODEM REACHABILITY
+    // ============================
+
+    if (prevModemReachable.current === null) {
+      prevModemReachable.current = modemReachable;
+    } else if (prevModemReachable.current !== modemReachable) {
       newLogs.push({
-        type: "success",
-        text: "Modem data fetched successfully",
+        type: modemReachable ? "success" : "error",
+        text: modemReachable
+          ? "Modem reachable"
+          : "Modem unreachable (local connection lost)",
         timestamp,
       });
+
+      prevModemReachable.current = modemReachable;
     }
 
-    // Device stats
+    // ============================
+    // FIBER / LOS
+    // ============================
+
+    if (prevFiberUp.current === null) {
+      prevFiberUp.current = fiberUp;
+    } else if (prevFiberUp.current !== fiberUp) {
+      newLogs.push({
+        type: fiberUp ? "success" : "error",
+        text: fiberUp
+          ? "Fiber signal restored"
+          : "Fiber signal lost (LOS detected)",
+        timestamp,
+      });
+
+      prevFiberUp.current = fiberUp;
+    }
+
+    // ============================
+    // INTERNET STATUS
+    // ============================
+
+    if (prevInternetUp.current === null) {
+      prevInternetUp.current = internetUp;
+    } else if (prevInternetUp.current !== internetUp) {
+      newLogs.push({
+        type: internetUp ? "success" : "error",
+        text: internetUp
+          ? "Internet connection restored"
+          : "Internet connection lost",
+        timestamp,
+      });
+
+      prevInternetUp.current = internetUp;
+    }
+
+    // ============================
+    // DEVICE HEALTH WARNINGS
+    // ============================
+
     if (data.device) {
       const { cpuUsage, memoryUsage } = data.device;
 
@@ -68,7 +136,10 @@ const LogPanel = () => {
       }
     }
 
-    // Temperature warnings
+    // ============================
+    // TEMPERATURE WARNING
+    // ============================
+
     if (data.optical?.temperature) {
       const temp = parseFloat(data.optical.temperature);
       if (temp > 70) {
@@ -80,8 +151,38 @@ const LogPanel = () => {
       }
     }
 
+    // ============================
+    // PASSIVE STATUS SNAPSHOT
+    // ============================
+
+    if (newLogs.length === 0 && !loading && status !== "error") {
+      let summary = "Status check complete — ";
+
+      if (!modemReachable) {
+        summary += "Modem unreachable";
+      } else {
+        summary += "Modem reachable";
+
+        if (fiberUp) summary += ", Fiber OK";
+        else summary += ", Fiber DOWN";
+
+        if (internetUp) summary += ", Internet OK";
+        else summary += ", Internet DOWN";
+      }
+
+      newLogs.push({
+        type: "success",
+        text: summary,
+        timestamp,
+      });
+    }
+
+    // ============================
+    // COMMIT LOGS
+    // ============================
+
     if (newLogs.length > 0) {
-      setLogs((prev) => [...prev, ...newLogs].slice(-50)); // Keep last 50 logs
+      setLogs((prev) => [...prev, ...newLogs].slice(-50));
     }
   }, [data, status]);
 
