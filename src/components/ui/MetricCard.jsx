@@ -10,7 +10,7 @@ const MetricCard = ({
       {/* Header: Icon + Label */}
       <div className="flex items-center gap-3 mb-3">
         {/* Render the icon wrapper */}
-        <div className="text-zinc-400 group-hover:text-white transition-colors duration-300">
+        <div className="text-zinc-400 group-hover:text-white transition-colors duration-300 pointer-events-none select-none">
           {icon}
         </div>
         <span className="text-sm tracking-[0.15em] uppercase text-gray">

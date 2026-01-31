@@ -38,7 +38,7 @@ const LogContent = ({ logs, logContainerRef, loading, getIcon }) => {
       {logs.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center text-gray-500">
           <div className="w-12 h-12 mb-2 my-1">
-            <img src={log} alt="Logs" className="w-12 h-12" />
+            <img src={log} alt="Logs" className="w-12 h-12 pointer-events-none select-none" />
           </div>
 
           <p className="text-sm font-medium text-gray-500">
