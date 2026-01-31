@@ -5,12 +5,14 @@ import {
   hourglass,
   warning,
   error,
+  navigate,
 } from "../assets/icons";
 
 const ICON_CLASSES = "w-4 h-4 inline-block pointer-events-none select-none";
 
 const ICON_MAP = {
   header: process,
+  navigate: navigate,
   info: logIcon,
   success: check,
   progress: hourglass,
