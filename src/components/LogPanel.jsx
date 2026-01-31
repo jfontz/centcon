@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useModem } from "../context/ModemContext";
 import LogHeader from "./log/LogHeader";
 import LogContent from "./log/LogContent";
+import { getIcon } from "../utils/getIcon.jsx";
 
 const LogPanel = () => {
   const [logs, setLogs] = useState([]);
@@ -163,21 +164,6 @@ const LogPanel = () => {
       );
     }
   }, [error]);
-
-  // Helper function to get icon based on type
-  const getIcon = (type) => {
-    const icons = {
-      header: "⚙️",
-      info: "↳",
-      success: "✓",
-      progress: "⏳",
-      checking: "↻",
-      error: "✗",
-      warning: "⚠️",
-    };
-    return icons[type] || "•";
-  };
-  // TODO: replace with svg icons
 
   const clearLogs = () => {
     setLogs([]);
