@@ -7,8 +7,13 @@ import { useModem } from "../../context/ModemContext";
 const Header = () => {
   const { status, refresh, lastUpdated } = useModem();
 
+  // Change header background to red only on system error
+  const headerBg = status === "error" ? "bg-red-500/5" : "";
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/80 backdrop-blur-md">
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 border-b border-white/10 backdrop-blur-md transition-colors duration-300 ${headerBg}`}
+    >
       <div className="max-w-450 mx-auto px-6 h-16 sm:h-20 flex items-center justify-between">
         {/* Left: Branding & Meta Info */}
         <div className="flex items-center gap-3 sm:gap-6">
