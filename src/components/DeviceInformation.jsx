@@ -1,6 +1,6 @@
 import SectionContainer from "./ui/SectionContainer";
 import DeviceModelCard from "./cards/DeviceModelCard";
-import DeviceFirmwareCard from "./cards/DeviceFirmwareCard";
+import DeviceSoftwareCard from "./cards/DeviceSoftwareCard";
 import { useModem } from "../context/ModemContext";
 
 const DeviceInformation = () => {
@@ -12,7 +12,7 @@ const DeviceInformation = () => {
     <SectionContainer title="Device Information" className="w-full h-full">
       <div className="grid grid-cols-1 gap-4">
         <DeviceModelCard value={deviceInfo?.model} loading={loading} />
-        <DeviceFirmwareCard value={deviceInfo?.software} loading={loading} />
+        <DeviceSoftwareCard value={deviceInfo?.software} loading={loading} />
       </div>
     </SectionContainer>
   );
