@@ -38,7 +38,7 @@ const LogPanel = () => {
       });
 
       newLogs.push({
-        type: "info",
+        type: "navigate",
         text: `Connected to modem: ${data.device?.model || "Unknown"}`,
         timestamp,
       });
