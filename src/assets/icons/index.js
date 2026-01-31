@@ -18,6 +18,8 @@ import runtime from "./runtime.svg";
 import firmware from "./firmware.svg";
 import temperature from "./temperature.svg";
 import wifi from "./wifi.svg";
+import warning from "./warning.svg";
+import error from "./error.svg";
 
 export {
   check,
@@ -39,4 +41,6 @@ export {
   firmware,
   temperature,
   wifi,
+  warning,
+  error,
 };
