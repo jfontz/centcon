@@ -15,7 +15,7 @@ import process from "./process.svg";
 import reboot from "./reboot.svg";
 import refreshData from "./refresh-data.svg";
 import runtime from "./runtime.svg";
-import firmware from "./firmware.svg";
+import software from "./software.svg";
 import temperature from "./temperature.svg";
 import wifi from "./wifi.svg";
 import warning from "./warning.svg";
@@ -38,7 +38,7 @@ export {
   reboot,
   refreshData,
   runtime,
-  firmware,
+  software,
   temperature,
   wifi,
   warning,
