@@ -15,12 +15,15 @@ import asyncio
 import json
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from state_manager import get_state, subscribe, unsubscribe, event_stream
 from selenium_worker import run_reboot_workflow
+
+# Prevent multiple simultaneous reboot processes
+reboot_in_progress = False
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -39,13 +42,31 @@ app.add_middleware(
 )
 
 
+async def _run_reboot_then_clear():
+    global reboot_in_progress
+    try:
+        await run_reboot_workflow()
+    finally:
+        reboot_in_progress = False
+
+
 @app.post("/reboot")
 async def reboot():
     """Start router reboot workflow in background; returns immediately."""
+    global reboot_in_progress
+    if reboot_in_progress:
+        raise HTTPException(
+            status_code=409,
+            detail="Reboot already in progress",
+        )
     state = get_state()
     if state["state"] not in ("IDLE", "ONLINE", "FAILED"):
-        return {"ok": False, "message": "Reboot already in progress"}
-    asyncio.create_task(run_reboot_workflow())
+        raise HTTPException(
+            status_code=409,
+            detail="Reboot already in progress",
+        )
+    reboot_in_progress = True
+    asyncio.create_task(_run_reboot_then_clear())
     return {"ok": True, "message": "Reboot started"}
 
 
