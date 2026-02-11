@@ -61,6 +61,7 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
 
         # 1. Navigate to router login page
         driver.get(ROUTER_URL)
+        _log("info", "Reboot Process Started")
 
         # 2. Wait for and fill username field
         WebDriverWait(driver, wait_time).until(
