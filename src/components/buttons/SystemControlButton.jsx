@@ -1,13 +1,13 @@
-import { useState } from "react";
-import {
-  hourglass,
-  process as processIcon,
-  check,
-  error as errorIcon,
-} from "../../assets/icons";
+import { useState, useEffect } from "react";
 import RebootConfirmModal from "../modals/RebootConfirmModal";
 
-const REBOOT_BUSY_STATES = ["REBOOTING", "WAITING", "CHECKING_CONNECTION"];
+const REBOOT_BUSY_STATES = [
+  "LOGGING_IN",
+  "NAVIGATING",
+  "REBOOTING",
+  "WAITING",
+  "CHECKING_CONNECTION",
+];
 
 const SystemControlButton = ({
   icon,
@@ -18,47 +18,52 @@ const SystemControlButton = ({
   triggerReboot,
 }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const isReboot = label === "Reboot Modem" && (rebootState != null || triggerReboot != null);
-  const busy =
+  const [rebootPending, setRebootPending] = useState(false);
+
+  const isReboot =
+    label === "Reboot Modem" &&
+    (rebootState != null || triggerReboot != null);
+
+  const isRebooting =
     isReboot &&
     rebootState &&
     REBOOT_BUSY_STATES.includes(rebootState.state);
-  const disabled = busy;
-  const showSuccess = isReboot && rebootState?.state === "ONLINE";
-  const showError = isReboot && rebootState?.state === "FAILED";
+
+  const disabled = isReboot && (isRebooting || rebootPending);
+
+  // Clear pending when reboot finishes (ONLINE or FAILED)
+  useEffect(() => {
+    if (rebootState?.state === "ONLINE" || rebootState?.state === "FAILED") {
+      setRebootPending(false);
+    }
+  }, [rebootState?.state]);
 
   const overlayText = (() => {
-    if (!isReboot || !rebootState || !busy) return null;
-    if (rebootState.state === "REBOOTING") return "Rebooting…";
+    if (!isReboot || !rebootState || !disabled) return null;
     if (rebootState.state === "WAITING" && rebootState.countdown != null)
       return `Rebooting… ${rebootState.countdown}s`;
-    if (rebootState.state === "WAITING") return "Rebooting…";
     if (rebootState.state === "CHECKING_CONNECTION")
       return "Checking connection…";
     return "Rebooting…";
   })();
 
-  const displayIcon = (() => {
-    if (showSuccess) return check;
-    if (showError) return errorIcon;
-    if (busy && rebootState)
-      return rebootState.state === "CHECKING_CONNECTION"
-        ? processIcon
-        : hourglass;
-    return icon;
-  })();
-
   const handleClick = () => {
     if (isReboot && triggerReboot) {
-      setShowConfirmModal(true);
+      if (!disabled) setShowConfirmModal(true);
       return;
     }
     onClick?.();
   };
 
-  const handleConfirmReboot = () => {
+  const handleConfirmReboot = async () => {
     setShowConfirmModal(false);
-    triggerReboot?.();
+    setRebootPending(true);
+    try {
+      const res = await triggerReboot?.();
+      if (!res?.ok) setRebootPending(false);
+    } catch {
+      setRebootPending(false);
+    }
   };
 
   return (
@@ -70,7 +75,7 @@ const SystemControlButton = ({
         type="button"
       >
         <img
-          src={displayIcon}
+          src={icon}
           alt={label}
           className="w-4.5 h-4.5 pointer-events-none select-none"
         />
