@@ -8,6 +8,7 @@ Exact navigation flow: login (By.ID) → Advanced Settings → Maintenance → R
 import asyncio
 import os
 import time
+import threading
 from datetime import datetime, timezone
 
 from selenium import webdriver
@@ -127,9 +128,9 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         # 10. Accept alert
         WebDriverWait(driver, wait_short).until(EC.alert_is_present())
         alert = driver.switch_to.alert
-        # alert.accept()
-        # _log("info", "Reboot command sent")
-        _log("info", "FAKE Reboot command sent")
+        alert.accept()
+        _log("info", "Reboot command sent")
+        # _log("info", "FAKE Reboot command sent")
         _emit_sync({"type": "state", "state": "REBOOTING", "message": "Reboot command sent", "progress": 75})
 
         # 11. Emit WAITING + single log immediately (give user feedback)
@@ -137,10 +138,17 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         _emit_sync({"type": "state", "state": "WAITING", "message": "Waiting for device to reboot (120 seconds)", "progress": 80})
         _emit_sync({"type": "countdown", "countdown": COUNTDOWN_SECONDS})
 
-        # 12. Wait briefly before closing driver
-        time.sleep(10)
-        driver.quit()
-        driver = None
+        # 12. Quit driver in background thread (non-blocking) - kept alive for 10 secs for the modem to sucessfully receive the command
+        def _quit_driver_delayed(drv):
+            time.sleep(10)  # keep driver alive for 10 seconds
+            try:
+                drv.quit()
+            except Exception:
+                pass
+
+        threading.Thread(target=_quit_driver_delayed, args=(driver,), daemon=True).start()
+        driver = None  # Prevent double quit in finally
+
 
     except Exception as e:
         _emit_sync({"type": "state", "state": "FAILED", "message": str(e), "progress": 0})
