@@ -8,7 +8,7 @@ const LogPanel = () => {
   const [logs, setLogs] = useState([]);
   const logContainerRef = useRef(null);
   const prevLogsLengthRef = useRef(0);
-  const { data, loading, error, status, rebootLogs } = useModem();
+  const { data, loading, error, status, rebootLogs, clearRebootLogs } = useModem();
 
   const rebootEntries = rebootLogs.map((r) => ({
     type: r.level,
@@ -16,19 +16,21 @@ const LogPanel = () => {
     timestamp: r.timestamp,
     id: r.id,
   }));
-  const allLogs = [...logs, ...rebootEntries];
+  const merged = [...logs, ...rebootEntries];
+  const sortedLogs = [...merged].sort(
+    (a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0)
+  );
   const prevInternetRef = useRef(null);
   const prevModemReachable = useRef(null);
   const prevFiberUp = useRef(null);
   const prevInternetUp = useRef(null);
 
-  // Auto-scroll to bottom only when new logs are added
+  // Auto-scroll to bottom (newest log) when logs change
   useEffect(() => {
-    if (allLogs.length > prevLogsLengthRef.current && logContainerRef.current) {
+    if (sortedLogs.length > 0 && logContainerRef.current) {
       logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
     }
-    prevLogsLengthRef.current = allLogs.length;
-  }, [allLogs.length]);
+  }, [sortedLogs.length]);
 
   // Add log entries based on modem data changes
   useEffect(() => {
@@ -175,13 +177,14 @@ const LogPanel = () => {
 
   const clearLogs = () => {
     setLogs([]);
+    clearRebootLogs();
   };
 
   return (
     <div className="h-full max-h-[40vh] sm:max-h-[45vh] lg:max-h-[calc(100vh-10rem)] flex flex-col lg:sticky lg:top-28 bg-black text-gray-300 font-mono text-sm overflow-hidden rounded-lg">
       <LogHeader status={status} loading={loading} onClearLogs={clearLogs} />
       <LogContent
-        logs={allLogs}
+        logs={sortedLogs}
         logContainerRef={logContainerRef}
         loading={loading}
         getIcon={getIcon}
