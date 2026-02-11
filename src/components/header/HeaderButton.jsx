@@ -4,6 +4,8 @@ const HeaderButton = ({
   buttonClass,
   rotate = false,
   onClick,
+  disabled = false,
+  title,
 }) => {
   const getButtonClass = () => {
     if (buttonClass) return buttonClass;
@@ -13,7 +15,13 @@ const HeaderButton = ({
   };
 
   return (
-    <button className={`group ${getButtonClass()}`} onClick={onClick}>
+    <button
+      className={`group ${getButtonClass()} disabled:opacity-50 disabled:cursor-not-allowed`}
+      onClick={onClick}
+      disabled={disabled}
+      type="button"
+      title={title}
+    >
       <img
         src={icon}
         alt={label}
