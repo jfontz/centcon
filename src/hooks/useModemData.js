@@ -3,83 +3,123 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { modemApi } from "../services/modemAPI";
 
-export const useModemData = (autoRefreshInterval = 60000) => {
+export const useModemData = (
+  autoRefreshInterval = 60000,
+  rebootState = { state: "IDLE" }
+) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [status, setStatus] = useState("offline"); 
+  const [status, setStatus] = useState("offline");
   // 'online' | 'offline' | 'error'
 
   const isInitialLoad = useRef(true);
+  const intervalRef = useRef(null);
 
-  const fetchData = useCallback(async () => {
-    try {
-      if (isInitialLoad.current) {
-        setLoading(true);
-      } else {
-        setRefreshing(true);
-      }
+  const isRebooting = [
+    "LOGGING_IN",
+    "NAVIGATING",
+    "REBOOTING",
+    "WAITING",
+    "CHECKING_CONNECTION",
+  ].includes(rebootState?.state);
 
-      setError(null);
-
-      const modemData = await modemApi.getData();
-
-      setData(modemData);
-
-      // Internet status
-      if (modemData?.wan?.connected) {
-        setStatus("online");
-      } else {
-        setStatus("offline");
-      }
-
-      setLastUpdated(new Date());
-
-      if (isInitialLoad.current) {
-        isInitialLoad.current = false;
-      }
-    } catch (err) {
-      console.error("Error fetching modem data:", err);
-
-      const message = err?.message || "";
-
-      // Browser-level network failure (WiFi/Ethernet unplugged)
-      if (err instanceof TypeError) {
-        setError("LOCAL_NETWORK_DOWN");
-        setStatus("offline");
+  const fetchData = useCallback(
+    async () => {
+      // Skip fetch if rebooting
+      if (isRebooting) {
+        console.log("Auto-refresh paused during reboot");
         return;
       }
 
-      // Proxy alive but modem unreachable
-      if (message.includes("HTTP 500")) {
-        setError("Modem unreachable");
-        setStatus("offline");
-        return;
-      }
+      try {
+        if (isInitialLoad.current) {
+          setLoading(true);
+        } else {
+          setRefreshing(true);
+        }
 
-      // True application / server error
-      setError(message);
-      setStatus("error");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+        setError(null);
+
+        const modemData = await modemApi.getData();
+
+        setData(modemData);
+
+        // Internet status
+        if (modemData?.wan?.connected) {
+          setStatus("online");
+        } else {
+          setStatus("offline");
+        }
+
+        setLastUpdated(new Date());
+
+        if (isInitialLoad.current) {
+          isInitialLoad.current = false;
+        }
+      } catch (err) {
+        console.error("Error fetching modem data:", err);
+
+        const message = err?.message || "";
+
+        // Browser-level network failure (WiFi/Ethernet unplugged)
+        if (err instanceof TypeError) {
+          setError("LOCAL_NETWORK_DOWN");
+          setStatus("offline");
+          return;
+        }
+
+        // Proxy alive but modem unreachable
+        if (message.includes("HTTP 500")) {
+          setError("Modem unreachable");
+          setStatus("offline");
+          return;
+        }
+
+        // True application / server error
+        setError(message);
+        setStatus("error");
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [isRebooting]
+  );
 
   // Initial fetch
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!isRebooting) {
+      fetchData();
+    }
+  }, [fetchData, isRebooting]);
 
-  // Auto-refresh
+  // Auto-refresh with pause during reboot
   useEffect(() => {
     if (!autoRefreshInterval) return;
 
-    const interval = setInterval(fetchData, autoRefreshInterval);
-    return () => clearInterval(interval);
-  }, [autoRefreshInterval, fetchData]);
+    // Clear any existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    // Don't start interval if rebooting
+    if (isRebooting) {
+      console.log("Auto-refresh paused during reboot");
+      return;
+    }
+
+    // Start interval when not rebooting
+    intervalRef.current = setInterval(fetchData, autoRefreshInterval);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [autoRefreshInterval, fetchData, isRebooting]);
 
   return {
     data,

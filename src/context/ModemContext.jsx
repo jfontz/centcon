@@ -12,9 +12,9 @@ const initialRebootState = {
 };
 
 export const ModemProvider = ({ children, refreshInterval }) => {
-  const modemState = useModemData(refreshInterval);
   const [rebootState, setRebootState] = useState(initialRebootState);
   const [rebootLogs, setRebootLogs] = useState([]);
+  const modemState = useModemData(refreshInterval, rebootState);
 
   useEffect(() => {
     const eventSource = connectToRebootEvents((event) => {
@@ -37,9 +37,7 @@ export const ModemProvider = ({ children, refreshInterval }) => {
 
   const triggerReboot = async () => {
     const res = await apiTriggerReboot();
-    if (res?.ok) {
-      setRebootLogs([]);
-    }
+    // Do not clear logs automatically; they should persist across reboots.
     return res;
   };
 
