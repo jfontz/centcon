@@ -8,7 +8,15 @@ const LogPanel = () => {
   const [logs, setLogs] = useState([]);
   const logContainerRef = useRef(null);
   const prevLogsLengthRef = useRef(0);
-  const { data, loading, error, status } = useModem();
+  const { data, loading, error, status, rebootLogs } = useModem();
+
+  const rebootEntries = rebootLogs.map((r) => ({
+    type: r.level,
+    text: r.message,
+    timestamp: r.timestamp,
+    id: r.id,
+  }));
+  const allLogs = [...logs, ...rebootEntries];
   const prevInternetRef = useRef(null);
   const prevModemReachable = useRef(null);
   const prevFiberUp = useRef(null);
@@ -16,11 +24,11 @@ const LogPanel = () => {
 
   // Auto-scroll to bottom only when new logs are added
   useEffect(() => {
-    if (logs.length > prevLogsLengthRef.current && logContainerRef.current) {
+    if (allLogs.length > prevLogsLengthRef.current && logContainerRef.current) {
       logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
     }
-    prevLogsLengthRef.current = logs.length;
-  }, [logs]);
+    prevLogsLengthRef.current = allLogs.length;
+  }, [allLogs.length]);
 
   // Add log entries based on modem data changes
   useEffect(() => {
@@ -173,7 +181,7 @@ const LogPanel = () => {
     <div className="h-full max-h-[40vh] sm:max-h-[45vh] lg:max-h-[calc(100vh-10rem)] flex flex-col lg:sticky lg:top-28 bg-black text-gray-300 font-mono text-sm overflow-hidden rounded-lg">
       <LogHeader status={status} loading={loading} onClearLogs={clearLogs} />
       <LogContent
-        logs={logs}
+        logs={allLogs}
         logContainerRef={logContainerRef}
         loading={loading}
         getIcon={getIcon}
