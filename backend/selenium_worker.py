@@ -170,7 +170,7 @@ async def run_reboot_workflow() -> None:
     import urllib.request
 
     reset_state()
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
     future = loop.run_in_executor(executor, lambda: _run_selenium_blocking(loop))
