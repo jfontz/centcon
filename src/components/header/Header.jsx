@@ -4,8 +4,20 @@ import HeaderButton from "./HeaderButton";
 import StatusBadge from "./StatusBadge";
 import { useModem } from "../../context/ModemContext";
 
+const REBOOT_BUSY_STATES = [
+  "LOGGING_IN",
+  "NAVIGATING",
+  "REBOOTING",
+  "WAITING",
+  "CHECKING_CONNECTION",
+];
+
 const Header = () => {
   const { status, refresh, lastUpdated, rebootState } = useModem();
+
+  const isRebooting =
+    rebootState &&
+    REBOOT_BUSY_STATES.includes(rebootState.state);
 
   // Change header background to red only on system error
   const headerBg = status === "error" ? "bg-red-500/5" : "";
@@ -37,6 +49,8 @@ const Header = () => {
             rotate
             buttonClass="btn-header btn-refresh"
             onClick={refresh}
+            disabled={isRebooting}
+            title={isRebooting ? "Cannot refresh while rebooting" : "Refresh status"}
           />
 
           <HeaderButton
