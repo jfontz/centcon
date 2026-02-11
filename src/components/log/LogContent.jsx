@@ -25,7 +25,11 @@ const LogContent = ({ logs, logContainerRef, loading, getIcon }) => {
         </div>
       ) : (
         logs.map((log, index) => (
-          <LogEntry key={log.id ?? `log-${index}`} log={log} getIcon={getIcon} />
+          <LogEntry
+            key={log.id ?? `log-${log.timestamp ?? index}-${index}`}
+            log={log}
+            getIcon={getIcon}
+          />
         ))
       )}
     </div>
