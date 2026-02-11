@@ -1,23 +1,51 @@
-const StatusBadge = ({ status }) => {
-  const statusMap = {
-    online: {
-      statusClass: "status-online",
-      dot: "bg-green-500 animate-pulse",
-      label: "Online",
-    },
-    error: {
-      statusClass: "status-error",
-      dot: "bg-red-500",
-      label: "Error",
-    },
-    offline: {
-      statusClass: "status-offline",
-      dot: "bg-gray-500",
-      label: "Offline",
-    },
-  };
+const REBOOT_STATE_MAP = {
+  IDLE: { statusClass: "status-offline", dot: "bg-gray-500", label: "" },
+  LOGGING_IN: { statusClass: "status-reboot-progress", dot: "bg-blue-500", label: "Logging in…" },
+  NAVIGATING: { statusClass: "status-reboot-progress", dot: "bg-blue-500", label: "Navigating…" },
+  REBOOTING: { statusClass: "status-reboot-waiting", dot: "bg-amber-500", label: "Rebooting…" },
+  WAITING: { statusClass: "status-reboot-waiting", dot: "bg-amber-500", label: "Rebooting…" },
+  CHECKING_CONNECTION: { statusClass: "status-reboot-progress", dot: "bg-blue-500", label: "Checking connection…" },
+  ONLINE: { statusClass: "status-online", dot: "bg-green-500 animate-pulse", label: "Online" },
+  FAILED: { statusClass: "status-error", dot: "bg-red-500", label: "Failed" },
+};
 
-  const current = statusMap[status] || statusMap.offline;
+const MODEM_STATUS_MAP = {
+  online: {
+    statusClass: "status-online",
+    dot: "bg-green-500 animate-pulse",
+    label: "Online",
+  },
+  error: {
+    statusClass: "status-error",
+    dot: "bg-red-500",
+    label: "Error",
+  },
+  offline: {
+    statusClass: "status-offline",
+    dot: "bg-gray-500",
+    label: "Offline",
+  },
+};
+
+const StatusBadge = ({ status, rebootState }) => {
+  const inRebootFlow =
+    rebootState &&
+    rebootState.state !== "IDLE" &&
+    (rebootState.state === "ONLINE" ? rebootState.message : true);
+
+  let current;
+  if (inRebootFlow && rebootState) {
+    const reboot = REBOOT_STATE_MAP[rebootState.state] || REBOOT_STATE_MAP.IDLE;
+    let label = reboot.label || rebootState.message;
+    if (rebootState.state === "WAITING" && rebootState.countdown != null) {
+      label = `Device rebooting... ${rebootState.countdown}s remaining`;
+    } else if (rebootState.message) {
+      label = rebootState.message;
+    }
+    current = { ...reboot, label };
+  } else {
+    current = MODEM_STATUS_MAP[status] || MODEM_STATUS_MAP.offline;
+  }
 
   return (
     <div className={`status-pill ${current.statusClass}`}>
