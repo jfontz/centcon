@@ -10,6 +10,8 @@ import os
 import time
 import threading
 from datetime import datetime, timezone
+from pathlib import Path
+from dotenv import load_dotenv
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -19,16 +21,23 @@ from selenium.common.exceptions import TimeoutException
 
 from state_manager import emit, reset_state
 
-ROUTER_URL = os.getenv("REBOOT_MODEM_URL", "http://192.168.254.254/")
-USERNAME = os.getenv("REBOOT_USERNAME", "admin")
-PASSWORD = os.getenv("REBOOT_PASSWORD", "Globe@0A06")
+# Go one directory up from this file
+ROOT_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(ROOT_DIR / ".env")
+
+ROUTER_URL = os.getenv("REBOOT_MODEM_URL")
+USERNAME = os.getenv("REBOOT_USERNAME")
+PASSWORD = os.getenv("REBOOT_PASSWORD")
+
+if not ROUTER_URL:
+    raise RuntimeError("Missing REBOOT_MODEM_URL in .env")
+
+if not USERNAME or not PASSWORD:
+    raise RuntimeError("Missing REBOOT_USERNAME or REBOOT_PASSWORD in .env")
+
 COUNTDOWN_SECONDS = 120
 CONNECTION_CHECK_INTERVAL = 5
 CONNECTION_CHECK_TIMEOUT = 120  # total seconds to try reconnecting
-
-# TODO: After successful login, navigate directly to /maintenance_globe.cgi?reboot
-# to bypass manual menu navigation (Advanced Settings → Maintenance → Reboot)
-# This will speed up the reboot process significantly.
 
 
 def _log_ts() -> str:
@@ -96,36 +105,20 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
             _emit_sync({"type": "state", "state": "FAILED", "message": "Login failed", "progress": 0})
             driver.quit()
             return
-
-        # 6. Navigate to Advanced Settings
-        WebDriverWait(driver, wait_short).until(
-            EC.element_to_be_clickable((By.LINK_TEXT, "Advanced Settings"))
-        ).click()
-        _log("info", "Navigated to Advanced Settings")
-        _emit_sync({"type": "state", "state": "NAVIGATING", "message": "Navigated to Advanced Settings", "progress": 30})
-
-        # 7. Navigate to Maintenance
-        WebDriverWait(driver, wait_short).until(
-            EC.element_to_be_clickable((By.LINK_TEXT, "Maintenance"))
-        ).click()
-        _log("info", "Navigated to Maintenance")
-        _emit_sync({"type": "state", "state": "NAVIGATING", "message": "Navigated to Maintenance", "progress": 50})
-
-        # 8. Navigate to Reboot tab
-        WebDriverWait(driver, wait_short).until(
-            EC.element_to_be_clickable((By.LINK_TEXT, "Reboot"))
-        ).click()
+        
+        # 6. Navigate to Reboot tab
+        driver.get(ROUTER_URL + "maintenance_globe.cgi?reboot")
         _log("info", "Navigated to Reboot tab")
         _emit_sync({"type": "state", "state": "NAVIGATING", "message": "Navigated to Reboot tab", "progress": 60})
 
-        # 9. Click reboot button
+        # 7. Click reboot button
         WebDriverWait(driver, wait_time).until(
             EC.element_to_be_clickable((By.ID, "reboot"))
         ).click()
         _log("info", "Reboot button clicked")
         _emit_sync({"type": "state", "state": "REBOOTING", "message": "Reboot button clicked", "progress": 70})
 
-        # 10. Accept alert
+        # 8. Accept alert
         WebDriverWait(driver, wait_short).until(EC.alert_is_present())
         alert = driver.switch_to.alert
         alert.accept()
@@ -133,12 +126,12 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         # _log("info", "FAKE Reboot command sent")
         _emit_sync({"type": "state", "state": "REBOOTING", "message": "Reboot command sent", "progress": 75})
 
-        # 11. Emit WAITING + single log immediately (give user feedback)
+        # 9. Emit WAITING + single log immediately (give user feedback)
         _log("info", "Waiting for device to reboot (120 seconds)")
         _emit_sync({"type": "state", "state": "WAITING", "message": "Waiting for device to reboot (120 seconds)", "progress": 80})
         _emit_sync({"type": "countdown", "countdown": COUNTDOWN_SECONDS})
 
-        # 12. Quit driver in background thread (non-blocking) - kept alive for 10 secs for the modem to sucessfully receive the command
+        # 10. Quit driver in background thread (non-blocking) - kept alive for 10 secs for the modem to sucessfully receive the command
         def _quit_driver_delayed(drv):
             time.sleep(10)  # keep driver alive for 10 seconds
             try:
