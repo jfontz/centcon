@@ -5,7 +5,7 @@ import StatusBadge from "./StatusBadge";
 import { useModem } from "../../context/ModemContext";
 
 const Header = () => {
-  const { status, refresh, lastUpdated } = useModem();
+  const { status, refresh, lastUpdated, rebootState } = useModem();
 
   // Change header background to red only on system error
   const headerBg = status === "error" ? "bg-red-500/5" : "";
@@ -29,7 +29,7 @@ const Header = () => {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2 sm:gap-4">
-          <StatusBadge status={status} />
+          <StatusBadge status={status} rebootState={rebootState} />
 
           <HeaderButton
             icon={refreshData}
