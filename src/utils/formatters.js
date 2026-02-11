@@ -1,5 +1,16 @@
 // Utility functions for formatting data
 
+/** Format date for log display: [HH:MM:SS] */
+export const formatLogTime = (date) => {
+  if (!date) return "";
+  return new Date(date).toLocaleTimeString("en-GB", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+};
+
 export const formatTimeAgo = (date) => {
   if (!date) return "Never";
 
