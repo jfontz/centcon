@@ -88,6 +88,18 @@
     background-color: transparent;
   }
 
+  .status-reboot-progress {
+    color: #3b82f6;
+    border: 1px solid #3b82f64d;
+    background-color: transparent;
+  }
+
+  .status-reboot-waiting {
+    color: #f59e0b;
+    border: 1px solid #f59e0b4d;
+    background-color: transparent;
+  }
+
   .status-pill {
     @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm;
   }
@@ -131,6 +143,79 @@
 
   .btn-logout:hover {
     background-color: #2f2f2f33;
+  }
+
+  /* Reboot confirmation modal */
+  .modal-backdrop {
+    @apply fixed inset-0 z-[100] flex items-center justify-center p-4;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    animation: modal-fade-in 0.25s ease-out;
+  }
+
+  .modal-content {
+    @apply w-full max-w-md rounded-xl p-6 flex flex-col items-center text-center shadow-xl;
+    background-color: #0a0a0a;
+    border: 1px solid #222222;
+    animation: modal-slide-in 0.25s ease-out;
+  }
+
+  .modal-icon {
+    @apply mb-4 flex items-center justify-center text-amber-500;
+  }
+
+  .modal-title {
+    @apply text-lg font-semibold text-white tracking-wide mb-2;
+  }
+
+  .modal-message {
+    @apply text-sm text-gray-400 mb-6 leading-relaxed;
+  }
+
+  .modal-actions {
+    @apply flex gap-3 w-full sm:w-auto;
+  }
+
+  .btn-modal-cancel {
+    @apply flex-1 sm:flex-none px-5 py-2.5 rounded-md text-sm font-medium transition-all cursor-pointer;
+    color: #858585;
+    background-color: transparent;
+    border: 1px solid #222222;
+  }
+
+  .btn-modal-cancel:hover {
+    background-color: #2f2f2f33;
+  }
+
+  .btn-modal-confirm {
+    @apply flex-1 sm:flex-none px-5 py-2.5 rounded-md text-sm font-medium transition-all cursor-pointer;
+    color: #f87171;
+    background-color: #7f1d1d1a;
+    border: 1px solid #7f1d1d4d;
+  }
+
+  .btn-modal-confirm:hover {
+    background-color: #7f1d1d33;
+  }
+
+  @keyframes modal-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes modal-slide-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96) translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
   }
 
   .btn-header {
