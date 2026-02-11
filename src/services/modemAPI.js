@@ -230,3 +230,38 @@ class ModemApiClient {
 
 // Export singleton instance for use throughout the application
 export const modemApi = new ModemApiClient();
+
+// --- Reboot SSE & API (backend at VITE_REBOOT_API_URL) ---
+const REBOOT_API_BASE =
+  import.meta.env.VITE_REBOOT_API_URL || "http://localhost:8000";
+
+/**
+ * Connect to reboot SSE stream. Call onEvent for each event; returns EventSource (call .close() on unmount).
+ * @param {function(object): void} onEvent - callback for each event: { type, state?, message?, progress?, countdown?, level?, message? }
+ */
+export const connectToRebootEvents = (onEvent) => {
+  const eventSource = new EventSource(`${REBOOT_API_BASE}/events`);
+  eventSource.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      onEvent(data);
+    } catch (e) {
+      console.warn("Reboot SSE parse error", e);
+    }
+  };
+  eventSource.onerror = () => {
+    eventSource.close();
+  };
+  return eventSource;
+};
+
+/**
+ * Trigger router reboot. Backend starts Selenium in background; progress comes via SSE.
+ * @returns {Promise<{ ok: boolean, message?: string }>}
+ */
+export const triggerReboot = async () => {
+  const response = await fetch(`${REBOOT_API_BASE}/reboot`, {
+    method: "POST",
+  });
+  return response.json();
+};
