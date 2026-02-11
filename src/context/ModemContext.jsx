@@ -22,9 +22,10 @@ export const ModemProvider = ({ children, refreshInterval }) => {
         setRebootState((prev) => ({ ...prev, ...event }));
       }
       if (event.type === "log") {
+        const timestamp = event.timestamp || new Date().toISOString();
         setRebootLogs((prev) => [
           ...prev,
-          { ...event, id: `reboot-${Date.now()}-${prev.length}`, timestamp: new Date().toISOString() },
+          { ...event, id: `reboot-${timestamp}-${prev.length}`, timestamp },
         ]);
       }
       if (event.type === "countdown") {
@@ -42,6 +43,8 @@ export const ModemProvider = ({ children, refreshInterval }) => {
     return res;
   };
 
+  const clearRebootLogs = () => setRebootLogs([]);
+
   return (
     <ModemContext.Provider
       value={{
@@ -49,6 +52,7 @@ export const ModemProvider = ({ children, refreshInterval }) => {
         rebootState,
         rebootLogs,
         triggerReboot,
+        clearRebootLogs,
       }}
     >
       {children}
