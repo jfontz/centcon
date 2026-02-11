@@ -1,3 +1,5 @@
+import { formatLogTime } from "../../utils/formatters";
+
 const LogEntry = ({ log, getIcon }) => {
   return (
     <div className="flex items-start gap-3">
@@ -18,7 +20,7 @@ const LogEntry = ({ log, getIcon }) => {
       >
         {log.timestamp && (
           <span className="text-gray-600 mr-2">
-            [{new Date(log.timestamp).toLocaleTimeString()}]
+            [{formatLogTime(log.timestamp)}]
           </span>
         )}
         {log.text}
