@@ -132,15 +132,15 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         _log("info", "FAKE Reboot command sent")
         _emit_sync({"type": "state", "state": "REBOOTING", "message": "Reboot command sent", "progress": 75})
 
-        # 11. Wait briefly before closing driver
-        time.sleep(10)
-        driver.quit()
-        driver = None
-
-        # 12. Emit WAITING + single log (countdown ticks are badge-only, no log spam)
+        # 11. Emit WAITING + single log immediately (give user feedback)
         _log("info", "Waiting for device to reboot (120 seconds)")
         _emit_sync({"type": "state", "state": "WAITING", "message": "Waiting for device to reboot (120 seconds)", "progress": 80})
         _emit_sync({"type": "countdown", "countdown": COUNTDOWN_SECONDS})
+
+        # 12. Wait briefly before closing driver
+        time.sleep(10)
+        driver.quit()
+        driver = None
 
     except Exception as e:
         _emit_sync({"type": "state", "state": "FAILED", "message": str(e), "progress": 0})
@@ -201,7 +201,7 @@ async def run_reboot_workflow() -> None:
             req = urllib.request.Request(ROUTER_URL, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req, timeout=10) as resp:
                 if resp.status == 200:
-                    await emit({"type": "state", "state": "ONLINE", "message": "Device is back online!", "progress": 100, "countdown": None})
+                    await emit({"type": "state", "state": "ONLINE", "message": "ONLINE", "progress": 100, "countdown": None})
                     await emit({"type": "log", "level": "success", "message": "Device is back online!", "timestamp": _log_ts()})
                     return
         except Exception:
