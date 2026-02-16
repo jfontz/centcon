@@ -47,8 +47,7 @@ const LogPanel = () => {
       // First check - set the ref but DON'T log
       prevModemReachable.current = modemReachable;
     } else if (prevModemReachable.current !== modemReachable) {
-      // Only log if we've already shown the startup banner
-      // This prevents logging before initial startup
+      // Only log if startup has been shown (prevents log on initial load)
       if (hasShownStartup.current) {
         newLogs.push({
           type: modemReachable ? "success" : "error",
@@ -75,7 +74,7 @@ const LogPanel = () => {
           text: `Connected to modem: ${data.device?.model || "Unknown"}`,
           timestamp,
         });
-        hasShownStartup.current = true; // ← Mark startup as shown
+        hasShownStartup.current = true;
       }
 
       // 2. LOS (Loss of Signal) Detection
