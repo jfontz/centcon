@@ -40,7 +40,7 @@ const SystemControls = () => {
               label={label}
               buttonClass={buttonClass}
               onClick={isReboot ? undefined : handleLogin}
-              rebootState={isReboot ? rebootState : undefined}
+              rebootState={rebootState}
               triggerReboot={isReboot ? triggerReboot : undefined}
             />
           ))}
