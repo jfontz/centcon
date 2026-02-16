@@ -47,8 +47,15 @@ export const useModemData = (
 
         setData(modemData);
 
-        // Internet status
-        if (modemData?.wan?.connected) {
+        // Priority-based status: LOS (highest) → WAN → offline
+        const hasLOS =
+          modemData?.optical?.enable === 0 ||
+          (Number(modemData?.optical?.rxPower ?? 0) === 0 &&
+            Number(modemData?.optical?.txPower ?? 0) === 0);
+
+        if (hasLOS) {
+          setStatus("los");
+        } else if (modemData?.wan?.connected) {
           setStatus("online");
         } else {
           setStatus("offline");
