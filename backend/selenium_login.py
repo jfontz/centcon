@@ -97,22 +97,15 @@ def _run_login_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
                 EC.presence_of_element_located((By.CLASS_NAME, "logout-btn"))
             )
             _log("info", "Login successful - Browser left open for manual control")
-            _emit_sync(
-                {
-                    "type": "state",
-                    "state": "SUCCESS",
-                    "message": "Login successful",
-                }
-            )
         except TimeoutException:
             _log("error", "Login failed - Invalid credentials or timeout")
-            _emit_sync(
-                {
-                    "type": "state",
-                    "state": "FAILED",
-                    "message": "Login failed",
-                }
-            )
+            # _emit_sync(
+            #     {
+            #         "type": "state",
+            #         "state": "FAILED",
+            #         "message": "Login failed",
+            #     }
+            # )
             if driver:
                 driver.quit()
             return
@@ -140,4 +133,3 @@ async def run_login_workflow() -> None:
 
     future = loop.run_in_executor(executor, lambda: _run_login_blocking(loop))
     await future
-
