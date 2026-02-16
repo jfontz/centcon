@@ -133,3 +133,6 @@ async def run_login_workflow() -> None:
 
     future = loop.run_in_executor(executor, lambda: _run_login_blocking(loop))
     await future
+
+
+# TODO: Review icon mappings and replace placeholders with final production icons when available.
