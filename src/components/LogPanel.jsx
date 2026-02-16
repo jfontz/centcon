@@ -8,7 +8,9 @@ const LogPanel = () => {
   const [logs, setLogs] = useState([]);
   const logContainerRef = useRef(null);
   const prevLogsLengthRef = useRef(0);
-  const { data, loading, error, status, rebootLogs, clearRebootLogs } = useModem();
+  const hasShownStartup = useRef(false);
+  const { data, loading, error, status, rebootLogs, clearRebootLogs } =
+    useModem();
 
   const rebootEntries = rebootLogs.map((r) => ({
     type: r.level,
@@ -18,7 +20,7 @@ const LogPanel = () => {
   }));
   const merged = [...logs, ...rebootEntries];
   const sortedLogs = [...merged].sort(
-    (a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0)
+    (a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0),
   );
   const prevLosRef = useRef(null);
   const prevModemReachable = useRef(null);
@@ -42,13 +44,16 @@ const LogPanel = () => {
     if (prevModemReachable.current === null) {
       prevModemReachable.current = modemReachable;
     } else if (prevModemReachable.current !== modemReachable) {
-      newLogs.push({
-        type: modemReachable ? "success" : "error",
-        text: modemReachable
-          ? "Modem connection restored"
-          : "Modem unreachable - Cannot fetch data",
-        timestamp,
-      });
+      // Only log if startup has been shown (prevents log on initial load)
+      if (hasShownStartup.current) {
+        newLogs.push({
+          type: modemReachable ? "success" : "error",
+          text: modemReachable
+            ? "Modem connection restored"
+            : "Modem unreachable - Cannot fetch data",
+          timestamp,
+        });
+      }
       prevModemReachable.current = modemReachable;
     }
 
@@ -66,6 +71,7 @@ const LogPanel = () => {
           text: `Connected to modem: ${data.device?.model || "Unknown"}`,
           timestamp,
         });
+        hasShownStartup.current = true;
       }
 
       // 2. LOS (Loss of Signal) Detection
