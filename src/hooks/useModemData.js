@@ -74,6 +74,7 @@ export const useModemData = (
         if (err instanceof TypeError) {
           setError("LOCAL_NETWORK_DOWN");
           setStatus("offline");
+          setData(null);
           return;
         }
 
@@ -81,12 +82,14 @@ export const useModemData = (
         if (message.includes("HTTP 500")) {
           setError("Modem unreachable");
           setStatus("offline");
+          setData(null);
           return;
         }
 
         // Other fetch/parse errors — treat as modem unreachable
         setError(message);
         setStatus("offline");
+        setData(null);
       } finally {
         setLoading(false);
         setRefreshing(false);

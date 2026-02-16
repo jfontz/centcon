@@ -36,56 +36,9 @@ const LogPanel = () => {
     const timestamp = new Date().toISOString();
     const newLogs = [];
 
-    // Modem unreachable (no data): log once and skip rest
-    const modemReachable = !error;
-    if (!data) {
-      if (error && prevModemReachable.current !== false) {
-        prevModemReachable.current = false;
-        newLogs.push({
-          type: "error",
-          text: "Modem unreachable - Cannot fetch data",
-          timestamp,
-        });
-      }
-      if (newLogs.length > 0) {
-        setLogs((prev) => [...prev, ...newLogs].slice(-50));
-      }
-      return;
-    }
+    // 1. Modem Reachability (check FIRST — data is null when unreachable)
+    const modemReachable = data !== null && !error;
 
-    // INITIAL STARTUP
-    if (logs.length === 0) {
-      newLogs.push({
-        type: "header",
-        text: "CENTCON Monitoring Started",
-        timestamp,
-      });
-      newLogs.push({
-        type: "navigate",
-        text: `Connected to modem: ${data.device?.model || "Unknown"}`,
-        timestamp,
-      });
-    }
-
-    // 1. LOS (Loss of Signal) Detection
-    const hasLOS =
-      Number(data?.optical?.txPower ?? 0) === 0 &&
-      Number(data?.optical?.rxPower ?? 0) === 0;
-
-    if (prevLosRef.current === null) {
-      prevLosRef.current = hasLOS;
-    } else if (prevLosRef.current !== hasLOS) {
-      newLogs.push({
-        type: hasLOS ? "error" : "success",
-        text: hasLOS
-          ? "LOS (Loss of Signal) - Physical fiber connection lost"
-          : "LOS cleared - Fiber signal restored",
-        timestamp,
-      });
-      prevLosRef.current = hasLOS;
-    }
-
-    // 2. Modem Reachability
     if (prevModemReachable.current === null) {
       prevModemReachable.current = modemReachable;
     } else if (prevModemReachable.current !== modemReachable) {
@@ -99,65 +52,108 @@ const LogPanel = () => {
       prevModemReachable.current = modemReachable;
     }
 
-    // 3. Internet Connection (WAN) — only when modem reachable and no LOS
-    const internetUp =
-      modemReachable && !hasLOS && Boolean(data?.wan?.connected);
-
-    if (prevInternetUp.current === null) {
-      prevInternetUp.current = internetUp;
-    } else if (prevInternetUp.current !== internetUp) {
-      if (modemReachable && !hasLOS) {
+    // ONLY check LOS and Internet when modem is reachable (fresh data)
+    if (data && modemReachable) {
+      // INITIAL STARTUP
+      if (logs.length === 0) {
         newLogs.push({
-          type: internetUp ? "success" : "error",
-          text: internetUp
-            ? "Internet connection restored"
-            : "Internet connection lost - WAN disconnected",
+          type: "header",
+          text: "CENTCON Monitoring Started",
+          timestamp,
+        });
+        newLogs.push({
+          type: "navigate",
+          text: `Connected to modem: ${data.device?.model || "Unknown"}`,
           timestamp,
         });
       }
-      prevInternetUp.current = internetUp;
+
+      // 2. LOS (Loss of Signal) Detection
+      const hasLOS =
+        Number(data?.optical?.txPower ?? 0) === 0 &&
+        Number(data?.optical?.rxPower ?? 0) === 0;
+
+      if (prevLosRef.current === null) {
+        prevLosRef.current = hasLOS;
+      } else if (prevLosRef.current !== hasLOS) {
+        newLogs.push({
+          type: hasLOS ? "error" : "success",
+          text: hasLOS
+            ? "LOS (Loss of Signal) - Physical fiber connection lost"
+            : "LOS cleared - Fiber signal restored",
+          timestamp,
+        });
+        prevLosRef.current = hasLOS;
+      }
+
+      // 3. Internet Connection (WAN)
+      const internetUp = !hasLOS && Boolean(data?.wan?.connected);
+
+      if (prevInternetUp.current === null) {
+        prevInternetUp.current = internetUp;
+      } else if (prevInternetUp.current !== internetUp) {
+        if (!hasLOS) {
+          newLogs.push({
+            type: internetUp ? "success" : "error",
+            text: internetUp
+              ? "Internet connection restored"
+              : "Internet connection lost - WAN disconnected",
+            timestamp,
+          });
+        }
+        prevInternetUp.current = internetUp;
+      }
+
+      // DEVICE HEALTH WARNINGS
+      if (data.device) {
+        const { cpuUsage, memoryUsage } = data.device;
+        if (cpuUsage > 80) {
+          newLogs.push({
+            type: "warning",
+            text: `High CPU usage detected: ${cpuUsage}%`,
+            timestamp,
+          });
+        }
+        if (memoryUsage > 90) {
+          newLogs.push({
+            type: "warning",
+            text: `High memory usage detected: ${memoryUsage}%`,
+            timestamp,
+          });
+        }
+      }
+
+      // TEMPERATURE WARNING
+      if (data.optical?.temperature) {
+        const temp = parseFloat(data.optical.temperature);
+        if (temp > 70) {
+          newLogs.push({
+            type: "warning",
+            text: `High temperature detected: ${temp}°C`,
+            timestamp,
+          });
+        }
+      }
     }
 
-    // DEVICE HEALTH WARNINGS
-    if (data.device) {
-      const { cpuUsage, memoryUsage } = data.device;
-      if (cpuUsage > 80) {
-        newLogs.push({
-          type: "warning",
-          text: `High CPU usage detected: ${cpuUsage}%`,
-          timestamp,
-        });
-      }
-      if (memoryUsage > 90) {
-        newLogs.push({
-          type: "warning",
-          text: `High memory usage detected: ${memoryUsage}%`,
-          timestamp,
-        });
-      }
+    // Reset LOS and Internet tracking when modem becomes unreachable
+    if (!modemReachable) {
+      prevLosRef.current = null;
+      prevInternetUp.current = null;
     }
 
-    // TEMPERATURE WARNING
-    if (data.optical?.temperature) {
-      const temp = parseFloat(data.optical.temperature);
-      if (temp > 70) {
-        newLogs.push({
-          type: "warning",
-          text: `High temperature detected: ${temp}°C`,
-          timestamp,
-        });
-      }
-    }
-
-    // STATUS CHECK — only when everything is OK
+    // STATUS CHECK LOG — only when everything is OK
     const hasAnyIssues =
       !modemReachable ||
-      hasLOS ||
-      !internetUp ||
+      (data &&
+        ((Number(data?.optical?.txPower ?? 0) === 0 &&
+          Number(data?.optical?.rxPower ?? 0) === 0) ||
+          !data?.wan?.connected)) ||
+      error ||
       status === "error" ||
       status === "offline";
 
-    if (!hasAnyIssues && newLogs.length === 0 && !loading) {
+    if (!hasAnyIssues && newLogs.length === 0 && !loading && data) {
       newLogs.push({
         type: "success",
         text: "Status check — All systems operational",
