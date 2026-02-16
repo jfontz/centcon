@@ -15,6 +15,11 @@ const MODEM_STATUS_MAP = {
     dot: "bg-green-500 animate-pulse",
     label: "Online",
   },
+  los: {
+    statusClass: "status-error",
+    dot: "bg-red-500 animate-pulse",
+    label: "LOS - No Signal",
+  },
   error: {
     statusClass: "status-error",
     dot: "bg-red-500",
