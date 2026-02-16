@@ -1,6 +1,10 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useModemData } from "../hooks/useModemData";
-import { connectToRebootEvents, triggerReboot as apiTriggerReboot } from "../services/modemAPI";
+import {
+  connectToRebootEvents,
+  triggerReboot as apiTriggerReboot,
+  triggerLogin as apiTriggerLogin,
+} from "../services/modemAPI";
 
 const ModemContext = createContext(null);
 
@@ -41,6 +45,11 @@ export const ModemProvider = ({ children, refreshInterval }) => {
     return res;
   };
 
+  const triggerLogin = async () => {
+    const res = await apiTriggerLogin();
+    return res;
+  };
+
   const clearRebootLogs = () => setRebootLogs([]);
 
   return (
@@ -50,6 +59,7 @@ export const ModemProvider = ({ children, refreshInterval }) => {
         rebootState,
         rebootLogs,
         triggerReboot,
+        triggerLogin,
         clearRebootLogs,
       }}
     >

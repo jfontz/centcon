@@ -114,7 +114,7 @@ class ModemApiClient {
   /**
    * Parse optical transceiver information
    * @param {Object} opticalInfo - Optical module information
-   * @returns {Object} Object with temperature, enable, rxPower, txPower, etc.
+   * @returns {Object} Object with temperature, enable, txPower, rxPower, voltage, biasCurrent
    */
   parseOptical(opticalInfo) {
     return {
@@ -122,8 +122,8 @@ class ModemApiClient {
         (opticalInfo.TransceiverTemperature || 0) / ModemApiClient.TEMP_DIVISOR
       ).toFixed(2),
       enable: opticalInfo.Enable ?? 0,
-      rxPower: opticalInfo.RXPower ?? 0,
       txPower: opticalInfo.TXPower ?? 0,
+      rxPower: opticalInfo.RXPower ?? 0,
       voltage: opticalInfo.SupplyVottage ?? 0,
       biasCurrent: opticalInfo.BiasCurrent ?? 0,
     };
@@ -266,6 +266,17 @@ export const connectToRebootEvents = (onEvent) => {
  */
 export const triggerReboot = async () => {
   const response = await fetch(`${REBOOT_API_BASE}/reboot`, {
+    method: "POST",
+  });
+  return response.json();
+};
+
+/**
+ * Trigger router login. Opens browser and logs in, leaves window open.
+ * @returns {Promise<{ ok: boolean, message?: string }>}
+ */
+export const triggerLogin = async () => {
+  const response = await fetch(`${REBOOT_API_BASE}/login`, {
     method: "POST",
   });
   return response.json();

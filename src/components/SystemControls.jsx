@@ -19,7 +19,15 @@ const controls = [
 ];
 
 const SystemControls = () => {
-  const { rebootState, triggerReboot } = useModem();
+  const { rebootState, triggerReboot, triggerLogin } = useModem();
+
+  const handleLogin = async () => {
+    try {
+      await triggerLogin();
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
+  };
 
   return (
     <div className="bg-black text-white text-sm">
@@ -31,8 +39,8 @@ const SystemControls = () => {
               icon={icon}
               label={label}
               buttonClass={buttonClass}
-              onClick={isReboot ? undefined : undefined}
-              rebootState={isReboot ? rebootState : undefined}
+              onClick={isReboot ? undefined : handleLogin}
+              rebootState={rebootState}
               triggerReboot={isReboot ? triggerReboot : undefined}
             />
           ))}

@@ -21,15 +21,14 @@ const SystemControlButton = ({
   const [rebootPending, setRebootPending] = useState(false);
 
   const isReboot =
-    label === "Reboot Modem" &&
-    (rebootState != null || triggerReboot != null);
+    label === "Reboot Modem" && (rebootState != null || triggerReboot != null);
 
   const isRebooting =
-    isReboot &&
-    rebootState &&
-    REBOOT_BUSY_STATES.includes(rebootState.state);
+    rebootState && REBOOT_BUSY_STATES.includes(rebootState.state);
 
-  const disabled = isReboot && (isRebooting || rebootPending);
+  // Disable reboot button when rebooting or pending
+  // Disable ALL buttons when rebooting
+  const disabled = isReboot ? isRebooting || rebootPending : isRebooting;
 
   // Clear pending when reboot finishes (ONLINE or FAILED)
   useEffect(() => {

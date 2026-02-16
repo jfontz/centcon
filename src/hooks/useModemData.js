@@ -47,14 +47,13 @@ export const useModemData = (
 
         setData(modemData);
 
-        // Priority-based status: LOS (highest) → WAN → offline
+        // LOS (Loss of Signal): both TX and RX power are 0
         const hasLOS =
-          modemData?.optical?.enable === 0 ||
-          (Number(modemData?.optical?.rxPower ?? 0) === 0 &&
-            Number(modemData?.optical?.txPower ?? 0) === 0);
+          Number(modemData?.optical?.txPower ?? 0) === 0 &&
+          Number(modemData?.optical?.rxPower ?? 0) === 0;
 
         if (hasLOS) {
-          setStatus("los");
+          setStatus("error");
         } else if (modemData?.wan?.connected) {
           setStatus("online");
         } else {
@@ -75,6 +74,7 @@ export const useModemData = (
         if (err instanceof TypeError) {
           setError("LOCAL_NETWORK_DOWN");
           setStatus("offline");
+          setData(null);
           return;
         }
 
@@ -82,12 +82,14 @@ export const useModemData = (
         if (message.includes("HTTP 500")) {
           setError("Modem unreachable");
           setStatus("offline");
+          setData(null);
           return;
         }
 
-        // True application / server error
+        // Other fetch/parse errors — treat as modem unreachable
         setError(message);
-        setStatus("error");
+        setStatus("offline");
+        setData(null);
       } finally {
         setLoading(false);
         setRefreshing(false);
