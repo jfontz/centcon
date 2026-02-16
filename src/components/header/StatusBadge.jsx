@@ -1,11 +1,35 @@
 const REBOOT_STATE_MAP = {
   IDLE: { statusClass: "status-offline", dot: "bg-gray-500", label: "" },
-  LOGGING_IN: { statusClass: "status-reboot-progress", dot: "bg-blue-500", label: "Logging in…" },
-  NAVIGATING: { statusClass: "status-reboot-progress", dot: "bg-blue-500", label: "Navigating…" },
-  REBOOTING: { statusClass: "status-reboot-waiting", dot: "bg-amber-500", label: "Rebooting…" },
-  WAITING: { statusClass: "status-reboot-waiting", dot: "bg-amber-500", label: "Rebooting…" },
-  CHECKING_CONNECTION: { statusClass: "status-reboot-progress", dot: "bg-blue-500", label: "Checking connection…" },
-  ONLINE: { statusClass: "status-online", dot: "bg-green-500 animate-pulse", label: "Online" },
+  LOGGING_IN: {
+    statusClass: "status-reboot-progress",
+    dot: "bg-blue-500",
+    label: "Logging in…",
+  },
+  NAVIGATING: {
+    statusClass: "status-reboot-progress",
+    dot: "bg-blue-500",
+    label: "Navigating…",
+  },
+  REBOOTING: {
+    statusClass: "status-reboot-waiting",
+    dot: "bg-amber-500",
+    label: "Rebooting…",
+  },
+  WAITING: {
+    statusClass: "status-reboot-waiting",
+    dot: "bg-amber-500",
+    label: "Rebooting…",
+  },
+  CHECKING_CONNECTION: {
+    statusClass: "status-reboot-progress",
+    dot: "bg-blue-500",
+    label: "Checking connection…",
+  },
+  ONLINE: {
+    statusClass: "status-online",
+    dot: "bg-green-500 animate-pulse",
+    label: "Online",
+  },
   FAILED: { statusClass: "status-error", dot: "bg-red-500", label: "Failed" },
 };
 
@@ -28,10 +52,13 @@ const MODEM_STATUS_MAP = {
 };
 
 const StatusBadge = ({ status, rebootState }) => {
+  // Only show reboot status during active reboot states
+  // Once reboot completes (ONLINE/FAILED) or is idle, show actual modem status
   const inRebootFlow =
     rebootState &&
     rebootState.state !== "IDLE" &&
-    (rebootState.state === "ONLINE" ? rebootState.message : true);
+    rebootState.state !== "ONLINE" &&
+    rebootState.state !== "FAILED";
 
   let current;
   if (inRebootFlow && rebootState) {
@@ -44,6 +71,7 @@ const StatusBadge = ({ status, rebootState }) => {
     }
     current = { ...reboot, label };
   } else {
+    // Use actual modem status when not actively rebooting
     current = MODEM_STATUS_MAP[status] || MODEM_STATUS_MAP.offline;
   }
 
