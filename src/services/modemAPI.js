@@ -270,3 +270,14 @@ export const triggerReboot = async () => {
   });
   return response.json();
 };
+
+/**
+ * Trigger router login. Opens browser and logs in, leaves window open.
+ * @returns {Promise<{ ok: boolean, message?: string }>}
+ */
+export const triggerLogin = async () => {
+  const response = await fetch(`${REBOOT_API_BASE}/login`, {
+    method: "POST",
+  });
+  return response.json();
+};

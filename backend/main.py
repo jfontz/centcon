@@ -21,9 +21,11 @@ from fastapi.responses import StreamingResponse
 
 from state_manager import get_state, subscribe, unsubscribe, event_stream
 from selenium_worker import run_reboot_workflow
+from selenium_login import run_login_workflow
 
 # Prevent multiple simultaneous reboot processes
 reboot_in_progress = False
+login_in_progress = False
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -68,6 +70,35 @@ async def reboot():
     reboot_in_progress = True
     asyncio.create_task(_run_reboot_then_clear())
     return {"ok": True, "message": "Reboot started"}
+
+
+async def _run_login_then_clear():
+    global login_in_progress
+    try:
+        await run_login_workflow()
+    finally:
+        login_in_progress = False
+
+
+@app.post("/login")
+async def login_to_modem():
+    """Open browser and login to modem, leave window open for user."""
+    global login_in_progress
+
+    if login_in_progress:
+        raise HTTPException(
+            status_code=409,
+            detail="Login already in progress",
+        )
+
+    login_in_progress = True
+
+    try:
+        asyncio.create_task(_run_login_then_clear())
+        return {"ok": True, "message": "Login started"}
+    except Exception as e:
+        login_in_progress = False
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/events")
