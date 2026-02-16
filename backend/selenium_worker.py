@@ -211,3 +211,5 @@ async def run_reboot_workflow() -> None:
 
     await emit({"type": "state", "state": "FAILED", "message": "Failed to reconnect after 2 minutes", "progress": 0})
     await emit({"type": "log", "level": "error", "message": "Failed to reconnect after 2 minutes", "timestamp": _log_ts()})
+    
+# TODO: Review icon mappings and replace placeholders with final production icons when available.
