@@ -22,7 +22,7 @@ const LogPanel = () => {
   );
   const prevInternetRef = useRef(null);
   const prevModemReachable = useRef(null);
-  const prevFiberUp = useRef(null);
+  const prevLosRef = useRef(null);
   const prevInternetUp = useRef(null);
 
   // Auto-scroll to bottom (newest log) when logs change
@@ -54,57 +54,58 @@ const LogPanel = () => {
       });
     }
 
-    // DERIVED STATES
-    const modemReachable = status === "online" || status === "offline";
+    // DERIVED STATES — priority: LOS → modem reachability → WAN
+    const hasLOS =
+      data?.optical?.enable === 0 ||
+      (Number(data?.optical?.rxPower ?? 0) === 0 &&
+        Number(data?.optical?.txPower ?? 0) === 0);
 
-    const fiberUp =
-      data?.optical?.temperature !== null &&
-      Number(data?.optical?.temperature) > 0;
+    const modemReachable =
+      status !== "error" && error !== "LOCAL_NETWORK_DOWN";
 
-    const internetUp = Boolean(data?.wan?.connected);
+    const internetUp = !hasLOS && Boolean(data?.wan?.connected);
 
-    // MODEM REACHABILITY
+    // 1. LOS (Loss of Signal) — most critical
+    if (prevLosRef.current === null) {
+      prevLosRef.current = hasLOS;
+    } else if (prevLosRef.current !== hasLOS) {
+      newLogs.push({
+        type: hasLOS ? "error" : "success",
+        text: hasLOS
+          ? "LOS (Loss of Signal) - Physical fiber connection to ISP lost"
+          : "LOS cleared - Fiber signal restored",
+        timestamp,
+      });
+      prevLosRef.current = hasLOS;
+    }
+
+    // 2. Modem reachability
     if (prevModemReachable.current === null) {
       prevModemReachable.current = modemReachable;
     } else if (prevModemReachable.current !== modemReachable) {
       newLogs.push({
-        type: modemReachable ? "success" : "offline",
+        type: modemReachable ? "success" : "error",
         text: modemReachable
-          ? "Modem reachable"
-          : "Modem unreachable (local connection lost)",
+          ? "Modem connection restored"
+          : "Modem unreachable - Local network connection lost",
         timestamp,
       });
-
       prevModemReachable.current = modemReachable;
     }
 
-    // FIBER / LOS
-    if (prevFiberUp.current === null) {
-      prevFiberUp.current = fiberUp;
-    } else if (prevFiberUp.current !== fiberUp) {
-      newLogs.push({
-        type: fiberUp ? "success" : "error",
-        text: fiberUp
-          ? "Fiber signal restored"
-          : "Fiber signal lost (LOS detected)",
-        timestamp,
-      });
-
-      prevFiberUp.current = fiberUp;
-    }
-
-    // INTERNET STATUS
+    // 3. WAN / Internet (only when no LOS)
     if (prevInternetUp.current === null) {
       prevInternetUp.current = internetUp;
     } else if (prevInternetUp.current !== internetUp) {
-      newLogs.push({
-        type: internetUp ? "success" : "error",
-        text: internetUp
-          ? "Internet connection restored"
-          : "Internet connection lost",
-        timestamp,
-      });
-
+      if (!hasLOS) {
+        newLogs.push({
+          type: internetUp ? "success" : "error",
+          text: internetUp
+            ? "Internet connection restored"
+            : "Internet disconnected - WAN connection lost",
+          timestamp,
+        });
+      }
       prevInternetUp.current = internetUp;
     }
 
@@ -143,7 +144,7 @@ const LogPanel = () => {
 
     // PASSIVE STATUS SNAPSHOT
     const hasIssues =
-      !modemReachable || !fiberUp || !internetUp || status === "error";
+      !modemReachable || hasLOS || !internetUp || status === "error";
 
     if (!hasIssues && newLogs.length === 0 && !loading) {
       newLogs.push({
