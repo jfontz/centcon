@@ -114,13 +114,18 @@ class ModemApiClient {
   /**
    * Parse optical transceiver information
    * @param {Object} opticalInfo - Optical module information
-   * @returns {Object} Object with temperature in Celsius
+   * @returns {Object} Object with temperature, enable, txPower, rxPower, voltage, biasCurrent
    */
   parseOptical(opticalInfo) {
     return {
       temperature: (
         (opticalInfo.TransceiverTemperature || 0) / ModemApiClient.TEMP_DIVISOR
       ).toFixed(2),
+      enable: opticalInfo.Enable ?? 0,
+      txPower: opticalInfo.TXPower ?? 0,
+      rxPower: opticalInfo.RXPower ?? 0,
+      voltage: opticalInfo.SupplyVottage ?? 0,
+      biasCurrent: opticalInfo.BiasCurrent ?? 0,
     };
   }
 

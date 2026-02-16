@@ -47,8 +47,14 @@ export const useModemData = (
 
         setData(modemData);
 
-        // Internet status
-        if (modemData?.wan?.connected) {
+        // LOS (Loss of Signal): both TX and RX power are 0
+        const hasLOS =
+          Number(modemData?.optical?.txPower ?? 0) === 0 &&
+          Number(modemData?.optical?.rxPower ?? 0) === 0;
+
+        if (hasLOS) {
+          setStatus("error");
+        } else if (modemData?.wan?.connected) {
           setStatus("online");
         } else {
           setStatus("offline");
@@ -78,9 +84,9 @@ export const useModemData = (
           return;
         }
 
-        // True application / server error
+        // Other fetch/parse errors — treat as modem unreachable
         setError(message);
-        setStatus("error");
+        setStatus("offline");
       } finally {
         setLoading(false);
         setRefreshing(false);

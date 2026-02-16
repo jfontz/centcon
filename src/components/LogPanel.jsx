@@ -20,9 +20,8 @@ const LogPanel = () => {
   const sortedLogs = [...merged].sort(
     (a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0)
   );
-  const prevInternetRef = useRef(null);
+  const prevLosRef = useRef(null);
   const prevModemReachable = useRef(null);
-  const prevFiberUp = useRef(null);
   const prevInternetUp = useRef(null);
 
   // Auto-scroll to bottom (newest log) when logs change
@@ -32,12 +31,27 @@ const LogPanel = () => {
     }
   }, [sortedLogs.length]);
 
-  // Add log entries based on modem data changes
+  // Add log entries based on modem data and error state
   useEffect(() => {
-    if (!data) return;
-
     const timestamp = new Date().toISOString();
     const newLogs = [];
+
+    // Modem unreachable (no data): log once and skip rest
+    const modemReachable = !error;
+    if (!data) {
+      if (error && prevModemReachable.current !== false) {
+        prevModemReachable.current = false;
+        newLogs.push({
+          type: "error",
+          text: "Modem unreachable - Cannot fetch data",
+          timestamp,
+        });
+      }
+      if (newLogs.length > 0) {
+        setLogs((prev) => [...prev, ...newLogs].slice(-50));
+      }
+      return;
+    }
 
     // INITIAL STARTUP
     if (logs.length === 0) {
@@ -46,7 +60,6 @@ const LogPanel = () => {
         text: "CENTCON Monitoring Started",
         timestamp,
       });
-
       newLogs.push({
         type: "navigate",
         text: `Connected to modem: ${data.device?.model || "Unknown"}`,
@@ -54,64 +67,60 @@ const LogPanel = () => {
       });
     }
 
-    // DERIVED STATES
-    const modemReachable = status === "online" || status === "offline";
+    // 1. LOS (Loss of Signal) Detection
+    const hasLOS =
+      Number(data?.optical?.txPower ?? 0) === 0 &&
+      Number(data?.optical?.rxPower ?? 0) === 0;
 
-    const fiberUp =
-      data?.optical?.temperature !== null &&
-      Number(data?.optical?.temperature) > 0;
+    if (prevLosRef.current === null) {
+      prevLosRef.current = hasLOS;
+    } else if (prevLosRef.current !== hasLOS) {
+      newLogs.push({
+        type: hasLOS ? "error" : "success",
+        text: hasLOS
+          ? "LOS (Loss of Signal) - Physical fiber connection lost"
+          : "LOS cleared - Fiber signal restored",
+        timestamp,
+      });
+      prevLosRef.current = hasLOS;
+    }
 
-    const internetUp = Boolean(data?.wan?.connected);
-
-    // MODEM REACHABILITY
+    // 2. Modem Reachability
     if (prevModemReachable.current === null) {
       prevModemReachable.current = modemReachable;
     } else if (prevModemReachable.current !== modemReachable) {
       newLogs.push({
-        type: modemReachable ? "success" : "offline",
+        type: modemReachable ? "success" : "error",
         text: modemReachable
-          ? "Modem reachable"
-          : "Modem unreachable (local connection lost)",
+          ? "Modem connection restored"
+          : "Modem unreachable - Cannot fetch data",
         timestamp,
       });
-
       prevModemReachable.current = modemReachable;
     }
 
-    // FIBER / LOS
-    if (prevFiberUp.current === null) {
-      prevFiberUp.current = fiberUp;
-    } else if (prevFiberUp.current !== fiberUp) {
-      newLogs.push({
-        type: fiberUp ? "success" : "error",
-        text: fiberUp
-          ? "Fiber signal restored"
-          : "Fiber signal lost (LOS detected)",
-        timestamp,
-      });
+    // 3. Internet Connection (WAN) — only when modem reachable and no LOS
+    const internetUp =
+      modemReachable && !hasLOS && Boolean(data?.wan?.connected);
 
-      prevFiberUp.current = fiberUp;
-    }
-
-    // INTERNET STATUS
     if (prevInternetUp.current === null) {
       prevInternetUp.current = internetUp;
     } else if (prevInternetUp.current !== internetUp) {
-      newLogs.push({
-        type: internetUp ? "success" : "error",
-        text: internetUp
-          ? "Internet connection restored"
-          : "Internet connection lost",
-        timestamp,
-      });
-
+      if (modemReachable && !hasLOS) {
+        newLogs.push({
+          type: internetUp ? "success" : "error",
+          text: internetUp
+            ? "Internet connection restored"
+            : "Internet connection lost - WAN disconnected",
+          timestamp,
+        });
+      }
       prevInternetUp.current = internetUp;
     }
 
     // DEVICE HEALTH WARNINGS
     if (data.device) {
       const { cpuUsage, memoryUsage } = data.device;
-
       if (cpuUsage > 80) {
         newLogs.push({
           type: "warning",
@@ -119,7 +128,6 @@ const LogPanel = () => {
           timestamp,
         });
       }
-
       if (memoryUsage > 90) {
         newLogs.push({
           type: "warning",
@@ -141,11 +149,15 @@ const LogPanel = () => {
       }
     }
 
-    // PASSIVE STATUS SNAPSHOT
-    const hasIssues =
-      !modemReachable || !fiberUp || !internetUp || status === "error";
+    // STATUS CHECK — only when everything is OK
+    const hasAnyIssues =
+      !modemReachable ||
+      hasLOS ||
+      !internetUp ||
+      status === "error" ||
+      status === "offline";
 
-    if (!hasIssues && newLogs.length === 0 && !loading) {
+    if (!hasAnyIssues && newLogs.length === 0 && !loading) {
       newLogs.push({
         type: "success",
         text: "Status check — All systems operational",
@@ -157,23 +169,7 @@ const LogPanel = () => {
     if (newLogs.length > 0) {
       setLogs((prev) => [...prev, ...newLogs].slice(-50));
     }
-  }, [data, status]);
-
-  // Error logging
-  useEffect(() => {
-    if (error) {
-      setLogs((prev) =>
-        [
-          ...prev,
-          {
-            type: "error",
-            text: `Error: ${error}`,
-            timestamp: new Date().toISOString(),
-          },
-        ].slice(-50),
-      );
-    }
-  }, [error]);
+  }, [data, status, error, loading]);
 
   const clearLogs = () => {
     setLogs([]);
