@@ -20,7 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from state_manager import get_state, subscribe, unsubscribe, event_stream
-from selenium_worker import run_reboot_workflow
+from selenium_reboot import run_reboot_workflow
 from selenium_login import run_login_workflow
 
 # Prevent multiple simultaneous reboot processes
