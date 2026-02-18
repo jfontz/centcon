@@ -22,9 +22,9 @@ from state_manager import emit, reset_state
 ROOT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT_DIR / ".env")
 
-ROUTER_URL = os.getenv("REBOOT_MODEM_URL")
-USERNAME = os.getenv("REBOOT_USERNAME")
-PASSWORD = os.getenv("REBOOT_PASSWORD")
+ROUTER_URL = os.getenv("MODEM_URL")
+USERNAME = os.getenv("MODEM_USERNAME")
+PASSWORD = os.getenv("MODEM_PASSWORD")
 
 if not ROUTER_URL or not USERNAME or not PASSWORD:
     raise RuntimeError("Missing router credentials in .env")
