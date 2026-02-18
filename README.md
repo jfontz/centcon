@@ -10,11 +10,11 @@ Real-time modem monitoring dashboard with automated router reboot functionality.
 
 > ⚠️ **The Selenium automation is built specifically for one modem model.** It uses custom navigation logic tailored to that device's admin interface and will not work correctly on other modems without modification.
 
-| Field            | Value               |
-| ---------------- | ------------------- |
-| ISP              | Globe (Philippines) |
-| Device Model     | G-1426G-A           |
-| Software Version | 3TN00802HJLI90      |
+| Field | Value |
+|-------|-------|
+| ISP | Globe (Philippines) |
+| Device Model | G-1426G-A |
+| Software Version | 3TN00802HJLI90 |
 
 If you have a different modem model or firmware version, the reboot automation sequence will likely fail or navigate incorrectly. You would need to update the Selenium logic in the backend to match your modem's admin interface.
 
@@ -24,12 +24,12 @@ If you have a different modem model or firmware version, the reboot automation s
 
 Before you begin, install the following software:
 
-| Tool          | Version | Download                          | Verify                  |
-| ------------- | ------- | --------------------------------- | ----------------------- |
-| Node.js       | 18+     | https://nodejs.org/               | `node --version`        |
-| Python        | 3.10+   | https://www.python.org/downloads/ | `python --version`      |
-| Google Chrome | Latest  | https://www.google.com/chrome/    | Open `chrome://version` |
-| Git           | Any     | https://git-scm.com/downloads     | `git --version`         |
+| Tool | Version | Download | Verify |
+|------|---------|----------|--------|
+| Node.js | 18+ | https://nodejs.org/ | `node --version` |
+| Python | 3.10+ | https://www.python.org/downloads/ | `python --version` |
+| Google Chrome | Latest | https://www.google.com/chrome/ | Open `chrome://version` |
+| Git | Any | https://git-scm.com/downloads | `git --version` |
 
 > **Windows note:** When installing Python, check **"Add Python to PATH"** on the first screen of the installer.
 
@@ -58,14 +58,14 @@ copy .env.example .env
 
 Open `.env` and set the following required values:
 
-| Variable         | Description                                                                  |
-| ---------------- | ---------------------------------------------------------------------------- |
-| `MODEM_IP`       | Your modem's local IP address (e.g. `192.168.0.1`)                           |
-| `MODEM_URL`      | Full URL to modem admin page (e.g. `http://192.168.0.1/`)                    |
-| `VITE_MODEM_IP`  | Same as `MODEM_IP` — used by the frontend                                    |
-| `MODEM_USERNAME` | Modem admin username                                                         |
-| `MODEM_PASSWORD` | Modem admin password                                                         |
-| `CENTCON_PIN`    | 4-character PIN (numeric or alphanumeric) to protect access to the dashboard |
+| Variable | Description |
+|----------|-------------|
+| `MODEM_IP` | Your modem's local IP address (e.g. `192.168.0.1`) |
+| `MODEM_URL` | Full URL to modem admin page (e.g. `http://192.168.0.1/`) |
+| `VITE_MODEM_IP` | Same as `MODEM_IP` — used by the frontend |
+| `MODEM_USERNAME` | Modem admin username |
+| `MODEM_PASSWORD` | Modem admin password |
+| `CENTCON_PIN` | PIN to protect access to the dashboard |
 
 All other values have sensible defaults and do not need to be changed for local development. See `.env.example` for the full list with descriptions.
 
@@ -143,7 +143,7 @@ Once both servers are running:
 
 1. Open `http://localhost:5173` — you should see the login screen. Enter the `CENTCON_PIN` you set in `.env`.
 2. Open `http://localhost:8000/docs` — you should see the FastAPI interactive API docs.
-3. On the dashboard, click **"Reboot Modem"** to test the full automation sequence. This will reboot your
+3. On the dashboard, click **"Reboot Modem"** to test the full automation sequence. This will log into your modem and trigger a real reboot — only do this if you're okay with a brief network interruption.
 
 ---
 
@@ -151,14 +151,40 @@ Once both servers are running:
 
 ```text
 centcon/
-├── .env               ← your local config (not committed)
-├── .env.example       ← template with all variables documented
+├── .env                        ← your local config (not committed)
+├── .env.example                ← template with all variables documented
+├── .gitignore
+├── index.html
 ├── package.json
-├── src/               ← React frontend source
+├── vite.config.js
+│
+├── src/                        ← React frontend source
+│   ├── App.jsx
+│   ├── main.jsx
+│   ├── index.css
+│   ├── assets/icons/           ← SVG icons + index.js barrel export
+│   ├── components/
+│   │   ├── buttons/            ← SystemControlButton
+│   │   ├── cards/              ← CPU, Memory, LAN, WiFi, etc.
+│   │   ├── header/             ← Header, StatusBadge, MetaInfo
+│   │   ├── log/                ← LogPanel subcomponents
+│   │   ├── modals/             ← RebootConfirmModal
+│   │   ├── ui/                 ← Shared layout primitives
+│   │   └── *.jsx               ← Top-level section components
+│   ├── context/                ← AuthContext, ModemContext
+│   ├── hooks/                  ← useModemData
+│   ├── pages/                  ← Login page
+│   ├── services/               ← authAPI, modemAPI
+│   └── utils/                  ← formatters, validators, helpers
+│
 └── backend/
-    ├── run.py
+    ├── run.py                  ← server entry point
+    ├── main.py                 ← FastAPI app + route definitions
+    ├── state_manager.py        ← SSE state + event emitter
+    ├── selenium_reboot.py      ← automated reboot workflow
+    ├── selenium_login.py       ← automated login workflow
     ├── requirements.txt
-    └── .venv/         ← Python virtual environment (not committed)
+    └── .venv/                  ← Python virtual environment (not committed)
 ```
 
 ---
@@ -173,21 +199,18 @@ Run `python -m pip install --upgrade pip` (or `python3 -m pip ...` on macOS/Linu
 
 **`Cannot activate virtual environment` (Windows PowerShell)**
 Run PowerShell as Administrator and allow script execution:
-
 ```powershell
 Set-ExecutionPolicy RemoteSigned
 ```
 
 **`ChromeDriver error` or `Chrome binary not found`**
 Ensure Google Chrome is installed in its default location:
-
 - Windows: `C:\Program Files\Google\Chrome\Application\chrome.exe`
 - macOS: `/Applications/Google Chrome.app`
 - Linux: `/usr/bin/google-chrome`
 
 **`Module not found` errors**
 Make sure `(.venv)` is visible in your terminal prompt, then re-run:
-
 ```bash
 pip install -r requirements.txt
 ```
