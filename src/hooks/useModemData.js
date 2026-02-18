@@ -4,9 +4,11 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { modemApi } from "../services/modemAPI";
 
 export const useModemData = (
-  autoRefreshInterval = 60000,
   rebootState = { state: "IDLE" }
 ) => {
+
+  const autoRefreshInterval =
+    Number(import.meta.env.VITE_AUTO_REFRESH_INTERVAL) || 60000;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
