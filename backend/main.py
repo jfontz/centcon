@@ -13,11 +13,13 @@ if _env.exists():
 
 import asyncio
 import json
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 from state_manager import get_state, subscribe, unsubscribe, event_stream
 from selenium_reboot import run_reboot_workflow
@@ -131,3 +133,28 @@ async def events():
 async def state():
     """Current reboot state (for polling if needed)."""
     return get_state()
+
+
+class PinVerifyRequest(BaseModel):
+    pin: str
+
+
+CENTCON_PIN = os.environ["CENTCON_PIN"]  # raises KeyError if missing
+
+@app.post("/verify-pin")
+async def verify_pin(request: PinVerifyRequest):
+    """Verify PIN for CENTCON access."""
+    if request.pin == CENTCON_PIN:
+        return {"ok": True, "message": "PIN verified"}
+    return {"ok": False, "message": "Invalid PIN"}
+
+
+
+@app.get("/auth-config")
+async def auth_config():
+    """Return authentication configuration."""
+    show_login = os.getenv("CENTCON_SHOW_LOGIN", "true").lower() == "true"
+    return {
+        "showLogin": show_login,
+        "message": "Login enabled" if show_login else "Login disabled"
+    }
