@@ -5,8 +5,10 @@ import DeviceInformation from "./components/DeviceInformation";
 import LogPanel from "./components/LogPanel";
 import ConnectedDevices from "./components/ConnectedDevices";
 import { ModemProvider } from "./context/ModemContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import Login from "./pages/Login";
 
-function App() {
+function Dashboard() {
   return (
     <ModemProvider>
       <MainLayout>
@@ -47,6 +49,35 @@ function App() {
         </div>
       </MainLayout>
     </ModemProvider>
+  );
+}
+
+function AppContent() {
+  const { isAuthenticated, showLogin, configLoaded } = useAuth();
+
+  // Show loading while fetching config
+  if (!configLoaded) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  // If login is disabled OR user is authenticated, show dashboard
+  if (!showLogin || isAuthenticated) {
+    return <Dashboard />;
+  }
+
+  // Otherwise show login page
+  return <Login />;
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
