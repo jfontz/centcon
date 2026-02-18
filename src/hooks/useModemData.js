@@ -3,10 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { modemApi } from "../services/modemAPI";
 
-export const useModemData = (
-  rebootState = { state: "IDLE" }
-) => {
-
+export const useModemData = (rebootState = { state: "IDLE" }) => {
   const autoRefreshInterval =
     Number(import.meta.env.VITE_AUTO_REFRESH_INTERVAL) || 60000;
   const [data, setData] = useState(null);
@@ -28,77 +25,74 @@ export const useModemData = (
     "CHECKING_CONNECTION",
   ].includes(rebootState?.state);
 
-  const fetchData = useCallback(
-    async () => {
-      // Skip fetch if rebooting
-      if (isRebooting) {
-        console.log("Auto-refresh paused during reboot");
+  const fetchData = useCallback(async () => {
+    // Skip fetch if rebooting
+    if (isRebooting) {
+      console.log("Auto-refresh paused during reboot");
+      return;
+    }
+
+    try {
+      if (isInitialLoad.current) {
+        setLoading(true);
+      } else {
+        setRefreshing(true);
+      }
+
+      setError(null);
+
+      const modemData = await modemApi.getData();
+
+      setData(modemData);
+
+      // LOS (Loss of Signal): both TX and RX power are 0
+      const hasLOS =
+        Number(modemData?.optical?.txPower ?? 0) === 0 &&
+        Number(modemData?.optical?.rxPower ?? 0) === 0;
+
+      if (hasLOS) {
+        setStatus("error");
+      } else if (modemData?.wan?.connected) {
+        setStatus("online");
+      } else {
+        setStatus("offline");
+      }
+
+      setLastUpdated(new Date());
+
+      if (isInitialLoad.current) {
+        isInitialLoad.current = false;
+      }
+    } catch (err) {
+      console.error("Error fetching modem data:", err);
+
+      const message = err?.message || "";
+
+      // Browser-level network failure (WiFi/Ethernet unplugged)
+      if (err instanceof TypeError) {
+        setError("LOCAL_NETWORK_DOWN");
+        setStatus("offline");
+        setData(null);
         return;
       }
 
-      try {
-        if (isInitialLoad.current) {
-          setLoading(true);
-        } else {
-          setRefreshing(true);
-        }
-
-        setError(null);
-
-        const modemData = await modemApi.getData();
-
-        setData(modemData);
-
-        // LOS (Loss of Signal): both TX and RX power are 0
-        const hasLOS =
-          Number(modemData?.optical?.txPower ?? 0) === 0 &&
-          Number(modemData?.optical?.rxPower ?? 0) === 0;
-
-        if (hasLOS) {
-          setStatus("error");
-        } else if (modemData?.wan?.connected) {
-          setStatus("online");
-        } else {
-          setStatus("offline");
-        }
-
-        setLastUpdated(new Date());
-
-        if (isInitialLoad.current) {
-          isInitialLoad.current = false;
-        }
-      } catch (err) {
-        console.error("Error fetching modem data:", err);
-
-        const message = err?.message || "";
-
-        // Browser-level network failure (WiFi/Ethernet unplugged)
-        if (err instanceof TypeError) {
-          setError("LOCAL_NETWORK_DOWN");
-          setStatus("offline");
-          setData(null);
-          return;
-        }
-
-        // Proxy alive but modem unreachable
-        if (message.includes("HTTP 500")) {
-          setError("Modem unreachable");
-          setStatus("offline");
-          setData(null);
-          return;
-        }
-
-        // Other fetch/parse errors — treat as modem unreachable
-        setError(message);
+      // Proxy alive but modem unreachable
+      if (message.includes("HTTP 500")) {
+        setError("Modem unreachable");
         setStatus("offline");
         setData(null);
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
+        return;
       }
-    },
-    [isRebooting]
-  );
+
+      // Other fetch/parse errors — treat as modem unreachable
+      setError(message);
+      setStatus("offline");
+      setData(null);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [isRebooting]);
 
   // Initial fetch
   useEffect(() => {
