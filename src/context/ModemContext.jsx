@@ -15,10 +15,10 @@ const initialRebootState = {
   countdown: null,
 };
 
-export const ModemProvider = ({ children, refreshInterval }) => {
+export const ModemProvider = ({ children }) => {
   const [rebootState, setRebootState] = useState(initialRebootState);
   const [rebootLogs, setRebootLogs] = useState([]);
-  const modemState = useModemData(refreshInterval, rebootState);
+  const modemState = useModemData(rebootState);
 
   useEffect(() => {
     const eventSource = connectToRebootEvents((event) => {
