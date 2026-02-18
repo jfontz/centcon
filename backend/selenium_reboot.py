@@ -14,10 +14,12 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+from webdriver_manager.chrome import ChromeDriverManager
 
 from state_manager import emit, reset_state
 
@@ -66,7 +68,7 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
 
-        driver = webdriver.Chrome(options=options)
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         driver.implicitly_wait(wait_time)
 
         # 1. Navigate to router login page
@@ -131,7 +133,7 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         _emit_sync({"type": "state", "state": "WAITING", "message": "Waiting for device to reboot (120 seconds)", "progress": 80})
         _emit_sync({"type": "countdown", "countdown": COUNTDOWN_SECONDS})
 
-        # 10. Quit driver in background thread (non-blocking) - kept alive for 10 secs for the modem to sucessfully receive the command
+        # 10. Quit driver in background thread (non-blocking) - kept alive for 10 secs for the modem to successfully receive the command
         def _quit_driver_delayed(drv):
             time.sleep(10)  # keep driver alive for 10 seconds
             try:
@@ -211,5 +213,5 @@ async def run_reboot_workflow() -> None:
 
     await emit({"type": "state", "state": "FAILED", "message": "Failed to reconnect after 2 minutes", "progress": 0})
     await emit({"type": "log", "level": "error", "message": "Failed to reconnect after 2 minutes", "timestamp": _log_ts()})
-    
+
 # TODO: Review icon mappings and replace placeholders with final production icons when available.

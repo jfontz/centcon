@@ -11,10 +11,12 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
 
 from state_manager import emit, reset_state
 
@@ -61,7 +63,7 @@ def _run_login_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
-        driver = webdriver.Chrome(options=options)
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         driver.implicitly_wait(wait_time)
 
         _log("info", "Login process started")
@@ -133,6 +135,5 @@ async def run_login_workflow() -> None:
 
     future = loop.run_in_executor(executor, lambda: _run_login_blocking(loop))
     await future
-
 
 # TODO: Review icon mappings and replace placeholders with final production icons when available.
