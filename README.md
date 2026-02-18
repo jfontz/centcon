@@ -191,3 +191,5 @@ Ensure Google Chrome is installed in the default application directory.
 **"Module not found" errors**
 
 Ensure the virtual environment is activated (`(.venv)` is visible) and run `pip install -r requirements.txt` again.
+
+<!-- TODO: Update README for the latest (or planned) "How to run" commmands -->
