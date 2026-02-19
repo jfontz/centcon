@@ -1,3 +1,4 @@
+import { useState } from "react";
 import SectionContainer from "./ui/SectionContainer";
 import SystemControlButton from "./buttons/SystemControlButton";
 import { useModem } from "../context/ModemContext";
@@ -20,12 +21,23 @@ const controls = [
 
 const SystemControls = () => {
   const { rebootState, triggerReboot, triggerLogin } = useModem();
+  const [loginInProgress, setLoginInProgress] = useState(false);
+  const [rebootPending, setRebootPending] = useState(false); // ← Lift to parent
 
   const handleLogin = async () => {
+    if (loginInProgress) return;
+
+    setLoginInProgress(true);
+
     try {
       await triggerLogin();
+
+      setTimeout(() => {
+        setLoginInProgress(false);
+      }, 3000);
     } catch (error) {
       console.error("Login failed:", error);
+      setLoginInProgress(false);
     }
   };
 
@@ -42,6 +54,9 @@ const SystemControls = () => {
               onClick={isReboot ? undefined : handleLogin}
               rebootState={rebootState}
               triggerReboot={isReboot ? triggerReboot : undefined}
+              loginInProgress={!isReboot ? loginInProgress : undefined}
+              rebootPending={rebootPending}
+              setRebootPending={setRebootPending}
             />
           ))}
         </div>
@@ -51,7 +66,3 @@ const SystemControls = () => {
 };
 
 export default SystemControls;
-
-// TODO: Ensure the button provides immediate visual feedback when pressed, 
-// so users don’t click it multiple times and accidentally open multiple 
-// windows or start multiple processes.
