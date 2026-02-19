@@ -51,3 +51,7 @@ const SystemControls = () => {
 };
 
 export default SystemControls;
+
+// TODO: Ensure the button provides immediate visual feedback when pressed, 
+// so users don’t click it multiple times and accidentally open multiple 
+// windows or start multiple processes.
