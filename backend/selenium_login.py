@@ -12,7 +12,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -63,7 +63,9 @@ def _run_login_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        driver = webdriver.Chrome(
+            service=Service(ChromeDriverManager().install()), options=options
+        )
         driver.implicitly_wait(wait_time)
 
         _log("info", "Login process started")
@@ -101,13 +103,6 @@ def _run_login_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
             _log("info", "Login successful - Browser left open for manual control")
         except TimeoutException:
             _log("error", "Login failed - Invalid credentials or timeout")
-            # _emit_sync(
-            #     {
-            #         "type": "state",
-            #         "state": "FAILED",
-            #         "message": "Login failed",
-            #     }
-            # )
             if driver:
                 driver.quit()
             return
@@ -115,11 +110,42 @@ def _run_login_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         # DO NOT quit driver - leave browser open for user
         # User will manually close the browser when done
 
-    except Exception as e:
-        _log("error", str(e))
-        _emit_sync({"type": "state", "state": "FAILED", "message": str(e)})
+    except WebDriverException as e:
+        # Handle browser-related errors (e.g., user closed browser)
+        error_msg = str(e).lower()
+
+        # Check if user closed the browser (various error messages)
+        browser_closed_indicators = [
+            "invalid session id",
+            "browser has closed",
+            "no such window",
+            "target window already closed",
+            "web view not found",
+        ]
+
+        if any(indicator in error_msg for indicator in browser_closed_indicators):
+            _log("warning", "Login cancelled - Browser was closed by user")
+        else:
+            # Strip stacktrace for cleaner error message
+            clean_msg = str(e).split("Stacktrace:")[0].strip()
+            _log("error", f"Browser error: {clean_msg}")
+
         if driver:
-            driver.quit()
+            try:
+                driver.quit()
+            except:
+                pass
+
+    except Exception as e:
+        # Handle other errors with cleaner message
+        error_msg = str(e).split("Stacktrace:")[0].strip()
+        _log("error", f"Login failed: {error_msg}")
+
+        if driver:
+            try:
+                driver.quit()
+            except:
+                pass
 
 
 async def run_login_workflow() -> None:
@@ -135,5 +161,5 @@ async def run_login_workflow() -> None:
 
     future = loop.run_in_executor(executor, lambda: _run_login_blocking(loop))
     await future
-
+    
 # TODO: Review icon mappings and replace placeholders with final production icons when available.
