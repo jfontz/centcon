@@ -1,6 +1,6 @@
-# Centcon
+# CENTCON
 
-Real-time modem/router monitoring dashboard with automated modem/router functionality.
+Real-time modem/router monitoring dashboard with one-click automated reboot and assisted modem/router login.
 
 **Stack:** React (Vite) frontend · FastAPI backend · Selenium automation · Server-Sent Events
 
