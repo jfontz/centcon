@@ -173,3 +173,6 @@ async def auth_config():
         "showLogin": show_login,
         "message": "Login enabled" if show_login else "Login disabled",
     }
+
+
+# TODO: Add copncurrently to run multiple commands to launch CENTCON faster.
