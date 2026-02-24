@@ -68,7 +68,7 @@ def _run_login_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         )
         driver.implicitly_wait(wait_time)
 
-        _log("info", "Login process started")
+        _log("header", "Login process started")
 
         # Navigate to router login page
         driver.get(ROUTER_URL)
@@ -98,7 +98,7 @@ def _run_login_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
             WebDriverWait(driver, wait_time).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "logout-btn"))
             )
-            _log("info", "Login successful - Browser left open for manual control")
+            _log("success", "Login successful - Browser left open for manual control")
         except TimeoutException:
             _log("error", "Login failed - Invalid credentials or timeout")
             if driver:
