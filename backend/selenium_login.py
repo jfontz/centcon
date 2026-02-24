@@ -86,8 +86,6 @@ def _run_login_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         elem.clear()
         elem.send_keys(PASSWORD)
 
-        _log("info", "Credentials entered")
-
         # Click login button
         WebDriverWait(driver, wait_time).until(
             EC.element_to_be_clickable((By.ID, "login"))
