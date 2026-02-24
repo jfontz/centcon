@@ -117,7 +117,6 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         WebDriverWait(driver, wait_time).until(
             EC.element_to_be_clickable((By.ID, "reboot"))
         ).click()
-        _log("success", "Reboot button clicked")
         _emit_sync({"type": "state", "state": "REBOOTING", "message": "Reboot button clicked", "progress": 70})
 
         # 8. Accept alert
