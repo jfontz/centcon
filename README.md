@@ -1,60 +1,83 @@
-# Centcon
+# CENTCON
 
-Real-time modem monitoring dashboard with automated router reboot functionality.
+Real-time modem/router monitoring dashboard with one-click automated reboot and assisted modem/router login.
 
-**Stack:** React (Vite) frontend + FastAPI backend + Selenium automation + Server-Sent Events
+**Stack:** React (Vite) frontend · FastAPI backend · Selenium automation · Server-Sent Events
+
+---
+
+## Compatibility
+
+> ⚠️ **The Selenium automation is built specifically for one modem model.** It uses custom navigation logic tailored to that device's admin interface and will not work correctly on other modems without modification.
+
+| Field | Value |
+|-------|-------|
+| ISP | Globe (Philippines) |
+| Device Model | G-1426G-A |
+| Software Version | 3TN00802HJLI90 |
+
+If you have a different modem model or firmware version, the reboot automation sequence will likely fail or navigate incorrectly. You would need to update the Selenium logic in the backend to match your modem's admin interface.
+
+---
+
+## Prerequisites
+
+Before you begin, install the following software:
+
+| Tool | Version | Download | Verify |
+|------|---------|----------|--------|
+| Node.js | 18+ | https://nodejs.org/ | `node --version` |
+| Python | 3.10+ | https://www.python.org/downloads/ | `python --version` |
+| Google Chrome | Latest | https://www.google.com/chrome/ | Open `chrome://version` |
+| Git | Any | https://git-scm.com/downloads | `git --version` |
+
+> **Windows note:** When installing Python, check **"Add Python to PATH"** on the first screen of the installer.
+
+---
 
 ## Installation
 
-### Step 1: Install Prerequisites
-
-Ensure the following software is installed on your system:
-
-**Node.js 18+**
-
-* Download: https://nodejs.org/
-* Verify command: `node --version`
-
-**Python 3.10+**
-
-* Download: https://www.python.org/downloads/
-* **Note for Windows users:** Ensure "Add Python to PATH" is checked during installation.
-* Verify command: `python --version` or `python3 --version`
-
-**Google Chrome**
-
-* Download: https://www.google.com/chrome/
-* Verify: Open Chrome and navigate to `chrome://version`
-
-**Git**
-
-* Download: https://git-scm.com/downloads
-* Verify command: `git --version`
-
-### Step 2: Clone the Repository
+### 1. Clone the Repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/jfontz/centcon
 cd centcon
 ```
 
-### Step 3: Setup Frontend
+### 2. Configure Environment Variables
 
-Open a terminal in the project root and run the following:
+Copy the example environment file and fill in your values:
 
 ```bash
-# Install dependencies
-npm install
+# macOS/Linux
+cp .env.example .env
 
-# Start development server
-npm run dev
+# Windows
+copy .env.example .env
 ```
 
-The frontend will run at `http://localhost:5173`. Keep this terminal open and open a new terminal for the backend.
+Open `.env` and set the following required values:
 
-### Step 4: Setup Backend
+| Variable | Description |
+|----------|-------------|
+| `MODEM_IP` | Your modem's local IP address (e.g. `192.168.0.1`) |
+| `MODEM_URL` | Full URL to modem admin page (e.g. `http://192.168.0.1/`) |
+| `VITE_MODEM_IP` | Same as `MODEM_IP` — used by the frontend |
+| `MODEM_USERNAME` | Modem admin username |
+| `MODEM_PASSWORD` | Modem admin password |
+| `CENTCON_PIN` | PIN to protect access to the dashboard |
 
-#### A. Create Python Virtual Environment
+All other values have sensible defaults and do not need to be changed for local development. See `.env.example` for the full list with descriptions.
+
+### 3. Install Frontend Dependencies
+
+From the project root:
+
+```bash
+npm install
+```
+
+### 4. Set Up the Python Backend
 
 Navigate to the backend directory and create a virtual environment:
 
@@ -65,29 +88,18 @@ python -m venv .venv
 
 Activate the virtual environment:
 
-* **Windows (Command Prompt):**
-
-```cmd
-.venv\Scripts\activate
-```
-
-* **Windows (PowerShell):**
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-* **macOS/Linux:**
-
 ```bash
+# Windows (Command Prompt)
+.venv\Scripts\activate
+
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+
+# macOS/Linux
 source .venv/bin/activate
 ```
 
-Ensure `(.venv)` appears in your terminal prompt before proceeding.
-
-#### B. Install Python Dependencies
-
-With the virtual environment active, install the required packages:
+You should see `(.venv)` appear in your terminal prompt. Then install dependencies:
 
 ```bash
 pip install -r requirements.txt
@@ -95,99 +107,113 @@ pip install -r requirements.txt
 
 This installs FastAPI, Selenium, webdriver-manager, and uvicorn. ChromeDriver is managed automatically.
 
-#### C. Configure Environment Variables
-
-Create a file named `.env` in the project root directory (one level up from the `backend/` folder).
-
-**File Structure:**
-
-```text
-centcon/
-├── .env
-├── backend/
-├── src/
-└── package.json
-```
-
-**.env content:**
-
-```ini
-REBOOT_USERNAME=admin
-REBOOT_PASSWORD=your_router_password_here
-REBOOT_MODEM_URL=http://192.168.254.254/
-SELENIUM_HEADLESS=false
-```
-
-#### D. Start Backend Server
-
-Ensure you are in the `backend/` directory with the virtual environment active:
-
-```bash
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-
-The backend will run at `http://localhost:8000`.
-
-### Step 5: Verification
-
-1. **Frontend:** Open `http://localhost:5173` in your browser.
-2. **Backend Documentation:** Open `http://localhost:8000/docs` to verify the API is running.
-3. **Functionality Test:** Click the "Reboot Router" button in the application interface to test the automation sequence.
-
 ---
 
-## Quick Reference
+## Running the App
 
-**Start Frontend:**
+The frontend and backend must be running at the same time — use two separate terminal windows.
+
+**Terminal 1 — Frontend** (from project root):
 
 ```bash
 npm run dev
 ```
 
-**Start Backend:**
+Runs at `http://localhost:5173`
+
+**Terminal 2 — Backend** (from `backend/` directory, with venv active):
 
 ```bash
-cd backend
-# Activate virtual environment (Windows)
-.venv\Scripts\activate
-# Activate virtual environment (macOS/Linux)
-source .venv/bin/activate
+source .venv/bin/activate   # macOS/Linux
+# or
+.venv\Scripts\activate      # Windows
 
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python run.py
 ```
 
-To stop servers, press `Ctrl+C` in the respective terminals.
+Runs at `http://localhost:8000`
+
+To stop either server, press `Ctrl+C` in its terminal.
+
+---
+
+## Verifying the Setup
+
+Once both servers are running:
+
+1. Open `http://localhost:5173` — you should see the login screen. Enter the `CENTCON_PIN` you set in `.env`.
+2. Open `http://localhost:8000/docs` — you should see the FastAPI interactive API docs.
+3. On the dashboard, click **"Reboot Modem"** to test the full automation sequence. This will log into your modem and trigger a real reboot — only do this if you're okay with a brief network interruption.
+
+---
+
+## Project Structure
+
+```text
+centcon/
+├── .env                        ← your local config (not committed)
+├── .env.example                ← template with all variables documented
+├── .gitignore
+├── index.html
+├── package.json
+├── vite.config.js
+│
+├── src/                        ← React frontend source
+│   ├── App.jsx
+│   ├── main.jsx
+│   ├── index.css
+│   ├── assets/icons/           ← SVG icons + index.js barrel export
+│   ├── components/
+│   │   ├── buttons/            ← SystemControlButton
+│   │   ├── cards/              ← CPU, Memory, LAN, WiFi, etc.
+│   │   ├── header/             ← Header, StatusBadge, MetaInfo
+│   │   ├── log/                ← LogPanel subcomponents
+│   │   ├── modals/             ← RebootConfirmModal
+│   │   ├── ui/                 ← Shared layout primitives
+│   │   └── *.jsx               ← Top-level section components
+│   ├── context/                ← AuthContext, ModemContext
+│   ├── hooks/                  ← useModemData
+│   ├── pages/                  ← Login page
+│   ├── services/               ← authAPI, modemAPI
+│   └── utils/                  ← formatters, validators, helpers
+│
+└── backend/
+    ├── run.py                  ← server entry point
+    ├── main.py                 ← FastAPI app + route definitions
+    ├── state_manager.py        ← SSE state + event emitter
+    ├── selenium_reboot.py      ← automated reboot workflow
+    ├── selenium_login.py       ← automated login workflow
+    ├── requirements.txt
+    └── .venv/                  ← Python virtual environment (not committed)
+```
 
 ---
 
 ## Troubleshooting
 
-**"python: command not found"**
+**`python: command not found`**
+Try `python3` instead. On Windows, reinstall Python and ensure "Add to PATH" is checked.
 
-* Windows: Try `python3` or reinstall Python ensuring "Add to PATH" is selected.
-* macOS/Linux: Use `python3`.
+**`pip: command not found`**
+Run `python -m pip install --upgrade pip` (or `python3 -m pip ...` on macOS/Linux).
 
-**"pip: command not found"**
-
-* Windows: `python -m pip install --upgrade pip`
-* macOS/Linux: `python3 -m pip install --upgrade pip`
-
-**"Cannot activate virtual environment" (Windows PowerShell)**
-
-Run the following command as Administrator to allow script execution:
-
+**`Cannot activate virtual environment` (Windows PowerShell)**
+Run PowerShell as Administrator and allow script execution:
 ```powershell
 Set-ExecutionPolicy RemoteSigned
 ```
 
-**"ChromeDriver error" or "Chrome binary not found"**
+**`ChromeDriver error` or `Chrome binary not found`**
+Ensure Google Chrome is installed in its default location:
+- Windows: `C:\Program Files\Google\Chrome\Application\chrome.exe`
+- macOS: `/Applications/Google Chrome.app`
+- Linux: `/usr/bin/google-chrome`
 
-Ensure Google Chrome is installed in the default application directory.
+**`Module not found` errors**
+Make sure `(.venv)` is visible in your terminal prompt, then re-run:
+```bash
+pip install -r requirements.txt
+```
 
-* Windows: `C:\Program Files\Google\Chrome\Application\chrome.exe`
-* macOS: `/Applications/Google Chrome.app`
-* Linux: `/usr/bin/google-chrome`
-
-**"Module not found" errors**
-
-Ensure the virtual environment is activated (`(.venv)` is visible) and run `pip install -r requirements.txt` again.
+**Login page asks for a PIN but I didn't set one**
+Open your `.env` file and ensure `CENTCON_PIN` is set to a value. Restart the backend after saving.

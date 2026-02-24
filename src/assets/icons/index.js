@@ -20,6 +20,7 @@ import temperature from "./temperature.svg";
 import wifi from "./wifi.svg";
 import warning from "./warning.svg";
 import error from "./error.svg";
+import login from "./login.svg";
 
 export {
   check,
@@ -43,4 +44,5 @@ export {
   wifi,
   warning,
   error,
+  login,
 };

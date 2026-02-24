@@ -11,10 +11,12 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.chrome.service import Service
+from selenium.common.exceptions import TimeoutException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
 
 from state_manager import emit, reset_state
 
@@ -22,9 +24,9 @@ from state_manager import emit, reset_state
 ROOT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT_DIR / ".env")
 
-ROUTER_URL = os.getenv("REBOOT_MODEM_URL")
-USERNAME = os.getenv("REBOOT_USERNAME")
-PASSWORD = os.getenv("REBOOT_PASSWORD")
+ROUTER_URL = os.getenv("MODEM_URL")
+USERNAME = os.getenv("MODEM_USERNAME")
+PASSWORD = os.getenv("MODEM_PASSWORD")
 
 if not ROUTER_URL or not USERNAME or not PASSWORD:
     raise RuntimeError("Missing router credentials in .env")
@@ -61,10 +63,12 @@ def _run_login_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
-        driver = webdriver.Chrome(options=options)
+        driver = webdriver.Chrome(
+            service=Service(ChromeDriverManager().install()), options=options
+        )
         driver.implicitly_wait(wait_time)
 
-        _log("info", "Login process started")
+        _log("header", "Login process started")
 
         # Navigate to router login page
         driver.get(ROUTER_URL)
@@ -82,8 +86,6 @@ def _run_login_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         elem.clear()
         elem.send_keys(PASSWORD)
 
-        _log("info", "Credentials entered")
-
         # Click login button
         WebDriverWait(driver, wait_time).until(
             EC.element_to_be_clickable((By.ID, "login"))
@@ -96,16 +98,9 @@ def _run_login_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
             WebDriverWait(driver, wait_time).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "logout-btn"))
             )
-            _log("info", "Login successful - Browser left open for manual control")
+            _log("success", "Login successful - Browser left open for manual control")
         except TimeoutException:
             _log("error", "Login failed - Invalid credentials or timeout")
-            # _emit_sync(
-            #     {
-            #         "type": "state",
-            #         "state": "FAILED",
-            #         "message": "Login failed",
-            #     }
-            # )
             if driver:
                 driver.quit()
             return
@@ -113,11 +108,42 @@ def _run_login_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         # DO NOT quit driver - leave browser open for user
         # User will manually close the browser when done
 
-    except Exception as e:
-        _log("error", str(e))
-        _emit_sync({"type": "state", "state": "FAILED", "message": str(e)})
+    except WebDriverException as e:
+        # Handle browser-related errors (e.g., user closed browser)
+        error_msg = str(e).lower()
+
+        # Check if user closed the browser (various error messages)
+        browser_closed_indicators = [
+            "invalid session id",
+            "browser has closed",
+            "no such window",
+            "target window already closed",
+            "web view not found",
+        ]
+
+        if any(indicator in error_msg for indicator in browser_closed_indicators):
+            _log("warning", "Login cancelled - Browser was closed by user")
+        else:
+            # Strip stacktrace for cleaner error message
+            clean_msg = str(e).split("Stacktrace:")[0].strip()
+            _log("error", f"Browser error: {clean_msg}")
+
         if driver:
-            driver.quit()
+            try:
+                driver.quit()
+            except:
+                pass
+
+    except Exception as e:
+        # Handle other errors with cleaner message
+        error_msg = str(e).split("Stacktrace:")[0].strip()
+        _log("error", f"Login failed: {error_msg}")
+
+        if driver:
+            try:
+                driver.quit()
+            except:
+                pass
 
 
 async def run_login_workflow() -> None:
@@ -133,6 +159,5 @@ async def run_login_workflow() -> None:
 
     future = loop.run_in_executor(executor, lambda: _run_login_blocking(loop))
     await future
-
-
+    
 # TODO: Review icon mappings and replace placeholders with final production icons when available.

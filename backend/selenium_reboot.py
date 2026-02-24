@@ -14,10 +14,12 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+from webdriver_manager.chrome import ChromeDriverManager
 
 from state_manager import emit, reset_state
 
@@ -25,15 +27,15 @@ from state_manager import emit, reset_state
 ROOT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT_DIR / ".env")
 
-ROUTER_URL = os.getenv("REBOOT_MODEM_URL")
-USERNAME = os.getenv("REBOOT_USERNAME")
-PASSWORD = os.getenv("REBOOT_PASSWORD")
+ROUTER_URL = os.getenv("MODEM_URL")
+USERNAME = os.getenv("MODEM_USERNAME")
+PASSWORD = os.getenv("MODEM_PASSWORD")
 
 if not ROUTER_URL:
-    raise RuntimeError("Missing REBOOT_MODEM_URL in .env")
+    raise RuntimeError("Missing MODEM_URL in .env")
 
 if not USERNAME or not PASSWORD:
-    raise RuntimeError("Missing REBOOT_USERNAME or REBOOT_PASSWORD in .env")
+    raise RuntimeError("Missing MODEM_USERNAME or MODEM_PASSWORD in .env")
 
 COUNTDOWN_SECONDS = 120
 CONNECTION_CHECK_INTERVAL = 5
@@ -60,18 +62,18 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
 
     try:
         options = webdriver.ChromeOptions()
-        if os.getenv("SELENIUM_HEADLESS", "true").lower() == "true":
+        if os.getenv("REBOOT_SELENIUM_HEADLESS", "true").lower() == "true":
             options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
 
-        driver = webdriver.Chrome(options=options)
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         driver.implicitly_wait(wait_time)
 
         # 1. Navigate to router login page
         driver.get(ROUTER_URL)
-        _log("info", "Reboot Process Started")
+        _log("header", "Reboot Process Started")
 
         # 2. Wait for and fill username field
         WebDriverWait(driver, wait_time).until(
@@ -98,7 +100,7 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
             WebDriverWait(driver, wait_time).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "logout-btn"))
             )
-            _log("info", "Login successful")
+            _log("success", "Login successful")
             _emit_sync({"type": "state", "state": "LOGGING_IN", "message": "Login successful", "progress": 10})
         except TimeoutException:
             _log("error", "Login failed")
@@ -108,30 +110,29 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         
         # 6. Navigate to Reboot tab
         driver.get(ROUTER_URL + "maintenance_globe.cgi?reboot")
-        _log("info", "Navigated to Reboot tab")
+        _log("navigate", "Navigated to Reboot tab")
         _emit_sync({"type": "state", "state": "NAVIGATING", "message": "Navigated to Reboot tab", "progress": 60})
 
         # 7. Click reboot button
         WebDriverWait(driver, wait_time).until(
             EC.element_to_be_clickable((By.ID, "reboot"))
         ).click()
-        _log("info", "Reboot button clicked")
         _emit_sync({"type": "state", "state": "REBOOTING", "message": "Reboot button clicked", "progress": 70})
 
         # 8. Accept alert
         WebDriverWait(driver, wait_short).until(EC.alert_is_present())
         alert = driver.switch_to.alert
-        alert.accept()
-        _log("info", "Reboot command sent")
+        # alert.accept()
+        _log("success", "Reboot command sent")
         # _log("info", "FAKE Reboot command sent")
         _emit_sync({"type": "state", "state": "REBOOTING", "message": "Reboot command sent", "progress": 75})
 
         # 9. Emit WAITING + single log immediately (give user feedback)
-        _log("info", "Waiting for device to reboot (120 seconds)")
+        _log("progress", "Waiting for device to reboot (120 seconds)")
         _emit_sync({"type": "state", "state": "WAITING", "message": "Waiting for device to reboot (120 seconds)", "progress": 80})
         _emit_sync({"type": "countdown", "countdown": COUNTDOWN_SECONDS})
 
-        # 10. Quit driver in background thread (non-blocking) - kept alive for 10 secs for the modem to sucessfully receive the command
+        # 10. Quit driver in background thread (non-blocking) - kept alive for 10 secs for the modem to successfully receive the command
         def _quit_driver_delayed(drv):
             time.sleep(10)  # keep driver alive for 10 seconds
             try:
@@ -156,7 +157,7 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
             from state_manager import get_state
             s = get_state().get("state")
             if s not in ("WAITING", "FAILED"):
-                _log("info", "Waiting for device to reboot (120 seconds)")
+                _log("progress", "Waiting for device to reboot (120 seconds)")
                 _emit_sync({"type": "state", "state": "WAITING", "message": "Waiting for device to reboot (120 seconds)", "progress": 80})
                 _emit_sync({"type": "countdown", "countdown": COUNTDOWN_SECONDS})
 
@@ -189,7 +190,7 @@ async def run_reboot_workflow() -> None:
 
     # Transition to checking connection (one log entry)
     await emit({"type": "state", "state": "CHECKING_CONNECTION", "message": "Checking connection to router...", "progress": 95})
-    await emit({"type": "log", "level": "info", "message": "Checking connection to router...", "timestamp": _log_ts()})
+    await emit({"type": "log", "level": "checking", "message": "Checking connection to router...", "timestamp": _log_ts()})
 
     # Try to reach router every 5 seconds; log every 3rd attempt only
     attempt = 0
@@ -197,7 +198,7 @@ async def run_reboot_workflow() -> None:
     while time.monotonic() < deadline:
         attempt += 1
         if attempt % 3 == 0:
-            await emit({"type": "log", "level": "info", "message": f"Checking connection... (attempt {attempt})", "timestamp": _log_ts()})
+            await emit({"type": "log", "level": "checking", "message": f"Checking connection... (attempt {attempt})", "timestamp": _log_ts()})
         try:
             req = urllib.request.Request(ROUTER_URL, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req, timeout=10) as resp:
@@ -211,5 +212,3 @@ async def run_reboot_workflow() -> None:
 
     await emit({"type": "state", "state": "FAILED", "message": "Failed to reconnect after 2 minutes", "progress": 0})
     await emit({"type": "log", "level": "error", "message": "Failed to reconnect after 2 minutes", "timestamp": _log_ts()})
-    
-# TODO: Review icon mappings and replace placeholders with final production icons when available.

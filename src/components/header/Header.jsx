@@ -3,6 +3,7 @@ import MetaInfo from "./MetaInfo";
 import HeaderButton from "./HeaderButton";
 import StatusBadge from "./StatusBadge";
 import { useModem } from "../../context/ModemContext";
+import { useAuth } from "../../context/AuthContext";
 
 const REBOOT_BUSY_STATES = [
   "LOGGING_IN",
@@ -14,6 +15,7 @@ const REBOOT_BUSY_STATES = [
 
 const Header = () => {
   const { status, refresh, lastUpdated, rebootState } = useModem();
+  const { logout: handleLogout, showLogin } = useAuth();
 
   const isRebooting =
     rebootState &&
@@ -53,11 +55,15 @@ const Header = () => {
             title={isRebooting ? "Cannot refresh while rebooting" : "Refresh status"}
           />
 
-          <HeaderButton
-            icon={logout}
-            label="Logout"
-            buttonClass="btn-header btn-logout"
-          />
+          {/* Only show logout button if login is enabled */}
+          {showLogin && (
+            <HeaderButton
+              icon={logout}
+              label="Logout"
+              buttonClass="btn-header btn-logout"
+              onClick={handleLogout}
+            />
+          )}
         </div>
       </div>
 
