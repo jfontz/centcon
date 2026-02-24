@@ -6,6 +6,7 @@ import {
   warning,
   error,
   navigate,
+  load,
 } from "../assets/icons";
 
 const ICON_CLASSES = "w-4 h-4 inline-block pointer-events-none select-none";
@@ -16,7 +17,7 @@ const ICON_MAP = {
   info: logIcon,
   success: check,
   progress: hourglass,
-  checking: process,
+  checking: load,
   error: error,
   warning: warning,
 };
