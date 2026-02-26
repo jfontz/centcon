@@ -24,20 +24,12 @@ from state_manager import emit, reset_state
 ROOT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT_DIR / ".env")
 
-ROUTER_URL = os.getenv("MODEM_URL")
-USERNAME = os.getenv("MODEM_USERNAME")
-PASSWORD = os.getenv("MODEM_PASSWORD")
-
-if not ROUTER_URL or not USERNAME or not PASSWORD:
-    raise RuntimeError("Missing router credentials in .env")
-
-
 def _log_ts() -> str:
     """Server-side ISO 8601 timestamp for log events."""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
 
-def _run_login_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
+def _run_login_blocking(main_loop: asyncio.AbstractEventLoop, ROUTER_URL: str, USERNAME: str, PASSWORD: str) -> None:
     """Run login in a thread; browser stays open after login."""
 
     def _emit_sync(ev: dict):
@@ -153,9 +145,18 @@ async def run_login_workflow() -> None:
     """
     import concurrent.futures
 
+    # Load env
+    ROUTER_URL = os.getenv("MODEM_URL")
+    USERNAME = os.getenv("MODEM_USERNAME")
+    PASSWORD = os.getenv("MODEM_PASSWORD")
+
+    if not ROUTER_URL or not USERNAME or not PASSWORD:
+        raise RuntimeError("Missing router credentials in .env")
+
     reset_state()
     loop = asyncio.get_running_loop()
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
-    future = loop.run_in_executor(executor, lambda: _run_login_blocking(loop))
+    # Pass env vars into blocking function
+    future = loop.run_in_executor(executor, lambda: _run_login_blocking(loop, ROUTER_URL, USERNAME, PASSWORD))
     await future

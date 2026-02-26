@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from "react";
 import MainLayout from "./components/ui/MainLayout";
 import SystemControls from "./components/SystemControls";
 import SystemStatus from "./components/SystemStatus";
@@ -7,6 +8,8 @@ import ConnectedDevices from "./components/ConnectedDevices";
 import { ModemProvider } from "./context/ModemContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
+import Setup from "./pages/Setup";
+import { checkSetupNeeded } from "./services/setupAPI";
 
 function Dashboard() {
   return (
@@ -54,14 +57,52 @@ function Dashboard() {
 
 function AppContent() {
   const { isAuthenticated, showLogin, configLoaded } = useAuth();
+  const [setupData, setSetupData] = useState(null);
+  const [setupChecked, setSetupChecked] = useState(false);
+  const prevAuthRef = useRef(false);
+  
+  useEffect(() => {
+    if (isAuthenticated && !showLogin) {
+      prevAuthRef.current = true;
+    }
+  }, [isAuthenticated, showLogin]);
 
-  // Show loading while fetching config
-  if (!configLoaded) {
+  // Check if setup is needed on mount
+  useEffect(() => {
+    const checkSetup = async () => {
+      try {
+        const data = await checkSetupNeeded();
+        if (data.setupRequired) {
+          setSetupData(data);
+        }
+      } catch (error) {
+        console.error("Setup check failed:", error);
+      } finally {
+        setSetupChecked(true);
+      }
+    };
+    
+    checkSetup();
+  }, []);
+
+  // Handle setup completion
+  const handleSetupComplete = () => {
+    setSetupData(null);
+    window.location.reload(); // Reload to apply new config
+  };
+
+  // Show loading while checking setup and config
+  if (!setupChecked || !configLoaded) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-white text-lg">Loading...</div>
       </div>
     );
+  }
+
+  // If setup is needed, show setup wizard
+  if (setupData) {
+    return <Setup setupData={setupData} onComplete={handleSetupComplete} />;
   }
 
   // If login is disabled OR user is authenticated, show dashboard

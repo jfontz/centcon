@@ -27,16 +27,6 @@ from state_manager import emit, reset_state
 ROOT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT_DIR / ".env")
 
-ROUTER_URL = os.getenv("MODEM_URL")
-USERNAME = os.getenv("MODEM_USERNAME")
-PASSWORD = os.getenv("MODEM_PASSWORD")
-
-if not ROUTER_URL:
-    raise RuntimeError("Missing MODEM_URL in .env")
-
-if not USERNAME or not PASSWORD:
-    raise RuntimeError("Missing MODEM_USERNAME or MODEM_PASSWORD in .env")
-
 COUNTDOWN_SECONDS = 120
 CONNECTION_CHECK_INTERVAL = 5
 CONNECTION_CHECK_TIMEOUT = 120  # total seconds to try reconnecting
@@ -47,8 +37,18 @@ def _log_ts() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
 
-def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
-    """Run Selenium in a thread; uses asyncio.run_coroutine_threadsafe to emit to main loop."""
+def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
+    """Run Selenium in a thread; uses asyncio.run_coroutine_threadsafe to emit to main loop.
+    Returns ROUTER_URL if reboot was sent successfully, else None."""
+
+    # Load env here
+    ROUTER_URL = os.getenv("MODEM_URL")
+    USERNAME = os.getenv("MODEM_USERNAME")
+    PASSWORD = os.getenv("MODEM_PASSWORD")
+
+    if not ROUTER_URL or not USERNAME or not PASSWORD:
+        # Wizard can continue without crashing
+        return None
 
     def _emit_sync(ev: dict):
         asyncio.run_coroutine_threadsafe(emit(ev), main_loop).result()
@@ -106,8 +106,8 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
             _log("error", "Login failed")
             _emit_sync({"type": "state", "state": "FAILED", "message": "Login failed", "progress": 0})
             driver.quit()
-            return
-        
+            return None
+
         # 6. Navigate to Reboot tab
         driver.get(ROUTER_URL + "maintenance_globe.cgi?reboot")
         _log("navigate", "Navigated to Reboot tab")
@@ -128,8 +128,8 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         _emit_sync({"type": "state", "state": "REBOOTING", "message": "Reboot command sent", "progress": 75})
 
         # 9. Emit WAITING + single log immediately (give user feedback)
-        _log("progress", "Waiting for device to reboot (120 seconds)")
-        _emit_sync({"type": "state", "state": "WAITING", "message": "Waiting for device to reboot (120 seconds)", "progress": 80})
+        _log("progress", f"Waiting for device to reboot ({COUNTDOWN_SECONDS} seconds)")
+        _emit_sync({"type": "state", "state": "WAITING", "message": f"Waiting for device to reboot ({COUNTDOWN_SECONDS} seconds)", "progress": 80})
         _emit_sync({"type": "countdown", "countdown": COUNTDOWN_SECONDS})
 
         # 10. Quit driver in background thread (non-blocking) - kept alive for 10 secs for the modem to successfully receive the command
@@ -143,22 +143,24 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> None:
         threading.Thread(target=_quit_driver_delayed, args=(driver,), daemon=True).start()
         driver = None  # Prevent double quit in finally
 
+        # Return URL so async block can use it for connection check
+        return ROUTER_URL
 
     except Exception as e:
         _emit_sync({"type": "state", "state": "FAILED", "message": str(e), "progress": 0})
         _log("error", str(e))
+        return None
     finally:
         if driver:
             try:
                 driver.quit()
             except Exception:
                 pass
-            # If we threw after alert accept (e.g. during sleep/quit), emit WAITING so async countdown can run
             from state_manager import get_state
             s = get_state().get("state")
             if s not in ("WAITING", "FAILED"):
-                _log("progress", "Waiting for device to reboot (120 seconds)")
-                _emit_sync({"type": "state", "state": "WAITING", "message": "Waiting for device to reboot (120 seconds)", "progress": 80})
+                _log("progress", f"Waiting for device to reboot ({COUNTDOWN_SECONDS} seconds)")
+                _emit_sync({"type": "state", "state": "WAITING", "message": f"Waiting for device to reboot ({COUNTDOWN_SECONDS} seconds)", "progress": 80})
                 _emit_sync({"type": "countdown", "countdown": COUNTDOWN_SECONDS})
 
 
@@ -174,11 +176,12 @@ async def run_reboot_workflow() -> None:
     loop = asyncio.get_running_loop()
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
+    # Run Selenium reboot and capture ROUTER_URL
     future = loop.run_in_executor(executor, lambda: _run_selenium_blocking(loop))
-    await future
+    ROUTER_URL = await future
 
-    from state_manager import get_state
-    if get_state()["state"] != "WAITING":
+    if not ROUTER_URL:
+        # Skip connection check safely if .env missing
         return
 
     # Countdown: every second emit state + countdown only (NO log per second)
