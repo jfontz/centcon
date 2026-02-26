@@ -44,32 +44,7 @@ git clone https://github.com/jfontz/centcon
 cd centcon
 ```
 
-### 2. Configure Environment Variables
-
-Copy the example environment file and fill in your values:
-
-```bash
-# macOS/Linux
-cp .env.example .env
-
-# Windows
-copy .env.example .env
-```
-
-Open `.env` and set the following required values:
-
-| Variable | Description |
-|----------|-------------|
-| `MODEM_IP` | Your modem's local IP address (e.g. `192.168.0.1`) |
-| `MODEM_URL` | Full URL to modem admin page (e.g. `http://192.168.0.1/`) |
-| `VITE_MODEM_IP` | Same as `MODEM_IP` — used by the frontend |
-| `MODEM_USERNAME` | Modem admin username |
-| `MODEM_PASSWORD` | Modem admin password |
-| `CENTCON_PIN` | PIN to protect access to the dashboard |
-
-All other values have sensible defaults and do not need to be changed for local development. See `.env.example` for the full list with descriptions.
-
-### 3. Install Frontend Dependencies
+### 2. Install Frontend Dependencies
 
 From the project root:
 
@@ -77,7 +52,7 @@ From the project root:
 npm install
 ```
 
-### 4. Set Up the Python Backend
+### 3. Set Up the Python Backend
 
 Navigate to the backend directory and create a virtual environment:
 
@@ -137,11 +112,28 @@ To stop either server, press `Ctrl+C` in its terminal.
 
 ---
 
+## First-Run Setup
+
+On the first launch, CENTCON will detect that no configuration exists and open a **setup wizard** automatically. You don't need to manually create or edit any files.
+
+The wizard will ask for:
+
+| Field | What it is |
+|-------|------------|
+| Modem IP Address | The local IP of your modem's admin page (default for Globe: `192.168.254.254`) |
+| Modem Username | Your modem's admin username — found on the sticker on your modem |
+| Modem Password | Your modem's admin password — same sticker |
+| CENTCON PIN | A 4-character PIN *you choose* to protect access to the dashboard |
+
+All values are saved to a `.env` file in the project root. If you ever need to change something after setup — or you forget your PIN — you can open that file directly and edit any value, then restart the app.
+
+---
+
 ## Verifying the Setup
 
-Once both servers are running:
+Once both servers are running and setup is complete:
 
-1. Open `http://localhost:5173` — you should see the login screen. Enter the `CENTCON_PIN` you set in `.env`.
+1. Open `http://localhost:5173` — you should see the login screen. Enter the `CENTCON_PIN` you set during setup.
 2. Open `http://localhost:8000/docs` — you should see the FastAPI interactive API docs.
 3. On the dashboard, click **"Reboot Modem"** to test the full automation sequence. This will log into your modem and trigger a real reboot — only do this if you're okay with a brief network interruption.
 
@@ -151,31 +143,67 @@ Once both servers are running:
 
 ```text
 centcon/
-├── .env                        ← your local config (not committed)
+├── .env                        ← your local config (created by setup wizard, not committed)
 ├── .env.example                ← template with all variables documented
 ├── .gitignore
+├── eslint.config.js
 ├── index.html
 ├── package.json
+├── package-lock.json
 ├── vite.config.js
 │
-├── src/                        ← React frontend source
+├── src/
 │   ├── App.jsx
 │   ├── main.jsx
 │   ├── index.css
-│   ├── assets/icons/           ← SVG icons + index.js barrel export
+│   │
+│   ├── assets/
+│   │   └── icons/              ← SVG icons + index.js barrel export
+│   │
 │   ├── components/
-│   │   ├── buttons/            ← SystemControlButton
-│   │   ├── cards/              ← CPU, Memory, LAN, WiFi, etc.
-│   │   ├── header/             ← Header, StatusBadge, MetaInfo
-│   │   ├── log/                ← LogPanel subcomponents
-│   │   ├── modals/             ← RebootConfirmModal
-│   │   ├── ui/                 ← Shared layout primitives
-│   │   └── *.jsx               ← Top-level section components
-│   ├── context/                ← AuthContext, ModemContext
-│   ├── hooks/                  ← useModemData
-│   ├── pages/                  ← Login page
-│   ├── services/               ← authAPI, modemAPI
-│   └── utils/                  ← formatters, validators, helpers
+│   │   ├── buttons/
+│   │   │   └── SystemControlButton.jsx
+│   │   ├── cards/              ← CPUCard, MemoryCard, LANCard, WiFi24Card, WiFi5Card,
+│   │   │                          TemperatureCard, RuntimeCard, DeviceModelCard, DeviceSoftwareCard
+│   │   ├── header/
+│   │   │   ├── Header.jsx
+│   │   │   ├── HeaderButton.jsx
+│   │   │   ├── MetaInfo.jsx
+│   │   │   └── StatusBadge.jsx
+│   │   ├── log/
+│   │   │   ├── LogContent.jsx
+│   │   │   ├── LogEntry.jsx
+│   │   │   └── LogHeader.jsx
+│   │   ├── modals/
+│   │   │   └── RebootConfirmModal.jsx
+│   │   ├── ui/                 ← IconWrapper, MainLayout, MetricCard, SectionContainer
+│   │   ├── ConnectedDevices.jsx
+│   │   ├── DeviceInformation.jsx
+│   │   ├── LogPanel.jsx
+│   │   ├── SystemControls.jsx
+│   │   └── SystemStatus.jsx
+│   │
+│   ├── context/
+│   │   ├── AuthContext.jsx
+│   │   └── ModemContext.jsx
+│   │
+│   ├── hooks/
+│   │   └── useModemData.js
+│   │
+│   ├── pages/
+│   │   ├── Login.jsx
+│   │   └── Setup.jsx           ← first-run setup wizard
+│   │
+│   ├── services/
+│   │   ├── authAPI.js
+│   │   ├── modemAPI.js
+│   │   └── setupAPI.js
+│   │
+│   └── utils/
+│       ├── formatters.js
+│       ├── getIcon.jsx
+│       ├── modemHelpers.js
+│       └── validators.js
 │
 └── backend/
     ├── run.py                  ← server entry point
@@ -183,6 +211,7 @@ centcon/
     ├── state_manager.py        ← SSE state + event emitter
     ├── selenium_reboot.py      ← automated reboot workflow
     ├── selenium_login.py       ← automated login workflow
+    ├── setup_utils.py          ← first-run setup logic + .env management
     ├── requirements.txt
     └── .venv/                  ← Python virtual environment (not committed)
 ```
@@ -215,5 +244,29 @@ Make sure `(.venv)` is visible in your terminal prompt, then re-run:
 pip install -r requirements.txt
 ```
 
-**Login page asks for a PIN but I didn't set one**
-Open your `.env` file and ensure `CENTCON_PIN` is set to a value. Restart the backend after saving.
+**Setup wizard keeps appearing even after completing setup**
+The backend may not have restarted after the `.env` file was written. Stop and restart the backend server.
+
+**Login page asks for a PIN but I forgot it**
+Open the `.env` file in the project root — your `CENTCON_PIN` is stored there in plain text. You can also change it there and restart the app.
+
+---
+
+## License
+
+This project is licensed under [Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/).
+
+**You are free to:**
+- Use and run this tool for personal use
+- Share and redistribute it with others
+- Modify it for your own needs
+
+**Under the following conditions:**
+- **Attribution** — You must give credit to the original author
+- **NonCommercial** — You may not sell this tool or use it for any commercial purpose
+
+*This software is provided as-is, without warranty of any kind.*
+
+---
+
+*Built by [jfontz](https://github.com/jfontz)*
