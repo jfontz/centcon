@@ -237,7 +237,7 @@ async def verify_pin(request: PinVerifyRequest):
     """Verify PIN for CENTCON access."""
     centcon_pin = os.getenv("CENTCON_PIN", "")
 
-    if request.pin == centcon_pin:
+    if request.pin.upper() == centcon_pin.upper():
         return {"ok": True, "message": "PIN verified"}
     return {"ok": False, "message": "Invalid PIN"}
 

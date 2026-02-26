@@ -52,7 +52,7 @@ const Login = () => {
               inputMode="text"
               pattern="[A-Za-z0-9]+"
               value={pin}
-              onChange={(e) => setPin(e.target.value)}
+              onChange={(e) => setPin(e.target.value.toUpperCase())}
               className="w-[60%] px-4 py-3 bg-black border border-white/15 rounded-md text-white text-center text-md tracking-widest focus:outline-none focus:border-white/30 transition-colors"
               placeholder="••••"
               maxLength={4}
