@@ -252,21 +252,4 @@ Open the `.env` file in the project root — your `CENTCON_PIN` is stored there 
 
 ---
 
-## License
-
-This project is licensed under [Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/).
-
-**You are free to:**
-- Use and run this tool for personal use
-- Share and redistribute it with others
-- Modify it for your own needs
-
-**Under the following conditions:**
-- **Attribution** — You must give credit to the original author
-- **NonCommercial** — You may not sell this tool or use it for any commercial purpose
-
-*This software is provided as-is, without warranty of any kind.*
-
----
-
-*Built by [jfontz](https://github.com/jfontz)*
+*Built by [jfontz](https://github.com/jfontz) · [MIT License](./LICENSE)*
