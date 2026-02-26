@@ -26,13 +26,27 @@ from state_manager import get_state, subscribe, unsubscribe, event_stream
 from selenium_reboot import run_reboot_workflow
 from selenium_login import run_login_workflow
 
+from setup_utils import (
+    check_setup_needed,
+    get_defaults,
+    save_to_env,
+    REQUIRED_VARS,
+)
+
 # Prevent multiple simultaneous reboot processes
 reboot_in_progress = False
 login_in_progress = False
 
-# Load CORS origins from .env
+# Load CORS origins from .env or fallback to localhost defaults
 cors_origins_env = os.getenv("CORS_ORIGINS", "")
 cors_origins = [origin.strip() for origin in cors_origins_env.split(",") if origin]
+
+# Fallback: allow standard localhost ports if empty
+if not cors_origins:
+    cors_origins = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
 
 
 # Lifespan context
@@ -53,6 +67,76 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+class SetupRequest(BaseModel):
+    MODEM_IP: str
+    MODEM_USERNAME: str
+    MODEM_PASSWORD: str
+    CENTCON_PIN: str
+
+
+class PinVerifyRequest(BaseModel):
+    pin: str
+
+
+@app.get("/api/setup-needed")
+async def setup_needed():
+    """Check if first-run setup is required."""
+    try:
+        setup_required, missing, invalid = check_setup_needed()
+
+        response = {
+            "setupRequired": setup_required,
+            "missingFields": missing,
+            "invalidFields": invalid,
+            "fieldDescriptions": REQUIRED_VARS,
+        }
+
+        # If setup is needed, provide defaults
+        if setup_required:
+            defaults = get_defaults()
+            response["defaults"] = defaults
+
+        return response
+    except Exception as e:
+        return {
+            "setupRequired": True,
+            "missingFields": list(REQUIRED_VARS.keys()),
+            "invalidFields": [],
+            "error": str(e),
+        }
+
+
+@app.post("/api/setup-complete")
+async def setup_complete(request: SetupRequest):
+    """Complete first-run setup by saving validated configuration."""
+    try:
+        # Get all defaults (includes frontend, backend, CORS, auth, selenium, etc.)
+        defaults = get_defaults()
+
+        # Merge submitted data from form on top of defaults
+        data = {
+            **defaults,
+            **{
+                "MODEM_IP": request.MODEM_IP.strip(),
+                "MODEM_USERNAME": request.MODEM_USERNAME.strip(),
+                "MODEM_PASSWORD": request.MODEM_PASSWORD,  # Don't strip password
+                "CENTCON_PIN": request.CENTCON_PIN.strip(),
+            },
+        }
+
+        # Save everything to .env
+        success, message = save_to_env(data)
+
+        if success:
+            return {"ok": True, "message": message}
+        else:
+            raise HTTPException(status_code=400, detail=message)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Setup failed: {str(e)}")
 
 
 # Reboot workflow
@@ -148,18 +232,12 @@ async def state():
     return get_state()
 
 
-# PIN verification
-class PinVerifyRequest(BaseModel):
-    pin: str
-
-
-CENTCON_PIN = os.environ["CENTCON_PIN"]  # raises KeyError if missing
-
-
 @app.post("/verify-pin")
 async def verify_pin(request: PinVerifyRequest):
     """Verify PIN for CENTCON access."""
-    if request.pin == CENTCON_PIN:
+    centcon_pin = os.getenv("CENTCON_PIN", "")
+
+    if request.pin == centcon_pin:
         return {"ok": True, "message": "PIN verified"}
     return {"ok": False, "message": "Invalid PIN"}
 
