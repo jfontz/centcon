@@ -20,6 +20,7 @@ const HeaderButton = ({
       onClick={onClick}
       disabled={disabled}
       type="button"
+      aria-label={label}
       title={title}
     >
       <img

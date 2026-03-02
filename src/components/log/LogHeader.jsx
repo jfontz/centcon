@@ -11,10 +11,14 @@ const LogHeader = ({ onClearLogs }) => {
         />
         <span className="text-gray-400">LOG</span>
       </div>
-      <button onClick={onClearLogs}>
+      <button
+        type="button"
+        onClick={onClearLogs}
+        aria-label="Clear log entries"
+      >
         <img
           src={clear}
-          alt="Clear log"
+          alt=""
           className="w-4.5 h-4.5 cursor-pointer"
         />
       </button>

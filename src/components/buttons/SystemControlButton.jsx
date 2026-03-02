@@ -94,6 +94,7 @@ const SystemControlButton = ({
         onClick={handleClick}
         disabled={disabled}
         type="button"
+        aria-label={label}
       >
         <img
           src={icon}
