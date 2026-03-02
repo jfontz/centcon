@@ -139,10 +139,16 @@ const Setup = ({ setupData, onComplete }) => {
 
                 {allFields.includes("MODEM_IP") && (
                   <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5">
                       <label className="text-xs font-medium text-zinc-400 tracking-wide">IP Address</label>
                       <div className="relative group">
-                        <button type="button" className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-zinc-700 text-zinc-600 hover:text-zinc-400 hover:border-zinc-500 transition-colors text-[9px] font-bold leading-none">?</button>
+                      <button
+                        type="button"
+                        aria-label="Get help finding your modem IP address"
+                        className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-zinc-700 text-zinc-600 hover:text-zinc-400 hover:border-zinc-500 transition-colors text-[9px] font-bold leading-none"
+                      >
+                        ?
+                      </button>
                         <div className="absolute top-full left-0 mt-2 w-64 hidden group-hover:block z-10">
                           <div className="w-2 h-2 bg-zinc-900 border-l border-t border-zinc-700 rotate-45 ml-3 -mb-1" />
                           <div className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 shadow-xl">
@@ -225,7 +231,13 @@ const Setup = ({ setupData, onComplete }) => {
                   <div className="flex items-center gap-1.5">
                     <label className="text-xs font-medium text-zinc-400 tracking-wide">4-Character PIN</label>
                     <div className="relative group">
-                      <button type="button" className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-zinc-700 text-zinc-600 hover:text-zinc-400 hover:border-zinc-500 transition-colors text-[9px] font-bold leading-none">?</button>
+                    <button
+                      type="button"
+                      aria-label="Learn more about the CENTCON access PIN"
+                      className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-zinc-700 text-zinc-600 hover:text-zinc-400 hover:border-zinc-500 transition-colors text-[9px] font-bold leading-none"
+                    >
+                      ?
+                    </button>
                       <div className="absolute bottom-full left-0 mb-2 w-56 hidden group-hover:block z-10">
                         <div className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 shadow-xl">
                           <p className="text-[11px] font-semibold text-zinc-300 mb-1.5">About the CENTCON PIN</p>
@@ -300,8 +312,9 @@ const Setup = ({ setupData, onComplete }) => {
                     <p className="text-[11px] font-semibold text-zinc-400">Compatibility Notice</p>
                     {/* Tooltip */}
                     <div className="relative group">
-                      <button
+                    <button
                         type="button"
+                        aria-label="How to check your modem model"
                         className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-zinc-700 text-zinc-600 hover:text-zinc-400 hover:border-zinc-500 transition-colors text-[9px] font-bold leading-none"
                       >
                         ?
