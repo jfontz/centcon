@@ -1,6 +1,3 @@
-// ============================================
-// FILE: src/components/SystemStatus.jsx
-// ============================================
 import { useEffect, useState } from "react";
 import SectionContainer from "./ui/SectionContainer";
 import RuntimeCard from "./cards/RuntimeCard";

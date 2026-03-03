@@ -1,5 +1,7 @@
 """
-FastAPI app: POST /reboot (start Selenium in background), GET /events (SSE).
+FastAPI app for CENTCON: setup (/api/setup-*), reboot (/reboot), login (/login),
+state streaming (/events), state polling (/state), PIN verification (/verify-pin),
+and auth configuration (/auth-config).
 """
 
 from pathlib import Path
@@ -201,7 +203,21 @@ async def login_to_modem():
 # SSE events endpoint
 @app.get("/events")
 async def events():
-    """SSE endpoint: stream state, log, countdown, heartbeat events."""
+    """
+    Server-Sent Events endpoint for realtime updates.
+
+    Event payloads:
+    - 'state': {type, state, message, progress, countdown?}
+        Reboot/login workflow state machine updates. Also used to pause
+        frontend auto-refresh during reboot and resume once ONLINE.
+    - 'log': {type, level, message, timestamp}
+        Timeline entries for the log panel (header/progress/error messages).
+    - 'countdown': {type, countdown}
+        Remaining seconds in the reboot wait period; drives StatusBadge only
+        to avoid spamming the log panel.
+    - 'heartbeat': {type}
+        Keep-alive ping emitted when no other events have occurred recently.
+    """
 
     async def generate():
         queue = await subscribe()
@@ -228,7 +244,7 @@ async def events():
 # Polling endpoint for state
 @app.get("/state")
 async def state():
-    """Current reboot state (for polling if needed)."""
+    """Current reboot state (fallback for environments that cannot use SSE)."""
     return get_state()
 
 
@@ -253,4 +269,4 @@ async def auth_config():
     }
 
 
-# TODO: Add copncurrently to run multiple commands to launch CENTCON faster.
+# TODO: Use concurrently (or similar) to start frontend and backend together for faster launch.

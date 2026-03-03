@@ -1,4 +1,3 @@
-// src/assets/icons/index.js
 import check from "./check.svg";
 import cpu from "./cpu.svg";
 import clear from "./clear.svg";

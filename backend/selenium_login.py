@@ -1,7 +1,9 @@
 """
 Selenium automation for router login only.
-Opens browser, logs in, and leaves window open for manual control.
-Emits structured events to state_manager for SSE broadcast.
+
+Opens a visible Chrome window, logs in with stored credentials, and leaves the
+session open so the user can manually inspect or change modem settings.
+All notable steps and errors are emitted as log events via state_manager.
 """
 
 import asyncio
@@ -30,7 +32,7 @@ def _log_ts() -> str:
 
 
 def _run_login_blocking(main_loop: asyncio.AbstractEventLoop, ROUTER_URL: str, USERNAME: str, PASSWORD: str) -> None:
-    """Run login in a thread; browser stays open after login."""
+    """Run login in a thread; browser stays open after login for manual control."""
 
     def _emit_sync(ev: dict):
         asyncio.run_coroutine_threadsafe(emit(ev), main_loop).result()
@@ -50,8 +52,7 @@ def _run_login_blocking(main_loop: asyncio.AbstractEventLoop, ROUTER_URL: str, U
 
     try:
         options = webdriver.ChromeOptions()
-        # IMPORTANT: Never run headless for login - user needs to see the browser
-        # options.add_argument("--headless=new")  # DON'T USE THIS
+        # IMPORTANT: Never run headless for login – user must see and control the browser.
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 

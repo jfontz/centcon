@@ -1,8 +1,13 @@
 """
 Selenium automation for router login and reboot.
-Emits structured events to state_manager for SSE broadcast.
 
-Exact navigation flow: login (By.ID) → Advanced Settings → Maintenance → Reboot tab → reboot (By.ID) → alert → wait → close.
+Globe G-1426G-A specific flow:
+- Login via username/password form
+- Jump directly to the Reboot page using a stable URL
+- Trigger reboot, accept confirmation alert, then keep the driver alive
+  briefly so the modem receives the command before the connection drops.
+
+All progress and log updates are emitted via state_manager for SSE broadcast.
 """
 
 import asyncio
@@ -38,8 +43,11 @@ def _log_ts() -> str:
 
 
 def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
-    """Run Selenium in a thread; uses asyncio.run_coroutine_threadsafe to emit to main loop.
-    Returns ROUTER_URL if reboot was sent successfully, else None."""
+    """
+    Run Selenium in a worker thread and emit events back into the main asyncio loop.
+
+    Returns ROUTER_URL if the reboot command was issued successfully, else None.
+    """
 
     # Load env here
     ROUTER_URL = os.getenv("MODEM_URL")
@@ -108,7 +116,7 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
             driver.quit()
             return None
 
-        # 6. Navigate to Reboot tab
+        # 6. Navigate directly to the Reboot page
         driver.get(ROUTER_URL + "maintenance_globe.cgi?reboot")
         _log("navigate", "Navigated to Reboot tab")
         _emit_sync({"type": "state", "state": "NAVIGATING", "message": "Navigated to Reboot tab", "progress": 60})
@@ -119,12 +127,11 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
         ).click()
         _emit_sync({"type": "state", "state": "REBOOTING", "message": "Reboot button clicked", "progress": 70})
 
-        # 8. Accept alert
+        # 8. Accept reboot confirmation alert
         WebDriverWait(driver, wait_short).until(EC.alert_is_present())
         alert = driver.switch_to.alert
-        # alert.accept()
+        alert.accept()
         _log("success", "Reboot command sent")
-        # _log("info", "FAKE Reboot command sent")
         _emit_sync({"type": "state", "state": "REBOOTING", "message": "Reboot command sent", "progress": 75})
 
         # 9. Emit WAITING + single log immediately (give user feedback)
@@ -132,7 +139,8 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
         _emit_sync({"type": "state", "state": "WAITING", "message": f"Waiting for device to reboot ({COUNTDOWN_SECONDS} seconds)", "progress": 80})
         _emit_sync({"type": "countdown", "countdown": COUNTDOWN_SECONDS})
 
-        # 10. Quit driver in background thread (non-blocking) - kept alive for 10 secs for the modem to successfully receive the command
+        # 10. Quit driver in a background thread so the modem has time to process
+        #     the reboot command before the TCP connection is closed.
         def _quit_driver_delayed(drv):
             time.sleep(10)  # keep driver alive for 10 seconds
             try:

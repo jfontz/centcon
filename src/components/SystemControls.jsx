@@ -22,7 +22,7 @@ const controls = [
 const SystemControls = () => {
   const { rebootState, triggerReboot, triggerLogin } = useModem();
   const [loginInProgress, setLoginInProgress] = useState(false);
-  const [rebootPending, setRebootPending] = useState(false); // ← Lift to parent
+  const [rebootPending, setRebootPending] = useState(false);
 
   const handleLogin = async () => {
     if (loginInProgress) return;

@@ -242,7 +242,14 @@ const REBOOT_API_BASE =
 
 /**
  * Connect to reboot SSE stream. Call onEvent for each event; returns EventSource (call .close() on unmount).
- * @param {function(object): void} onEvent - callback for each event: { type, state?, message?, progress?, countdown?, level?, message? }
+ *
+ * Event types:
+ * - 'state': { type, state, message, progress, countdown? }
+ * - 'log': { type, level, message, timestamp }
+ * - 'countdown': { type, countdown }
+ * - 'heartbeat': { type }
+ *
+ * @param {function(object): void} onEvent - callback invoked with each parsed event payload.
  */
 export const connectToRebootEvents = (onEvent) => {
   const eventSource = new EventSource(`${REBOOT_API_BASE}/events`);

@@ -26,7 +26,8 @@ export const useModemData = (rebootState = { state: "IDLE" }) => {
   ].includes(rebootState?.state);
 
   const fetchData = useCallback(async () => {
-    // Skip fetch if rebooting
+    // Pause telemetry refresh while reboot workflow is in progress to avoid
+    // spamming "offline" readings while the modem is intentionally unreachable.
     if (isRebooting) {
       console.log("Auto-refresh paused during reboot");
       return;
@@ -45,7 +46,8 @@ export const useModemData = (rebootState = { state: "IDLE" }) => {
 
       setData(modemData);
 
-      // LOS (Loss of Signal): both TX and RX power are 0
+      // LOS (Loss of Signal): treat fiber loss as a higher-priority failure than WAN down.
+      // Globe G-1426G-A reports both TX and RX power as exactly 0 when the optical link is gone.
       const hasLOS =
         Number(modemData?.optical?.txPower ?? 0) === 0 &&
         Number(modemData?.optical?.rxPower ?? 0) === 0;
