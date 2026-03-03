@@ -19,7 +19,7 @@ SETUP_VARS = {
     "MODEM_USERNAME": {"desc": "Username for modem login", "default": "admin"},
     "MODEM_PASSWORD": {"desc": "Password for modem login", "default": ""},
     # Centcon PIN
-    "CENTCON_PIN": {"desc": "4-digit PIN for CENTCON access", "default": None},
+    "CENTCON_PIN": {"desc": "4-character PIN for CENTCON access", "default": None},
     # Frontend
     "VITE_MODEM_IP": {
         "desc": "Exposed modem IP for frontend",
