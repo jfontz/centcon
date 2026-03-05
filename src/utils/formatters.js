@@ -59,3 +59,23 @@ export const getTemperatureColor = (temp) => {
   if (temperature < 70) return "text-yellow-400";
   return "text-red-400";
 };
+
+/**
+ * Format uptime seconds into human-readable string
+ * @param {number} seconds - Uptime in seconds
+ * @returns {string} Formatted uptime (e.g., "5d 3h 21m 45s")
+ */
+export const formatUptime = (seconds) => {
+  const days = Math.floor(seconds / (3600 * 24));
+  const hours = Math.floor((seconds % (3600 * 24)) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  let result = [];
+  if (days > 0) result.push(`${days}d`);
+  result.push(`${hours}h`);
+  result.push(`${minutes}m`);
+  result.push(`${secs}s`);
+
+  return result.join(" ");
+};

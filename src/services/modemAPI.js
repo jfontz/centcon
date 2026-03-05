@@ -9,6 +9,8 @@ import {
   extractConnectionInfo,
 } from "../utils/modemHelpers.js";
 
+import { formatUptime } from "../utils/formatters.js";
+
 // API endpoint for fetching modem information
 const API_ENDPOINT = "/login_globe.cgi?info";
 
@@ -107,7 +109,7 @@ class ModemApiClient {
       cpuUsage: onuInfo.CPUUsage || 0,
       memoryUsage: parseInt(memUsage),
       uptime: onuInfo.UpTime || 0,
-      uptimeFormatted: this.formatUptime(onuInfo.UpTime || 0),
+      uptimeFormatted: formatUptime(onuInfo.UpTime || 0),
     };
   }
 
@@ -200,25 +202,7 @@ class ModemApiClient {
     };
   }
 
-  /**
-   * Format uptime seconds into human-readable string
-   * @param {number} seconds - Uptime in seconds
-   * @returns {string} Formatted uptime (e.g., "5d 3h 21m 45s")
-   */
-  formatUptime(seconds) {
-    const days = Math.floor(seconds / (3600 * 24));
-    const hours = Math.floor((seconds % (3600 * 24)) / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
 
-    let result = [];
-    if (days > 0) result.push(`${days}d`);
-    result.push(`${hours}h`);
-    result.push(`${minutes}m`);
-    result.push(`${secs}s`);
-
-    return result.join(" ");
-  }
 
   /**
    * Main method to get parsed modem data
