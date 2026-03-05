@@ -46,7 +46,7 @@ function Dashboard() {
           </div>
 
           {/* RIGHT COLUMN (Log) - visible on desktop only  */}
-          <div className="hidden lg:flex lg:col-span-4 h-full flex-col min-h-">
+          <div className="hidden lg:flex lg:col-span-4 h-full flex-col">
             <LogPanel />
           </div>
         </div>
