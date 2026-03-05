@@ -1,3 +1,15 @@
+/**
+ * Modem Context
+ * Manages modem state including real-time data, reboot state, and logs.
+ * Integrates with the backend API for device control and server-sent events for status updates.
+ * 
+ * Provides:
+ * - Modem data (wireless, device, optical, WAN, connected devices)
+ * - Reboot state and logs with real-time streaming
+ * - Methods to trigger reboot/login operations
+ * - Status tracking and error handling
+ */
+
 import { createContext, useContext, useState, useEffect } from "react";
 import { useModemData } from "../hooks/useModemData";
 import {

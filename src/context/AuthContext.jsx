@@ -1,3 +1,15 @@
+/**
+ * Authentication Context
+ * Manages user authentication state, login/logout functionality,
+ * and authentication configuration from the backend.
+ * 
+ * Provides:
+ * - isAuthenticated: Whether user is currently logged in
+ * - login/logout: Methods to change auth state
+ * - showLogin: Whether to display login UI (configurable from backend)
+ * - configLoaded: Whether auth config has been fetched
+ */
+
 import { createContext, useContext, useState, useEffect } from "react";
 import { getAuthConfig } from "../services/authAPI";
 

@@ -1,3 +1,10 @@
+/**
+ * Login Page Component
+ * Handles user PIN authentication.
+ * Displays login form and communicates with AuthContext to manage authentication state.
+ * Only visible when login is enabled in the backend configuration.
+ */
+
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { verifyPin } from "../services/authAPI";

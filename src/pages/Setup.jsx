@@ -1,3 +1,10 @@
+/**
+ * Setup/Configuration Page Component
+ * Handles initial device configuration including modem connection settings and PIN setup.
+ * Displayed only on first run when setup is required or when missing values are detected.
+ * Collects modem IP, username, password, and PIN configuration from the user.
+ */
+
 import { useState, useRef, useEffect } from "react";
 import { submitSetup } from "../services/setupAPI";
 
