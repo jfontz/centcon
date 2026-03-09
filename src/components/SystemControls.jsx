@@ -1,62 +1,37 @@
-import { useState } from "react";
-import SectionContainer from "./ui/SectionContainer";
-import SystemControlButton from "./buttons/SystemControlButton";
+import { useEffect, useState } from "react";
+import * as icons from "../assets/icons";
 import { useModem } from "../context/ModemContext";
-import { reboot, newTab } from "../assets/icons";
-
-const controls = [
-  {
-    icon: reboot,
-    label: "Reboot Modem",
-    buttonClass: "btn-reboot",
-    isReboot: true,
-  },
-  {
-    icon: newTab,
-    label: "Login to Modem",
-    buttonClass: "control-btn",
-    isReboot: false,
-  },
-];
+import SystemControlButton from "./buttons/SystemControlButton";
+import SectionContainer from "./ui/SectionContainer";
 
 const SystemControls = () => {
-  const { rebootState, triggerReboot, triggerLogin } = useModem();
-  const [loginInProgress, setLoginInProgress] = useState(false);
-  const [rebootPending, setRebootPending] = useState(false);
+  const { commands, commandState, commandStatuses, triggerCommand } = useModem();
+  const [pendingCommandIds, setPendingCommandIds] = useState([]);
 
-  const handleLogin = async () => {
-    if (loginInProgress) return;
-
-    setLoginInProgress(true);
-
-    try {
-      await triggerLogin();
-
-      setTimeout(() => {
-        setLoginInProgress(false);
-      }, 3000);
-    } catch (error) {
-      console.error("Login failed:", error);
-      setLoginInProgress(false);
-    }
-  };
+  useEffect(() => {
+    setPendingCommandIds((prev) =>
+      prev.filter((commandId) => {
+        const status = commandStatuses[commandId];
+        return !status || status.active;
+      }),
+    );
+  }, [commandStatuses]);
 
   return (
     <div className="bg-black text-white text-sm">
       <SectionContainer title="System Controls" className="flex">
         <div className="flex flex-col gap-4">
-          {controls.map(({ icon, label, buttonClass, isReboot }) => (
+          {commands.map((command) => (
             <SystemControlButton
-              key={label}
-              icon={icon}
-              label={label}
-              buttonClass={buttonClass}
-              onClick={isReboot ? undefined : handleLogin}
-              rebootState={rebootState}
-              triggerReboot={isReboot ? triggerReboot : undefined}
-              loginInProgress={!isReboot ? loginInProgress : undefined}
-              rebootPending={rebootPending}
-              setRebootPending={setRebootPending}
+              key={command.id}
+              command={command}
+              icon={icons[command.icon]}
+              commandState={commandState}
+              commandStatuses={commandStatuses}
+              commands={commands}
+              pendingCommandIds={pendingCommandIds}
+              setPendingCommandIds={setPendingCommandIds}
+              onTrigger={triggerCommand}
             />
           ))}
         </div>

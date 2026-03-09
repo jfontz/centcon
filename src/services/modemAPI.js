@@ -220,7 +220,7 @@ class ModemApiClient {
 // Export singleton instance for use throughout the application
 export const modemApi = new ModemApiClient();
 
-// --- Reboot SSE & API (backend at VITE_REBOOT_API_URL) ---
+// --- Selenium command SSE & API (backend at VITE_REBOOT_API_URL) ---
 const REBOOT_API_BASE =
   import.meta.env.VITE_REBOOT_API_URL || "http://localhost:8000";
 
@@ -252,22 +252,21 @@ export const connectToRebootEvents = (onEvent) => {
 };
 
 /**
- * Trigger router reboot. Backend starts Selenium in background; progress comes via SSE.
- * @returns {Promise<{ ok: boolean, message?: string }>}
+ * Fetch available Selenium-backed control commands.
+ * @returns {Promise<Array<{id: string, label: string, buttonClass: string, icon: string, confirm: boolean, dangerous: boolean}>>}
  */
-export const triggerReboot = async () => {
-  const response = await fetch(`${REBOOT_API_BASE}/reboot`, {
-    method: "POST",
-  });
-  return response.json();
+export const fetchCommands = async () => {
+  const response = await fetch(`${REBOOT_API_BASE}/commands`);
+  const data = await response.json();
+  return data.commands || [];
 };
 
 /**
- * Trigger router login. Opens browser and logs in, leaves window open.
+ * Trigger a Selenium-backed modem command.
  * @returns {Promise<{ ok: boolean, message?: string }>}
  */
-export const triggerLogin = async () => {
-  const response = await fetch(`${REBOOT_API_BASE}/login`, {
+export const triggerCommand = async (commandId) => {
+  const response = await fetch(`${REBOOT_API_BASE}/commands/${commandId}`, {
     method: "POST",
   });
   return response.json();

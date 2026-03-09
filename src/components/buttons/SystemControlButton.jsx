@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import RebootConfirmModal from "../modals/RebootConfirmModal";
 
-const REBOOT_BUSY_STATES = [
+const ACTIVE_COMMAND_STATES = [
+  "RUNNING",
   "LOGGING_IN",
   "NAVIGATING",
   "REBOOTING",
@@ -10,103 +11,136 @@ const REBOOT_BUSY_STATES = [
 ];
 
 const SystemControlButton = ({
+  command,
   icon,
-  label,
-  buttonClass,
-  onClick,
-  rebootState,
-  triggerReboot,
-  loginInProgress = false,
-  rebootPending,
-  setRebootPending,
+  commandState,
+  commandStatuses,
+  commands,
+  onTrigger,
+  pendingCommandIds,
+  setPendingCommandIds,
 }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  const isReboot =
-    label === "Reboot Modem" && (rebootState != null || triggerReboot != null);
-  
-  const isLogin = label === "Login to Modem";
+  const isReboot = command.id === "reboot";
+  const status = commandStatuses?.[command.id];
+  const isActiveCommand =
+    commandState?.command === command.id &&
+    ACTIVE_COMMAND_STATES.includes(commandState.state);
+  const isSelfPending = pendingCommandIds.includes(command.id);
+  const pendingBlockingCommandId = pendingCommandIds.find((commandId) => {
+    const pendingCommand = commands.find((candidate) => candidate.id === commandId);
+    return pendingCommand?.blocksOthers;
+  });
+  const activeCommandIds = Object.entries(commandStatuses || {})
+    .filter(([, value]) => value?.active)
+    .map(([commandId]) => commandId);
+  const activeBlockingCommandId = activeCommandIds.find((commandId) => {
+    const activeCommand = commands.find((candidate) => candidate.id === commandId);
+    return activeCommand?.blocksOthers;
+  });
+  const blockingCommandId = pendingBlockingCommandId || activeBlockingCommandId;
+  const anotherBlockingCommandIsActive =
+    blockingCommandId != null && blockingCommandId !== command.id;
+  const otherPendingCommandIds = pendingCommandIds.filter(
+    (commandId) => commandId !== command.id,
+  );
+  const anotherCommandIsActive =
+    activeCommandIds.some((commandId) => commandId !== command.id) ||
+    otherPendingCommandIds.length > 0;
+  const disallowedWhileBusy =
+    anotherCommandIsActive && command.allowWhileBusy === false;
+  const selfDisabled =
+    command.disableSelf &&
+    (isSelfPending || status?.active || isActiveCommand);
+  const disabled =
+    anotherBlockingCommandIsActive || disallowedWhileBusy || selfDisabled;
 
-  const isRebooting =
-    rebootState && REBOOT_BUSY_STATES.includes(rebootState.state);
-
-  // Disable reboot button when rebooting or pending
-  // Disable login button when login in progress OR reboot pending
-  // Disable ALL buttons when rebooting
-  const disabled = isReboot 
-    ? (isRebooting || rebootPending) 
-    : isLogin 
-    ? (loginInProgress || rebootPending)
-    : isRebooting;
-
-  // Clear pending when reboot finishes (ONLINE or FAILED)
   useEffect(() => {
-    if (rebootState?.state === "ONLINE" || rebootState?.state === "FAILED") {
-      setRebootPending?.(false);
-    }
-  }, [rebootState?.state, setRebootPending]);
+    setPendingCommandIds((prev) =>
+      prev.filter((commandId) => {
+        const currentStatus = commandStatuses?.[commandId];
+        return !currentStatus || currentStatus.active;
+      }),
+    );
+  }, [commandStatuses, setPendingCommandIds]);
 
   const overlayText = (() => {
-    // Reboot overlay text
-    if (isReboot && rebootState && disabled) {
-      if (rebootState.state === "WAITING" && rebootState.countdown != null)
-        return `Rebooting… ${rebootState.countdown}s`;
-      if (rebootState.state === "CHECKING_CONNECTION")
-        return "Checking connection…";
-      return "Rebooting…";
+    if (!isActiveCommand) {
+      return null;
     }
-    
-    // Login overlay text
-    if (isLogin && loginInProgress) {
-      return "Opening browser…";
+
+    if (isReboot) {
+      if (commandState.state === "WAITING" && commandState.countdown != null) {
+        return `Rebooting... ${commandState.countdown}s`;
+      }
+      if (commandState.state === "CHECKING_CONNECTION") {
+        return "Checking connection...";
+      }
+      return "Rebooting...";
     }
-    
-    return null;
+
+    if (commandState.state === "RUNNING") return "Opening browser...";
+    if (commandState.state === "LOGGING_IN") return "Logging in...";
+    if (commandState.state === "NAVIGATING") return "Navigating...";
+
+    return commandState.message || "Working...";
   })();
 
-  const handleClick = () => {
-    if (isReboot && triggerReboot) {
-      if (!disabled) setShowConfirmModal(true);
-      return;
-    }
-    
-    // For login button - respect disabled state
-    if (!disabled) {
-      onClick?.();
+  const handleTrigger = async () => {
+    setPendingCommandIds?.((prev) =>
+      prev.includes(command.id) ? prev : [...prev, command.id],
+    );
+    try {
+      const res = await onTrigger?.(command.id);
+      if (!res?.ok) {
+        setPendingCommandIds?.((prev) =>
+          prev.filter((commandId) => commandId !== command.id),
+        );
+      }
+    } catch {
+      setPendingCommandIds?.((prev) =>
+        prev.filter((commandId) => commandId !== command.id),
+      );
     }
   };
 
-  const handleConfirmReboot = async () => {
-    setShowConfirmModal(false);
-    setRebootPending?.(true);
-    try {
-      const res = await triggerReboot?.();
-      if (!res?.ok) setRebootPending?.(false);
-    } catch {
-      setRebootPending?.(false);
+  const handleClick = () => {
+    if (command.confirm) {
+      if (!disabled) setShowConfirmModal(true);
+      return;
     }
+
+    if (!disabled) {
+      handleTrigger();
+    }
+  };
+
+  const handleConfirm = async () => {
+    setShowConfirmModal(false);
+    await handleTrigger();
   };
 
   return (
     <>
       <button
-        className={`${buttonClass} disabled:opacity-60 disabled:cursor-not-allowed`}
+        className={`${command.buttonClass} disabled:opacity-60 disabled:cursor-not-allowed`}
         onClick={handleClick}
         disabled={disabled}
         type="button"
-        aria-label={label}
+        aria-label={command.label}
       >
         <img
           src={icon}
-          alt={label}
+          alt={command.label}
           className="w-4.5 h-4.5 pointer-events-none select-none"
         />
-        <p>{overlayText != null ? overlayText : label}</p>
+        <p>{overlayText != null ? overlayText : command.label}</p>
       </button>
       <RebootConfirmModal
         isOpen={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
-        onConfirm={handleConfirmReboot}
+        onConfirm={handleConfirm}
       />
     </>
   );

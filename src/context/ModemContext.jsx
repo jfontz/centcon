@@ -14,65 +14,113 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { useModemData } from "../hooks/useModemData";
 import {
   connectToRebootEvents,
-  triggerReboot as apiTriggerReboot,
-  triggerLogin as apiTriggerLogin,
+  fetchCommands as apiFetchCommands,
+  triggerCommand as apiTriggerCommand,
 } from "../services/modemAPI";
 
 const ModemContext = createContext(null);
 
-const initialRebootState = {
+const initialCommandState = {
   state: "IDLE",
   message: "",
   progress: 0,
   countdown: null,
+  command: null,
 };
 
+const TERMINAL_COMMAND_STATES = ["FAILED", "ONLINE", "SUCCEEDED"];
+
 export const ModemProvider = ({ children }) => {
-  const [rebootState, setRebootState] = useState(initialRebootState);
-  const [rebootLogs, setRebootLogs] = useState([]);
-  const modemState = useModemData(rebootState);
+  const [commandState, setCommandState] = useState(initialCommandState);
+  const [commandLogs, setCommandLogs] = useState([]);
+  const [commands, setCommands] = useState([]);
+  const [commandStatuses, setCommandStatuses] = useState({});
+  const modemState = useModemData(commandState);
+
+  useEffect(() => {
+    const loadCommands = async () => {
+      try {
+        const availableCommands = await apiFetchCommands();
+        setCommands(availableCommands);
+      } catch (error) {
+        console.error("Failed to load commands:", error);
+      }
+    };
+
+    loadCommands();
+  }, []);
 
   useEffect(() => {
     const eventSource = connectToRebootEvents((event) => {
       if (event.type === "state") {
-        setRebootState((prev) => ({ ...prev, ...event }));
+        setCommandState((prev) => ({ ...prev, ...event }));
+        if (event.command) {
+          setCommandStatuses((prev) => ({
+            ...prev,
+            [event.command]: {
+              state: event.state,
+              message: event.message || "",
+              progress: event.progress ?? 0,
+              countdown:
+                event.countdown ?? prev[event.command]?.countdown ?? null,
+              active: !TERMINAL_COMMAND_STATES.includes(event.state),
+            },
+          }));
+        }
       }
       if (event.type === "log") {
         const timestamp = event.timestamp || new Date().toISOString();
-        setRebootLogs((prev) => [
+        setCommandLogs((prev) => [
           ...prev,
-          { ...event, id: `reboot-${timestamp}-${prev.length}`, timestamp },
+          {
+            ...event,
+            id: `${event.command || "system"}-${timestamp}-${prev.length}`,
+            timestamp,
+          },
         ]);
       }
       if (event.type === "countdown") {
-        setRebootState((prev) => ({ ...prev, countdown: event.countdown }));
+        setCommandState((prev) => ({ ...prev, countdown: event.countdown }));
+        if (event.command) {
+          setCommandStatuses((prev) => ({
+            ...prev,
+            [event.command]: {
+              ...(prev[event.command] || {
+                state: "IDLE",
+                message: "",
+                progress: 0,
+                countdown: null,
+                active: false,
+              }),
+              countdown: event.countdown,
+            },
+          }));
+        }
       }
     });
     return () => eventSource.close();
   }, []);
 
-  const triggerReboot = async () => {
-    const res = await apiTriggerReboot();
-    // Do not clear logs automatically; they should persist across reboots.
+  const triggerCommand = async (commandId) => {
+    const res = await apiTriggerCommand(commandId);
     return res;
   };
 
-  const triggerLogin = async () => {
-    const res = await apiTriggerLogin();
-    return res;
-  };
-
-  const clearRebootLogs = () => setRebootLogs([]);
+  const clearCommandLogs = () => setCommandLogs([]);
 
   return (
     <ModemContext.Provider
       value={{
         ...modemState,
-        rebootState,
-        rebootLogs,
-        triggerReboot,
-        triggerLogin,
-        clearRebootLogs,
+        commands,
+        commandState,
+        commandStatuses,
+        commandLogs,
+        triggerCommand,
+        clearCommandLogs,
+        rebootState: commandState,
+        rebootLogs: commandLogs,
+        clearRebootLogs: clearCommandLogs,
       }}
     >
       {children}
