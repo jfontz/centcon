@@ -28,6 +28,8 @@ const SystemControlButton = ({
     commandState?.command === command.id &&
     ACTIVE_COMMAND_STATES.includes(commandState.state);
   const isSelfPending = pendingCommandIds.includes(command.id);
+  // Pending commands must participate in the lock rules immediately, before
+  // the backend emits its first SSE state update.
   const pendingBlockingCommandId = pendingCommandIds.find((commandId) => {
     const pendingCommand = commands.find((candidate) => candidate.id === commandId);
     return pendingCommand?.blocksOthers;
@@ -50,6 +52,8 @@ const SystemControlButton = ({
     otherPendingCommandIds.length > 0;
   const disallowedWhileBusy =
     anotherCommandIsActive && command.allowWhileBusy === false;
+  // disableSelf covers the common UX case where a button should lock itself
+  // as soon as it is clicked, even if it does not block other commands.
   const selfDisabled =
     command.disableSelf &&
     (isSelfPending || status?.active || isActiveCommand);
