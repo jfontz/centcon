@@ -55,6 +55,8 @@ export const ModemProvider = ({ children }) => {
       if (event.type === "state") {
         setCommandState((prev) => ({ ...prev, ...event }));
         if (event.command) {
+          // Keep a per-command status map so button-disable rules do not depend
+          // on whichever command most recently updated the shared SSE state.
           setCommandStatuses((prev) => ({
             ...prev,
             [event.command]: {
@@ -82,6 +84,8 @@ export const ModemProvider = ({ children }) => {
       if (event.type === "countdown") {
         setCommandState((prev) => ({ ...prev, countdown: event.countdown }));
         if (event.command) {
+          // Countdown events arrive separately from state events, so merge them
+          // into the cached command status without resetting the rest of the entry.
           setCommandStatuses((prev) => ({
             ...prev,
             [event.command]: {
