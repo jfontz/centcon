@@ -36,6 +36,7 @@ from setup_utils import (
     REQUIRED_VARS,
 )
 
+# Command metadata is the contract between backend scheduling and frontend button behavior.
 COMMAND_DEFINITIONS = {
     "reboot": {
         "label": "Reboot Modem",
@@ -217,6 +218,9 @@ async def start_command(command_id: str):
         raise HTTPException(status_code=409, detail=f"{command_id} already in progress")
 
     if command_in_progress:
+        # A blocking command is exclusive in both directions:
+        # it prevents later commands from starting, and it cannot start
+        # while any other command is already active.
         active_blockers = [
             active_id
             for active_id in command_in_progress
