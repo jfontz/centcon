@@ -27,6 +27,7 @@ from pydantic import BaseModel
 from state_manager import get_state, subscribe, unsubscribe, event_stream
 from selenium_reboot import run_reboot_workflow
 from selenium_login import run_login_workflow
+from selenium_open_reboot_page import run_open_reboot_page_workflow
 
 from setup_utils import (
     check_setup_needed,
@@ -35,9 +36,43 @@ from setup_utils import (
     REQUIRED_VARS,
 )
 
-# Prevent multiple simultaneous reboot processes
-reboot_in_progress = False
-login_in_progress = False
+COMMAND_DEFINITIONS = {
+    "reboot": {
+        "label": "Reboot Modem",
+        "buttonClass": "btn-reboot",
+        "icon": "reboot",
+        "confirm": True,
+        "dangerous": True,
+        "blocksOthers": True,
+        "allowWhileBusy": False,
+        "disableSelf": True,
+        "workflow": run_reboot_workflow,
+    },
+    "login": {
+        "label": "Login to Modem",
+        "buttonClass": "control-btn",
+        "icon": "newTab",
+        "confirm": False,
+        "dangerous": False,
+        "blocksOthers": False,
+        "allowWhileBusy": True,
+        "disableSelf": True,
+        "workflow": run_login_workflow,
+    },
+    "open-reboot-page": {
+        "label": "Open Reboot Page",
+        "buttonClass": "control-btn",
+        "icon": "navigate",
+        "confirm": False,
+        "dangerous": False,
+        "blocksOthers": False,
+        "allowWhileBusy": True,
+        "disableSelf": True,
+        "workflow": run_open_reboot_page_workflow,
+    },
+}
+
+command_in_progress: set[str] = set()
 
 # Load CORS origins from .env or fallback to localhost defaults
 cors_origins_env = os.getenv("CORS_ORIGINS", "")
@@ -141,62 +176,77 @@ async def setup_complete(request: SetupRequest):
         raise HTTPException(status_code=500, detail=f"Setup failed: {str(e)}")
 
 
-# Reboot workflow
-async def _run_reboot_then_clear():
-    global reboot_in_progress
+async def _run_command_then_clear(command_id: str):
+    """Run a registered command workflow and clear its in-progress marker."""
     try:
-        await run_reboot_workflow()
+        workflow = COMMAND_DEFINITIONS[command_id]["workflow"]
+        await workflow()
     finally:
-        reboot_in_progress = False
+        command_in_progress.discard(command_id)
 
 
-@app.post("/reboot")
-async def reboot():
-    """Start router reboot workflow in background; returns immediately."""
-    global reboot_in_progress
-    if reboot_in_progress:
-        raise HTTPException(
-            status_code=409,
-            detail="Reboot already in progress",
-        )
-    state = get_state()
-    if state["state"] not in ("IDLE", "ONLINE", "FAILED"):
-        raise HTTPException(
-            status_code=409,
-            detail="Reboot already in progress",
-        )
-    reboot_in_progress = True
-    asyncio.create_task(_run_reboot_then_clear())
-    return {"ok": True, "message": "Reboot started"}
+@app.get("/commands")
+async def list_commands():
+    """Return available Selenium-backed commands for the dashboard controls."""
+    return {
+        "commands": [
+            {
+                "id": command_id,
+                "label": definition["label"],
+                "buttonClass": definition["buttonClass"],
+                "icon": definition["icon"],
+                "confirm": definition["confirm"],
+                "dangerous": definition["dangerous"],
+                "blocksOthers": definition["blocksOthers"],
+                "allowWhileBusy": definition["allowWhileBusy"],
+                "disableSelf": definition["disableSelf"],
+            }
+            for command_id, definition in COMMAND_DEFINITIONS.items()
+        ]
+    }
 
 
-# Login workflow
-async def _run_login_then_clear():
-    global login_in_progress
+@app.post("/commands/{command_id}")
+async def start_command(command_id: str):
+    """Start a registered Selenium command in the background."""
+    if command_id not in COMMAND_DEFINITIONS:
+        raise HTTPException(status_code=404, detail="Unknown command")
+
+    definition = COMMAND_DEFINITIONS[command_id]
+    if command_id in command_in_progress:
+        raise HTTPException(status_code=409, detail=f"{command_id} already in progress")
+
+    if command_in_progress:
+        active_blockers = [
+            active_id
+            for active_id in command_in_progress
+            if COMMAND_DEFINITIONS[active_id]["blocksOthers"]
+        ]
+        if active_blockers:
+            raise HTTPException(
+                status_code=409,
+                detail=f"{active_blockers[0]} is blocking other commands",
+            )
+
+        if definition["blocksOthers"]:
+            raise HTTPException(
+                status_code=409,
+                detail=f"{command_id} requires all other commands to be idle",
+            )
+
+        if not definition["allowWhileBusy"]:
+            raise HTTPException(
+                status_code=409,
+                detail=f"{command_id} cannot run while another command is active",
+            )
+
+    command_in_progress.add(command_id)
+
     try:
-        await run_login_workflow()
-    finally:
-        login_in_progress = False
-
-
-@app.post("/login")
-async def login_to_modem():
-    """Open browser and login to modem, leave window open for user."""
-    global login_in_progress
-
-    if login_in_progress:
-        raise HTTPException(
-            status_code=409,
-            detail="Login already in progress",
-        )
-
-    login_in_progress = True
-
-    try:
-        asyncio.create_task(_run_login_then_clear())
-        return {"ok": True, "message": "Login started"}
+        asyncio.create_task(_run_command_then_clear(command_id))
+        return {"ok": True, "message": f"{command_id} started"}
     except Exception as e:
-        login_in_progress = False
+        command_in_progress.discard(command_id)
         raise HTTPException(status_code=500, detail=str(e))
 
 

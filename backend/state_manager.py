@@ -12,6 +12,7 @@ INITIAL_STATE = {
     "message": "",        # Human-readable status for the UI
     "progress": 0,        # 0–100 approximate progress for StatusBadge
     "countdown": None,    # Remaining seconds in reboot countdown (or None when idle)
+    "command": None,      # Active command id for the current Selenium workflow
 }
 
 _state: dict = INITIAL_STATE.copy()
@@ -73,6 +74,7 @@ async def emit(event: dict) -> None:
             "state": event.get("state", _state["state"]),
             "message": event.get("message", _state["message"]),
             "progress": event.get("progress", _state["progress"]),
+            "command": event.get("command", _state["command"]),
         })
     if event.get("type") == "countdown":
         update_state({"countdown": event.get("countdown")})

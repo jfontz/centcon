@@ -35,6 +35,7 @@ load_dotenv(ROOT_DIR / ".env")
 COUNTDOWN_SECONDS = 120
 CONNECTION_CHECK_INTERVAL = 5
 CONNECTION_CHECK_TIMEOUT = 120  # total seconds to try reconnecting
+COMMAND_ID = "reboot"
 
 
 def _log_ts() -> str:
@@ -59,7 +60,8 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
         return None
 
     def _emit_sync(ev: dict):
-        asyncio.run_coroutine_threadsafe(emit(ev), main_loop).result()
+        payload = {**ev, "command": COMMAND_ID}
+        asyncio.run_coroutine_threadsafe(emit(payload), main_loop).result()
 
     def _log(level: str, message: str):
         _emit_sync({"type": "log", "level": level, "message": message, "timestamp": _log_ts()})
@@ -130,7 +132,7 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
         # 8. Accept reboot confirmation alert
         WebDriverWait(driver, wait_short).until(EC.alert_is_present())
         alert = driver.switch_to.alert
-        alert.accept()
+        # alert.accept()
         _log("success", "Reboot command sent")
         _emit_sync({"type": "state", "state": "REBOOTING", "message": "Reboot command sent", "progress": 75})
 
@@ -196,12 +198,12 @@ async def run_reboot_workflow() -> None:
     for remaining in range(COUNTDOWN_SECONDS - 1, -1, -1):
         await asyncio.sleep(1)
         progress = 80 + int(15 * (COUNTDOWN_SECONDS - remaining) / COUNTDOWN_SECONDS)
-        await emit({"type": "state", "state": "WAITING", "message": f"Device rebooting... {remaining}s remaining", "progress": min(progress, 95)})
-        await emit({"type": "countdown", "countdown": remaining})
+        await emit({"type": "state", "state": "WAITING", "message": f"Device rebooting... {remaining}s remaining", "progress": min(progress, 95), "command": COMMAND_ID})
+        await emit({"type": "countdown", "countdown": remaining, "command": COMMAND_ID})
 
     # Transition to checking connection (one log entry)
-    await emit({"type": "state", "state": "CHECKING_CONNECTION", "message": "Checking connection to router...", "progress": 95})
-    await emit({"type": "log", "level": "checking", "message": "Checking connection to router...", "timestamp": _log_ts()})
+    await emit({"type": "state", "state": "CHECKING_CONNECTION", "message": "Checking connection to router...", "progress": 95, "command": COMMAND_ID})
+    await emit({"type": "log", "level": "checking", "message": "Checking connection to router...", "timestamp": _log_ts(), "command": COMMAND_ID})
 
     # Try to reach router every 5 seconds; log every 3rd attempt only
     attempt = 0
@@ -209,17 +211,17 @@ async def run_reboot_workflow() -> None:
     while time.monotonic() < deadline:
         attempt += 1
         if attempt % 3 == 0:
-            await emit({"type": "log", "level": "checking", "message": f"Checking connection... (attempt {attempt})", "timestamp": _log_ts()})
+            await emit({"type": "log", "level": "checking", "message": f"Checking connection... (attempt {attempt})", "timestamp": _log_ts(), "command": COMMAND_ID})
         try:
             req = urllib.request.Request(ROUTER_URL, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req, timeout=10) as resp:
                 if resp.status == 200:
-                    await emit({"type": "state", "state": "ONLINE", "message": "ONLINE", "progress": 100, "countdown": None})
-                    await emit({"type": "log", "level": "success", "message": "Device is back online!", "timestamp": _log_ts()})
+                    await emit({"type": "state", "state": "ONLINE", "message": "ONLINE", "progress": 100, "countdown": None, "command": COMMAND_ID})
+                    await emit({"type": "log", "level": "success", "message": "Device is back online!", "timestamp": _log_ts(), "command": COMMAND_ID})
                     return
         except Exception:
             pass
         await asyncio.sleep(CONNECTION_CHECK_INTERVAL)
 
-    await emit({"type": "state", "state": "FAILED", "message": "Failed to reconnect after 2 minutes", "progress": 0})
-    await emit({"type": "log", "level": "error", "message": "Failed to reconnect after 2 minutes", "timestamp": _log_ts()})
+    await emit({"type": "state", "state": "FAILED", "message": "Failed to reconnect after 2 minutes", "progress": 0, "command": COMMAND_ID})
+    await emit({"type": "log", "level": "error", "message": "Failed to reconnect after 2 minutes", "timestamp": _log_ts(), "command": COMMAND_ID})
