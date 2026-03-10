@@ -148,9 +148,12 @@ centcon/
 ├── .gitignore
 ├── eslint.config.js
 ├── index.html
+├── LICENSE
 ├── package.json
 ├── package-lock.json
 ├── vite.config.js
+├── public/
+│   └── favicon.svg
 │
 ├── src/
 │   ├── App.jsx
@@ -176,7 +179,7 @@ centcon/
 │   │   │   └── LogHeader.jsx
 │   │   ├── modals/
 │   │   │   └── RebootConfirmModal.jsx
-│   │   ├── ui/                 ← IconWrapper, MainLayout, MetricCard, SectionContainer
+│   │   ├── ui/                 ← HelpTooltip, IconWrapper, InputField, MainLayout, MetricCard, SectionContainer
 │   │   ├── ConnectedDevices.jsx
 │   │   ├── DeviceInformation.jsx
 │   │   ├── LogPanel.jsx
@@ -195,9 +198,14 @@ centcon/
 │   │   └── Setup.jsx           ← first-run setup wizard
 │   │
 │   ├── services/
+│   │   ├── apiConfig.js
 │   │   ├── authAPI.js
-│   │   ├── modemAPI.js
+│   │   ├── commandApi.js
+│   │   ├── modemDataApi.js
 │   │   └── setupAPI.js
+│   │
+│   ├── config/
+│   │   └── systemCommands.js
 │   │
 │   └── utils/
 │       ├── formatters.js
@@ -215,6 +223,22 @@ centcon/
     ├── requirements.txt
     └── .venv/                  ← Python virtual environment (not committed)
 ```
+
+---
+
+## Extending CENTCON
+
+The frontend renders system control buttons automatically from the config file, so no changes to `SystemControls.jsx` are needed when adding or removing buttons.
+
+Removing a button:
+- Delete its entry from `src/config/systemCommands.js`.
+- Delete its entry from `COMMAND_DEFINITIONS` in `backend/main.py`.
+- Delete its workflow file from `backend/`.
+
+Adding a button:
+- Add a new entry to `src/config/systemCommands.js` with the required fields: `id`, `label`, `buttonClass`, `icon`, `confirm`, `dangerous`, `blocksOthers`, `allowWhileBusy`, `disableSelf`.
+- Create a new Selenium workflow file in `backend/` following the same pattern as `selenium_reboot.py` or `selenium_login.py`.
+- Add a matching entry to `COMMAND_DEFINITIONS` in `backend/main.py`.
 
 ---
 
