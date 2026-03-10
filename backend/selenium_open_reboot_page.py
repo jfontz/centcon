@@ -207,3 +207,6 @@ async def run_open_reboot_page_workflow() -> None:
         lambda: _run_open_reboot_page_blocking(loop, router_url, username, password),
     )
     await future
+
+
+# TODO: Remove this experimental command and related code after testing is complete, or move to a separate file for future reference.
