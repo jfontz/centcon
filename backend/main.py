@@ -1,5 +1,5 @@
 """
-FastAPI app for CENTCON: setup (/api/setup-*), reboot (/reboot), login (/login),
+FastAPI app for CENTCON: setup (/api/setup-*), command execution (/commands),
 state streaming (/events), state polling (/state), PIN verification (/verify-pin),
 and auth configuration (/auth-config).
 """
@@ -73,6 +73,14 @@ COMMAND_DEFINITIONS = {
     },
 }
 
+ERR_UNKNOWN_COMMAND = "Unknown command"
+ERR_ALREADY_IN_PROGRESS = "already in progress"
+ERR_BLOCKING_ACTIVE = "is blocking other commands"
+ERR_REQUIRES_IDLE = "requires all other commands to be idle"
+ERR_BUSY = "cannot run while another command is active"
+OK_STARTED = "started"
+
+# In-process guard only; expected to run as a single-process backend.
 command_in_progress: set[str] = set()
 
 # Load CORS origins from .env or fallback to localhost defaults
@@ -137,12 +145,7 @@ async def setup_needed():
 
         return response
     except Exception as e:
-        return {
-            "setupRequired": True,
-            "missingFields": list(REQUIRED_VARS.keys()),
-            "invalidFields": [],
-            "error": str(e),
-        }
+        raise HTTPException(status_code=500, detail=f"Setup check failed: {str(e)}")
 
 
 @app.post("/api/setup-complete")
@@ -211,11 +214,14 @@ async def list_commands():
 async def start_command(command_id: str):
     """Start a registered Selenium command in the background."""
     if command_id not in COMMAND_DEFINITIONS:
-        raise HTTPException(status_code=404, detail="Unknown command")
+        raise HTTPException(status_code=404, detail=ERR_UNKNOWN_COMMAND)
 
     definition = COMMAND_DEFINITIONS[command_id]
     if command_id in command_in_progress:
-        raise HTTPException(status_code=409, detail=f"{command_id} already in progress")
+        raise HTTPException(
+            status_code=409,
+            detail=f"{command_id} {ERR_ALREADY_IN_PROGRESS}",
+        )
 
     if command_in_progress:
         # A blocking command is exclusive in both directions:
@@ -229,26 +235,26 @@ async def start_command(command_id: str):
         if active_blockers:
             raise HTTPException(
                 status_code=409,
-                detail=f"{active_blockers[0]} is blocking other commands",
+                detail=f"{active_blockers[0]} {ERR_BLOCKING_ACTIVE}",
             )
 
         if definition["blocksOthers"]:
             raise HTTPException(
                 status_code=409,
-                detail=f"{command_id} requires all other commands to be idle",
+                detail=f"{command_id} {ERR_REQUIRES_IDLE}",
             )
 
         if not definition["allowWhileBusy"]:
             raise HTTPException(
                 status_code=409,
-                detail=f"{command_id} cannot run while another command is active",
+                detail=f"{command_id} {ERR_BUSY}",
             )
 
     command_in_progress.add(command_id)
 
     try:
         asyncio.create_task(_run_command_then_clear(command_id))
-        return {"ok": True, "message": f"{command_id} started"}
+        return {"ok": True, "message": f"{command_id} {OK_STARTED}"}
     except Exception as e:
         command_in_progress.discard(command_id)
         raise HTTPException(status_code=500, detail=str(e))
@@ -298,7 +304,7 @@ async def events():
 # Polling endpoint for state
 @app.get("/state")
 async def state():
-    """Current reboot state (fallback for environments that cannot use SSE)."""
+    """Current command state (fallback for environments that cannot use SSE)."""
     return get_state()
 
 

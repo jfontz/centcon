@@ -7,14 +7,15 @@ All notable steps and errors are emitted as log events via state_manager.
 """
 
 import asyncio
+import concurrent.futures
 import os
 from datetime import datetime, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import TimeoutException, WebDriverException
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -26,18 +27,73 @@ from state_manager import emit, reset_state
 ROOT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT_DIR / ".env")
 COMMAND_ID = "login"
+WAIT_TIME_SECONDS = 10
+OPEN_BROWSER_PROGRESS = 5
+LOGGING_IN_PROGRESS = 30
+LOGIN_COMPLETE_PROGRESS = 100
+LOGIN_FAILED_PROGRESS = 0
+USERNAME_FIELD_ID = "username"
+PASSWORD_FIELD_ID = "password"
+LOGIN_BUTTON_ID = "login"
+LOGOUT_BUTTON_CLASS = "logout-btn"
+BROWSER_CLOSED_INDICATORS = [
+    "invalid session id",
+    "browser has closed",
+    "no such window",
+    "target window already closed",
+    "web view not found",
+]
+
 
 def _log_ts() -> str:
     """Server-side ISO 8601 timestamp for log events."""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
 
-def _run_login_blocking(main_loop: asyncio.AbstractEventLoop, ROUTER_URL: str, USERNAME: str, PASSWORD: str) -> None:
+def _build_driver() -> webdriver.Chrome:
+    """Create a Chrome driver configured for the login workflow."""
+    options = webdriver.ChromeOptions()
+    # IMPORTANT: Never run headless for login - user must see and control the browser.
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+
+    driver = webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()), options=options
+    )
+    driver.implicitly_wait(WAIT_TIME_SECONDS)
+    return driver
+
+
+def _safe_quit(driver: webdriver.Chrome | None) -> None:
+    if not driver:
+        return
+    try:
+        driver.quit()
+    except Exception:
+        pass
+
+
+def _run_login_blocking(
+    main_loop: asyncio.AbstractEventLoop,
+    router_url: str,
+    username: str,
+    password: str,
+) -> None:
     """Run login in a thread; browser stays open after login for manual control."""
 
     def _emit_sync(ev: dict):
         payload = {**ev, "command": COMMAND_ID}
         asyncio.run_coroutine_threadsafe(emit(payload), main_loop).result()
+
+    def _emit_state(state: str, message: str, progress: int):
+        _emit_sync(
+            {
+                "type": "state",
+                "state": state,
+                "message": message,
+                "progress": progress,
+            }
+        )
 
     def _log(level: str, message: str):
         _emit_sync(
@@ -50,86 +106,51 @@ def _run_login_blocking(main_loop: asyncio.AbstractEventLoop, ROUTER_URL: str, U
         )
 
     driver = None
-    wait_time = 10
 
     try:
-        options = webdriver.ChromeOptions()
-        # IMPORTANT: Never run headless for login – user must see and control the browser.
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-
-        driver = webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()), options=options
-        )
-        driver.implicitly_wait(wait_time)
+        driver = _build_driver()
 
         _log("header", "Login process started")
-        _emit_sync(
-            {
-                "type": "state",
-                "state": "RUNNING",
-                "message": "Opening browser",
-                "progress": 5,
-            }
-        )
+        _emit_state("RUNNING", "Opening browser", OPEN_BROWSER_PROGRESS)
 
         # Navigate to router login page
-        driver.get(ROUTER_URL)
-        _emit_sync(
-            {
-                "type": "state",
-                "state": "LOGGING_IN",
-                "message": "Logging into modem",
-                "progress": 30,
-            }
-        )
+        driver.get(router_url)
+        _emit_state("LOGGING_IN", "Logging into modem", LOGGING_IN_PROGRESS)
 
         # Wait for and fill username field
-        WebDriverWait(driver, wait_time).until(
-            EC.presence_of_element_located((By.ID, "username"))
+        WebDriverWait(driver, WAIT_TIME_SECONDS).until(
+            EC.presence_of_element_located((By.ID, USERNAME_FIELD_ID))
         )
-        elem = driver.find_element(By.ID, "username")
+        elem = driver.find_element(By.ID, USERNAME_FIELD_ID)
         elem.clear()
-        elem.send_keys(USERNAME)
+        elem.send_keys(username)
 
         # Fill password field
-        elem = driver.find_element(By.ID, "password")
+        elem = driver.find_element(By.ID, PASSWORD_FIELD_ID)
         elem.clear()
-        elem.send_keys(PASSWORD)
+        elem.send_keys(password)
 
         # Click login button
-        WebDriverWait(driver, wait_time).until(
-            EC.element_to_be_clickable((By.ID, "login"))
+        WebDriverWait(driver, WAIT_TIME_SECONDS).until(
+            EC.element_to_be_clickable((By.ID, LOGIN_BUTTON_ID))
         )
-        login_button = driver.find_element(By.ID, "login")
-        login_button.click()
+        driver.find_element(By.ID, LOGIN_BUTTON_ID).click()
 
         # Verify login success
         try:
-            WebDriverWait(driver, wait_time).until(
-                EC.presence_of_element_located((By.CLASS_NAME, "logout-btn"))
+            WebDriverWait(driver, WAIT_TIME_SECONDS).until(
+                EC.presence_of_element_located((By.CLASS_NAME, LOGOUT_BUTTON_CLASS))
             )
-            _emit_sync(
-                {
-                    "type": "state",
-                    "state": "SUCCEEDED",
-                    "message": "Browser opened and logged in",
-                    "progress": 100,
-                }
+            _emit_state(
+                "SUCCEEDED",
+                "Browser opened and logged in",
+                LOGIN_COMPLETE_PROGRESS,
             )
             _log("success", "Login successful - Browser left open for manual control")
         except TimeoutException:
-            _emit_sync(
-                {
-                    "type": "state",
-                    "state": "FAILED",
-                    "message": "Login failed",
-                    "progress": 0,
-                }
-            )
+            _emit_state("FAILED", "Login failed", LOGIN_FAILED_PROGRESS)
             _log("error", "Login failed - Invalid credentials or timeout")
-            if driver:
-                driver.quit()
+            _safe_quit(driver)
             return
 
         # DO NOT quit driver - leave browser open for user
@@ -139,62 +160,23 @@ def _run_login_blocking(main_loop: asyncio.AbstractEventLoop, ROUTER_URL: str, U
         # Handle browser-related errors (e.g., user closed browser)
         error_msg = str(e).lower()
 
-        # Check if user closed the browser (various error messages)
-        browser_closed_indicators = [
-            "invalid session id",
-            "browser has closed",
-            "no such window",
-            "target window already closed",
-            "web view not found",
-        ]
-
-        if any(indicator in error_msg for indicator in browser_closed_indicators):
-            _emit_sync(
-                {
-                    "type": "state",
-                    "state": "FAILED",
-                    "message": "Browser was closed by user",
-                    "progress": 0,
-                }
-            )
+        if any(indicator in error_msg for indicator in BROWSER_CLOSED_INDICATORS):
+            _emit_state("FAILED", "Browser was closed by user", LOGIN_FAILED_PROGRESS)
             _log("warning", "Login cancelled - Browser was closed by user")
         else:
             # Strip stacktrace for cleaner error message
             clean_msg = str(e).split("Stacktrace:")[0].strip()
-            _emit_sync(
-                {
-                    "type": "state",
-                    "state": "FAILED",
-                    "message": clean_msg,
-                    "progress": 0,
-                }
-            )
+            _emit_state("FAILED", clean_msg, LOGIN_FAILED_PROGRESS)
             _log("error", f"Browser error: {clean_msg}")
 
-        if driver:
-            try:
-                driver.quit()
-            except:
-                pass
+        _safe_quit(driver)
 
     except Exception as e:
         # Handle other errors with cleaner message
         error_msg = str(e).split("Stacktrace:")[0].strip()
-        _emit_sync(
-            {
-                "type": "state",
-                "state": "FAILED",
-                "message": error_msg,
-                "progress": 0,
-            }
-        )
+        _emit_state("FAILED", error_msg, LOGIN_FAILED_PROGRESS)
         _log("error", f"Login failed: {error_msg}")
-
-        if driver:
-            try:
-                driver.quit()
-            except:
-                pass
+        _safe_quit(driver)
 
 
 async def run_login_workflow() -> None:
@@ -202,14 +184,13 @@ async def run_login_workflow() -> None:
     Run login in a thread, leave browser open.
     No countdown, no connection checking - just login and done.
     """
-    import concurrent.futures
 
     # Load env
-    ROUTER_URL = os.getenv("MODEM_URL")
-    USERNAME = os.getenv("MODEM_USERNAME")
-    PASSWORD = os.getenv("MODEM_PASSWORD")
+    router_url = os.getenv("MODEM_URL")
+    username = os.getenv("MODEM_USERNAME")
+    password = os.getenv("MODEM_PASSWORD")
 
-    if not ROUTER_URL or not USERNAME or not PASSWORD:
+    if not router_url or not username or not password:
         raise RuntimeError("Missing router credentials in .env")
 
     reset_state()
@@ -217,5 +198,8 @@ async def run_login_workflow() -> None:
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
     # Pass env vars into blocking function
-    future = loop.run_in_executor(executor, lambda: _run_login_blocking(loop, ROUTER_URL, USERNAME, PASSWORD))
+    future = loop.run_in_executor(
+        executor,
+        lambda: _run_login_blocking(loop, router_url, username, password),
+    )
     await future

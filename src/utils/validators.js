@@ -47,19 +47,3 @@ export const isValidInternetConnection = (connection, currentAddress) => {
     currentAddress === "Empty"
   );
 };
-
-/**
- * Check if data exists and has items (for arrays)
- * General-purpose validator for array data
- *
- * @param {Array} data - Data to check
- * @returns {boolean} True if data exists and has length > 0
- *
- * @example
- * if (hasData(wlanInfo)) {
- *   // Process WLAN data
- * }
- */
-export const hasData = (data) => {
-  return data && data.length > 0;
-};

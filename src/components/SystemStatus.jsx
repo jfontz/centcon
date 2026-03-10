@@ -5,25 +5,15 @@ import TemperatureCard from "./cards/TemperatureCard";
 import CPUCard from "./cards/CPUCard";
 import MemoryCard from "./cards/MemoryCard";
 import { useModem } from "../context/ModemContext";
-import { getTemperatureStatus, getTemperatureColor } from "../utils/formatters";
+import {
+  formatUptime,
+  getTemperatureStatus,
+  getTemperatureColor,
+} from "../utils/formatters";
 
-// Local formatter to keep the runtime display consistent with the modem API
-const formatUptime = (seconds) => {
+const formatUptimeSafely = (seconds) => {
   if (seconds == null) return null;
-
-  const totalSeconds = Math.max(0, Math.floor(seconds));
-  const days = Math.floor(totalSeconds / (3600 * 24));
-  const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const secs = totalSeconds % 60;
-
-  const parts = [];
-  if (days > 0) parts.push(`${days}d`);
-  parts.push(`${hours}h`);
-  parts.push(`${minutes}m`);
-  parts.push(`${secs}s`);
-
-  return parts.join(" ");
+  return formatUptime(Math.max(0, Math.floor(seconds)));
 };
 
 const SystemStatus = () => {
@@ -58,7 +48,7 @@ const SystemStatus = () => {
       ? loading
         ? "..."
         : deviceInfo?.uptimeFormatted || "N/A"
-      : formatUptime(uptimeSeconds);
+      : formatUptimeSafely(uptimeSeconds);
 
   return (
     <SectionContainer title="System Status" className="w-full h-full">
