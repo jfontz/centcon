@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import RebootConfirmModal from "../modals/RebootConfirmModal";
 
 const ACTIVE_COMMAND_STATES = [
@@ -10,12 +10,48 @@ const ACTIVE_COMMAND_STATES = [
   "CHECKING_CONNECTION",
 ];
 
+const OVERLAY_TEXT = {
+  RUNNING: "Opening browser...",
+  LOGGING_IN: "Logging in...",
+  NAVIGATING: "Navigating...",
+  CHECKING_CONNECTION: "Checking connection...",
+  REBOOTING: "Rebooting...",
+  WORKING: "Working...",
+};
+
+const getCommandById = (commands, commandId) =>
+  commands.find((candidate) => candidate.id === commandId);
+
+const getOverlayText = ({ command, commandState, isActiveCommand }) => {
+  if (!isActiveCommand) {
+    return null;
+  }
+
+  if (command.id === "reboot") {
+    if (commandState.state === "WAITING" && commandState.countdown != null) {
+      return `${OVERLAY_TEXT.REBOOTING} ${commandState.countdown}s`;
+    }
+    if (commandState.state === "CHECKING_CONNECTION") {
+      return OVERLAY_TEXT.CHECKING_CONNECTION;
+    }
+    return OVERLAY_TEXT.REBOOTING;
+  }
+
+  return (
+    OVERLAY_TEXT[commandState.state] ||
+    commandState.message ||
+    OVERLAY_TEXT.WORKING
+  );
+};
+
 const SystemControlButton = ({
   command,
   icon,
   commandState,
   commandStatuses,
   commands,
+  backendOnline = true,
+  backendError,
   onTrigger,
   pendingCommandIds,
   setPendingCommandIds,
@@ -31,18 +67,18 @@ const SystemControlButton = ({
   // Pending commands must participate in the lock rules immediately, before
   // the backend emits its first SSE state update.
   const pendingBlockingCommandId = pendingCommandIds.find((commandId) => {
-    const pendingCommand = commands.find((candidate) => candidate.id === commandId);
+    const pendingCommand = getCommandById(commands, commandId);
     return pendingCommand?.blocksOthers;
   });
   const activeCommandIds = Object.entries(commandStatuses || {})
     .filter(([, value]) => value?.active)
     .map(([commandId]) => commandId);
   const activeBlockingCommandId = activeCommandIds.find((commandId) => {
-    const activeCommand = commands.find((candidate) => candidate.id === commandId);
+    const activeCommand = getCommandById(commands, commandId);
     return activeCommand?.blocksOthers;
   });
   const blockingCommandId = pendingBlockingCommandId || activeBlockingCommandId;
-  const anotherBlockingCommandIsActive =
+  const anotherBlockingCommandExists =
     blockingCommandId != null && blockingCommandId !== command.id;
   const otherPendingCommandIds = pendingCommandIds.filter(
     (commandId) => commandId !== command.id,
@@ -57,39 +93,22 @@ const SystemControlButton = ({
   const selfDisabled =
     command.disableSelf &&
     (isSelfPending || status?.active || isActiveCommand);
+  const backendDisabled = backendOnline === false;
   const disabled =
-    anotherBlockingCommandIsActive || disallowedWhileBusy || selfDisabled;
+    backendDisabled ||
+    anotherBlockingCommandExists ||
+    disallowedWhileBusy ||
+    selfDisabled;
+  const overlayText = getOverlayText({ command, commandState, isActiveCommand });
+  const disabledTitle = backendDisabled
+    ? backendError || "Command backend offline."
+    : undefined;
 
-  useEffect(() => {
-    setPendingCommandIds((prev) =>
-      prev.filter((commandId) => {
-        const currentStatus = commandStatuses?.[commandId];
-        return !currentStatus || currentStatus.active;
-      }),
+  const removePendingCommand = () => {
+    setPendingCommandIds?.((prev) =>
+      prev.filter((commandId) => commandId !== command.id),
     );
-  }, [commandStatuses, setPendingCommandIds]);
-
-  const overlayText = (() => {
-    if (!isActiveCommand) {
-      return null;
-    }
-
-    if (isReboot) {
-      if (commandState.state === "WAITING" && commandState.countdown != null) {
-        return `Rebooting... ${commandState.countdown}s`;
-      }
-      if (commandState.state === "CHECKING_CONNECTION") {
-        return "Checking connection...";
-      }
-      return "Rebooting...";
-    }
-
-    if (commandState.state === "RUNNING") return "Opening browser...";
-    if (commandState.state === "LOGGING_IN") return "Logging in...";
-    if (commandState.state === "NAVIGATING") return "Navigating...";
-
-    return commandState.message || "Working...";
-  })();
+  };
 
   const handleTrigger = async () => {
     setPendingCommandIds?.((prev) =>
@@ -98,14 +117,10 @@ const SystemControlButton = ({
     try {
       const res = await onTrigger?.(command.id);
       if (!res?.ok) {
-        setPendingCommandIds?.((prev) =>
-          prev.filter((commandId) => commandId !== command.id),
-        );
+        removePendingCommand();
       }
     } catch {
-      setPendingCommandIds?.((prev) =>
-        prev.filter((commandId) => commandId !== command.id),
-      );
+      removePendingCommand();
     }
   };
 
@@ -133,6 +148,7 @@ const SystemControlButton = ({
         disabled={disabled}
         type="button"
         aria-label={command.label}
+        title={disabledTitle}
       >
         <img
           src={icon}
