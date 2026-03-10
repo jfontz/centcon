@@ -1,11 +1,11 @@
-const API_BASE = import.meta.env.VITE_REBOOT_API_URL || "http://localhost:8000";
+import { BACKEND_URL } from "./apiConfig";
 
 /**
  * Check if first-run setup is needed.
  * @returns {Promise<{ setupRequired: boolean, missingFields: string[], invalidFields: string[], defaults?: object }>}
  */
 export const checkSetupNeeded = async () => {
-  const response = await fetch(`${API_BASE}/api/setup-needed`);
+  const response = await fetch(`${BACKEND_URL}/api/setup-needed`);
   return response.json();
 };
 
@@ -17,9 +17,16 @@ export const checkSetupNeeded = async () => {
  */
 export const submitSetup = async (data) => {
   let response;
+  const extractErrorDetail = async (res) => {
+    const body = await res.json();
+    if (!body.detail) return null;
+    return Array.isArray(body.detail)
+      ? body.detail.map((e) => e.msg || e.message || String(e)).join(", ")
+      : String(body.detail);
+  };
 
   try {
-    response = await fetch(`${API_BASE}/api/setup-complete`, {
+    response = await fetch(`${BACKEND_URL}/api/setup-complete`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -31,14 +38,9 @@ export const submitSetup = async (data) => {
   if (!response.ok) {
     // Try to extract FastAPI's error detail
     try {
-      const body = await response.json();
+      const detail = await extractErrorDetail(response);
       // FastAPI validation errors come as { detail: [...] } or { detail: "string" }
-      if (body.detail) {
-        const detail = Array.isArray(body.detail)
-          ? body.detail.map((e) => e.msg || e.message || String(e)).join(", ")
-          : String(body.detail);
-        throw new Error(detail);
-      }
+      if (detail) throw new Error(detail);
     } catch (parseError) {
       if (parseError instanceof SyntaxError) {
         throw new Error(`Server error (${response.status})`);
