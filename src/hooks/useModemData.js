@@ -1,7 +1,7 @@
 // React hook for managing modem data state
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { modemApi } from "../services/modemAPI";
+import { modemApi } from "../services/modemDataApi";
 
 export const useModemData = (commandState = { state: "IDLE", command: null }) => {
   const autoRefreshInterval =
