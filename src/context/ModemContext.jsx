@@ -128,6 +128,7 @@ export const ModemProvider = ({ children }) => {
     <ModemContext.Provider
       value={{
         ...modemState,
+        refreshing: modemState.refreshing,
         commands,
         commandState,
         commandStatuses,
