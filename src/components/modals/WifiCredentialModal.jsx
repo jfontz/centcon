@@ -61,7 +61,7 @@ const Field = ({
           <button
             type="button"
             onClick={() => setRevealed((prev) => !prev)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
             aria-label={revealed ? "Hide password" : "Show password"}
             title={revealed ? "Hide password" : "Show password"}
           >
