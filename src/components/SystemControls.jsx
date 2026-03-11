@@ -3,7 +3,7 @@ import * as icons from "../assets/icons";
 import { useModem } from "../context/ModemContext";
 import SystemControlButton from "./buttons/SystemControlButton";
 import SectionContainer from "./ui/SectionContainer";
-import WiFiCredentialModal from "./modals/WiFiCredentialModal";
+import WiFiCredentialModal from "./modals/WifiCredentialModal";
 
 const SystemControls = () => {
   const {
