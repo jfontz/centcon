@@ -42,9 +42,7 @@ const Field = ({ label, value, placeholder, onChange, error }) => (
             : "border-zinc-800 focus:border-zinc-500"
         }`}
     />
-    {error && (
-      <p className="text-[10px] text-red-400 leading-snug">{error}</p>
-    )}
+    {error && <p className="text-[10px] text-red-400 leading-snug">{error}</p>}
   </div>
 );
 
@@ -57,39 +55,79 @@ const BandGrid = ({
   accentClass,
   borderClass,
   disabled,
+  broadcastIntents,
+  onBroadcastIntent,
 }) => (
-  <div className="grid grid-cols-4 gap-1.5">
+  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
     {indices.map((i) => {
       const isSelected = selected.includes(i);
       const bandSelected = selected.find((s) => is24(s) === is24(i));
       const isDisabled =
         disabled || (!isSelected && bandSelected !== undefined);
       const ssid = wlanInfo?.[i]?.SSID;
+      const cardClass = isSelected
+        ? `${accentClass} ${borderClass} text-white`
+        : isDisabled
+          ? "bg-zinc-900/40 border border-zinc-900 text-zinc-700 cursor-not-allowed"
+          : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white";
       return (
-        <button
+        <div
           key={i}
-          onClick={() => onToggle(i)}
-          disabled={isDisabled}
-          className={`py-2 px-1.5 rounded-md transition-all flex flex-col items-center gap-1
-            ${
-              isSelected
-                ? `${accentClass} ${borderClass} text-white`
-                : isDisabled
-                  ? "bg-zinc-900/40 border border-zinc-900 text-zinc-700 cursor-not-allowed"
-                  : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white"
-            }`}
+          className={`py-2 px-1.5 rounded-md transition-all flex flex-col items-center gap-1 ${cardClass}`}
         >
-          <span className="text-[10px] font-bold text-zinc-500">
-            SSID {getModemIndex(i)}
-          </span>
-          {loadState === "loaded" && ssid ? (
-            <span className="text-[9px] truncate w-full text-center font-mono leading-tight">
-              {ssid}
+          <button
+            type="button"
+            onClick={() => {
+              if (isDisabled) return;
+              onToggle(i);
+            }}
+            disabled={isDisabled}
+            className="w-full flex flex-col items-center gap-1 focus:outline-none"
+          >
+            <span className="text-[10px] font-bold text-zinc-500">
+              SSID {getModemIndex(i)}
             </span>
-          ) : (
-            <span className="text-[9px] text-zinc-700">—</span>
-          )}
-        </button>
+            {loadState === "loaded" && ssid ? (
+              <span className="text-[9px] truncate w-full text-center font-mono leading-tight">
+                {ssid}
+              </span>
+            ) : (
+              <span className="text-[9px] text-zinc-700">—</span>
+            )}
+          </button>
+          <div className="flex gap-1 mt-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onBroadcastIntent(i, "enable");
+              }}
+              disabled={disabled}
+              className={`text-[8px] px-1.5 py-0.5 rounded font-bold transition-all
+                ${
+                  broadcastIntents?.[i] === "enable"
+                    ? "bg-emerald-900 text-emerald-400 border border-emerald-700"
+                    : "bg-zinc-800 text-zinc-600 border border-zinc-700 hover:text-zinc-400"
+                }`}
+            >
+              ON
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onBroadcastIntent(i, "disable");
+              }}
+              disabled={disabled}
+              className={`text-[8px] px-1.5 py-0.5 rounded font-bold transition-all
+                ${
+                  broadcastIntents?.[i] === "disable"
+                    ? "bg-red-950 text-red-400 border border-red-800"
+                    : "bg-zinc-800 text-zinc-600 border border-zinc-700 hover:text-zinc-400"
+                }`}
+            >
+              OFF
+            </button>
+          </div>
+        </div>
       );
     })}
   </div>
@@ -103,6 +141,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
   const [selected, setSelected] = useState([]);
   const [fields, setFields] = useState({});
   const [errors, setErrors] = useState({});
+  const [broadcastIntents, setBroadcastIntents] = useState({});
   const [saveState, setSaveState] = useState("idle");
   const [logs, setLogs] = useState([]);
   const logEndRef = useRef(null);
@@ -185,6 +224,20 @@ export default function WiFiCredentialModal({ open, onClose }) {
     });
   };
 
+  const handleBroadcastIntent = (index, intent) => {
+    if (isBusy) return;
+    setBroadcastIntents((prev) => {
+      const next = { ...prev };
+      if (next[index] === intent) {
+        delete next[index];
+      } else {
+        next[index] = intent;
+      }
+      return next;
+    });
+    setSaveState("idle");
+  };
+
   const validateName = (raw) => {
     const value = raw.trim();
     if (value.length === 0) return "Wi-Fi name is required.";
@@ -231,13 +284,23 @@ export default function WiFiCredentialModal({ open, onClose }) {
     logStartIndexRef.current = commandLogs.length;
     seenActiveStateRef.current = false; // reset for this run
 
-    const targets = selected.map((i) => ({
+    const targetIndices = Array.from(
+      new Set([
+        ...selected,
+        ...Object.keys(broadcastIntents).map((i) => Number(i)),
+      ]),
+    ).sort((a, b) => a - b);
+
+    const targets = targetIndices.map((i) => ({
       ssid_index: i,
       freq: getFreqLabel(i),
       modem_index: String(getModemIndex(i)),
       new_name: fields[i]?.newName || "",
       new_pass: fields[i]?.newPass || "",
+      broadcast_intent: broadcastIntents[i] ?? null,
     }));
+
+    setBroadcastIntents({});
 
     try {
       await triggerWifiCredentials(targets);
@@ -256,6 +319,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
       setSelected([]);
       setFields({});
       setErrors({});
+      setBroadcastIntents({});
       setLogs([]);
       logStartIndexRef.current = null;
     }, 200);
@@ -264,6 +328,9 @@ export default function WiFiCredentialModal({ open, onClose }) {
   const hasNewValues = selected.some(
     (i) => fields[i]?.newName || fields[i]?.newPass,
   );
+  const hasBroadcastIntents = Object.keys(broadcastIntents).length > 0;
+  const hasOnlyBroadcast = !hasNewValues && hasBroadcastIntents;
+  const hasBoth = hasNewValues && hasBroadcastIntents;
   const hasValidationErrors = selected.some((i) => {
     const errs = errors[i];
     return Boolean(errs?.name || errs?.pass);
@@ -359,6 +426,8 @@ export default function WiFiCredentialModal({ open, onClose }) {
                 accentClass="bg-blue-950"
                 borderClass="border border-blue-700"
                 disabled={isBusy}
+                broadcastIntents={broadcastIntents}
+                onBroadcastIntent={handleBroadcastIntent}
               />
             </div>
 
@@ -382,6 +451,8 @@ export default function WiFiCredentialModal({ open, onClose }) {
                 accentClass="bg-purple-950"
                 borderClass="border border-purple-700"
                 disabled={isBusy}
+                broadcastIntents={broadcastIntents}
+                onBroadcastIntent={handleBroadcastIntent}
               />
             </div>
 
@@ -404,7 +475,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
           </div>
 
           {/* Credential fields */}
-          {selected.length > 0 && (
+          {(selected.length > 0 || hasBroadcastIntents) && (
             <>
               <div className="border-t border-zinc-900" />
               <div
@@ -465,13 +536,15 @@ export default function WiFiCredentialModal({ open, onClose }) {
             </>
           )}
 
-          {selected.length === 0 && loadState === "loaded" && (
-            <div className="rounded-lg bg-zinc-900/40 border border-zinc-900 px-4 py-4 text-center">
-              <p className="text-[11px] text-zinc-600">
-                Select an SSID above to edit its credentials.
-              </p>
-            </div>
-          )}
+          {selected.length === 0 &&
+            loadState === "loaded" &&
+            !hasBroadcastIntents && (
+              <div className="rounded-lg bg-zinc-900/40 border border-zinc-900 px-4 py-4 text-center">
+                <p className="text-[11px] text-zinc-600">
+                  Select an SSID above to edit its credentials.
+                </p>
+              </div>
+            )}
 
           {/* Inline log */}
           {logs.length > 0 && (
@@ -539,14 +612,17 @@ export default function WiFiCredentialModal({ open, onClose }) {
           )}
 
           {/* Save */}
-          {selected.length > 0 && (
+          {(selected.length > 0 || hasBroadcastIntents) && (
             <>
               <div className="border-t border-zinc-900" />
               <div className="flex flex-col gap-3">
                 <button
                   onClick={handleSave}
                   disabled={
-                    !hasNewValues || hasValidationErrors || isBusy || saveState === "saved"
+                    (!hasNewValues && !hasBroadcastIntents) ||
+                    hasValidationErrors ||
+                    isBusy ||
+                    saveState === "saved"
                   }
                   className="w-full py-2.5 rounded-md bg-white text-black text-xs font-bold tracking-[0.2em] uppercase hover:bg-zinc-200 active:scale-[0.99] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                 >
@@ -554,7 +630,11 @@ export default function WiFiCredentialModal({ open, onClose }) {
                     ? "Applying..."
                     : saveState === "saved"
                       ? "Changes Applied"
-                      : `Apply Changes${selected.length > 1 ? " to Both Bands" : ""}`}
+                      : hasOnlyBroadcast
+                        ? "Apply Broadcast Changes"
+                        : hasBoth
+                          ? "Apply All Changes"
+                          : `Apply Changes${selected.length > 1 ? " to Both Bands" : ""}`}
                 </button>
                 {isBusy && (
                   <p className="text-center text-[10px] text-amber-600">
@@ -563,8 +643,11 @@ export default function WiFiCredentialModal({ open, onClose }) {
                 )}
                 {!isBusy && saveState === "idle" && (
                   <p className="text-center text-[10px] text-zinc-700">
-                    Selenium will navigate to Wi-Fi Settings → Basic and save
-                    changes.
+                    {hasOnlyBroadcast
+                      ? "Selenium will navigate to Wi-Fi Settings → Advanced and update broadcast toggles."
+                      : hasBoth
+                        ? "Selenium will update credentials on Basic, then broadcast toggles on Advanced."
+                        : "Selenium will navigate to Wi-Fi Settings → Basic and save changes."}
                   </p>
                 )}
               </div>
