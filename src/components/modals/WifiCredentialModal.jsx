@@ -25,7 +25,7 @@ const getFreqLabel = (index) => (index < 4 ? "2.4" : "5");
 const getModemIndex = (index) => index + 1;
 const is24 = (index) => index < 4;
 
-const Field = ({ label, value, placeholder, onChange }) => (
+const Field = ({ label, value, placeholder, onChange, error }) => (
   <div className="flex flex-col gap-1">
     <label className="text-[10px] font-semibold tracking-[0.15em] uppercase text-zinc-500">
       {label}
@@ -35,8 +35,16 @@ const Field = ({ label, value, placeholder, onChange }) => (
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className="w-full px-3 py-2 rounded-md text-sm border outline-none transition-colors bg-black border-zinc-800 text-white focus:border-zinc-500 placeholder:text-zinc-700"
+      className={`w-full px-3 py-2 rounded-md text-sm border outline-none transition-colors bg-black text-white placeholder:text-zinc-700
+        ${
+          error
+            ? "border-red-700 focus:border-red-500"
+            : "border-zinc-800 focus:border-zinc-500"
+        }`}
     />
+    {error && (
+      <p className="text-[10px] text-red-400 leading-snug">{error}</p>
+    )}
   </div>
 );
 
@@ -94,6 +102,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
   const [wlanInfo, setWlanInfo] = useState(null);
   const [selected, setSelected] = useState([]);
   const [fields, setFields] = useState({});
+  const [errors, setErrors] = useState({});
   const [saveState, setSaveState] = useState("idle");
   const [logs, setLogs] = useState([]);
   const logEndRef = useRef(null);
@@ -164,6 +173,11 @@ export default function WiFiCredentialModal({ open, onClose }) {
           delete next[index];
           return next;
         });
+        setErrors((e) => {
+          const next = { ...e };
+          delete next[index];
+          return next;
+        });
         return prev.filter((i) => i !== index);
       }
       setFields((f) => ({ ...f, [index]: { newName: "", newPass: "" } }));
@@ -171,12 +185,43 @@ export default function WiFiCredentialModal({ open, onClose }) {
     });
   };
 
+  const validateName = (raw) => {
+    const value = raw.trim();
+    if (value.length === 0) return "Wi-Fi name is required.";
+    if (value.length > 32) return "Wi-Fi name must be 1–32 characters.";
+    if (!/^[A-Za-z0-9 _-]+$/.test(value)) {
+      return "Use letters, numbers, spaces, underscore, or hyphen.";
+    }
+    return "";
+  };
+
+  const validatePassword = (raw) => {
+    if (raw.length === 0) return "";
+    if (raw.length < 8 || raw.length > 63) {
+      return "Password must be 8–63 characters.";
+    }
+    if (raw.trim() !== raw) {
+      return "Password cannot start or end with spaces.";
+    }
+    return "";
+  };
+
+  const updateErrorsForField = (index, next) => {
+    const nameError = next.newName ? validateName(next.newName) : "";
+    const passError = next.newPass ? validatePassword(next.newPass) : "";
+    setErrors((prev) => ({
+      ...prev,
+      [index]: { name: nameError, pass: passError },
+    }));
+  };
+
   const handleFieldChange = (index, key, value) => {
     if (isBusy) return;
-    setFields((prev) => ({
-      ...prev,
-      [index]: { ...prev[index], [key]: value },
-    }));
+    setFields((prev) => {
+      const next = { ...prev[index], [key]: value };
+      updateErrorsForField(index, next);
+      return { ...prev, [index]: next };
+    });
     setSaveState("idle");
   };
 
@@ -210,6 +255,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
       setWlanInfo(null);
       setSelected([]);
       setFields({});
+      setErrors({});
       setLogs([]);
       logStartIndexRef.current = null;
     }, 200);
@@ -218,6 +264,10 @@ export default function WiFiCredentialModal({ open, onClose }) {
   const hasNewValues = selected.some(
     (i) => fields[i]?.newName || fields[i]?.newPass,
   );
+  const hasValidationErrors = selected.some((i) => {
+    const errs = errors[i];
+    return Boolean(errs?.name || errs?.pass);
+  });
   const selected24 = selected.find((i) => is24(i));
   const selected5 = selected.find((i) => !is24(i));
   const lastLog = logs[logs.length - 1];
@@ -237,7 +287,8 @@ export default function WiFiCredentialModal({ open, onClose }) {
       onClick={handleClose}
     >
       <div
-        className="relative w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden z-50 shadow-2xl max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden z-50 shadow-2xl flex flex-col"
+        style={{ maxHeight: "calc(100dvh - 20rem)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -272,7 +323,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
           </button>
         </div>
 
-        <div className="p-5 flex flex-col gap-5">
+        <div className="p-5 flex flex-col gap-5 overflow-y-auto log-scrollbar">
           {/* SSID Grid */}
           <div
             className={`flex flex-col gap-3 ${isBusy ? "opacity-40 pointer-events-none" : ""}`}
@@ -395,6 +446,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                           onChange={(e) =>
                             handleFieldChange(i, "newName", e.target.value)
                           }
+                          error={errors[i]?.name}
                         />
                         <Field
                           label="New Password"
@@ -403,6 +455,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                           onChange={(e) =>
                             handleFieldChange(i, "newPass", e.target.value)
                           }
+                          error={errors[i]?.pass}
                         />
                       </div>
                     </div>
@@ -453,7 +506,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                     <span className="text-[10px] text-red-500">Failed</span>
                   )}
                 </div>
-                <div className="rounded-lg bg-black border border-zinc-900 p-3 max-h-40 overflow-y-auto flex flex-col gap-1.5">
+                <div className="rounded-lg bg-black border border-zinc-900 p-3 max-h-40 overflow-y-auto log-scrollbar flex flex-col gap-1.5">
                   {logs.map((entry) => (
                     <div key={entry.id} className="flex items-start gap-2">
                       <span
@@ -492,7 +545,9 @@ export default function WiFiCredentialModal({ open, onClose }) {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={handleSave}
-                  disabled={!hasNewValues || isBusy || saveState === "saved"}
+                  disabled={
+                    !hasNewValues || hasValidationErrors || isBusy || saveState === "saved"
+                  }
                   className="w-full py-2.5 rounded-md bg-white text-black text-xs font-bold tracking-[0.2em] uppercase hover:bg-zinc-200 active:scale-[0.99] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                 >
                   {isBusy
