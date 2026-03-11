@@ -11,7 +11,7 @@ import HelpTooltip from "../components/ui/HelpTooltip";
 import { submitSetup } from "../services/setupAPI";
 
 const SECTION_LABEL_CLASS =
-  "text-[10px] font-semibold tracking-[0.2em] uppercase text-zinc-600 mb-4";
+  "text-xs font-semibold tracking-[0.2em] uppercase text-zinc-600 mb-4";
 const IP_REGEX = /^(\d{1,3}\.){3}\d{1,3}$/;
 const ERR_INVALID_IP = "Invalid IP address format";
 const ERR_USERNAME_REQUIRED = "Username is required";
@@ -105,7 +105,7 @@ const Setup = ({ setupData, onComplete }) => {
           <h1 className="text-base sm:text-xl font-light tracking-[0.2em] text-white mb-1.5">
             CENTCON
           </h1>
-          <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-zinc-600">
+          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-zinc-600">
             First-Run Setup
           </p>
         </div>
@@ -119,7 +119,7 @@ const Setup = ({ setupData, onComplete }) => {
               <div className="p-6 flex flex-col gap-4">
                 <div>
                   <p className={SECTION_LABEL_CLASS}>Modem Connection</p>
-                  <p className="text-[11px] text-zinc-500 leading-relaxed -mt-2">
+                  <p className="text-[13px] text-zinc-500 leading-relaxed -mt-2">
                     Enter the login details of your{" "}
                     <span className="text-zinc-300">existing modem</span>.
                     CENTCON uses these credentials to access your modem's admin
@@ -132,7 +132,7 @@ const Setup = ({ setupData, onComplete }) => {
                 {allFields.includes("MODEM_IP") && (
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1.5">
-                      <label className="text-xs font-medium text-zinc-400 tracking-wide">
+                      <label className="text-sm font-medium text-zinc-400 tracking-wide">
                         IP Address
                       </label>
                       <HelpTooltip
@@ -143,14 +143,14 @@ const Setup = ({ setupData, onComplete }) => {
                         buttonAriaLabel="Get help finding your modem IP address"
                         label="What is the modem IP address?"
                       >
-                        <p className="text-[10px] text-zinc-500 leading-relaxed mb-2">
+                        <p className="text-xs text-zinc-500 leading-relaxed mb-2">
                           This is the local address your modem uses on your home
                           network — separate from your public internet IP.
                         </p>
-                        <p className="text-[10px] text-zinc-400 font-medium mb-1">
+                        <p className="text-xs text-zinc-400 font-medium mb-1">
                           How to find it:
                         </p>
-                        <ul className="text-[10px] text-zinc-500 leading-relaxed space-y-1">
+                        <ul className="text-xs text-zinc-500 leading-relaxed space-y-1">
                           <li>
                             • Open a browser and try{" "}
                             <code className="text-zinc-400">
@@ -179,7 +179,7 @@ const Setup = ({ setupData, onComplete }) => {
                       type="text"
                       value={formData.MODEM_IP}
                       onChange={(e) => handleChange("MODEM_IP", e.target.value)}
-                      className={`w-full px-3 py-2.5 rounded-md bg-black text-white text-sm border transition-colors outline-none placeholder:text-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed
+                      className={`w-full px-3 py-2.5 rounded-md bg-black text-white text-[15px] border transition-colors outline-none placeholder:text-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed
                         ${
                           errors.MODEM_IP
                             ? "border-red-900 focus:border-red-800 focus:ring-1 focus:ring-red-900/50"
@@ -190,8 +190,8 @@ const Setup = ({ setupData, onComplete }) => {
                       autoComplete="off"
                     />
                     {errors.MODEM_IP && (
-                      <p className="flex items-center gap-1.5 text-xs text-red-400 mt-0.5">
-                        <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-red-900/60 text-red-400 font-bold text-[9px] flex-shrink-0">
+                      <p className="flex items-center gap-1.5 text-sm text-red-400 mt-0.5">
+                        <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-red-900/60 text-red-400 font-bold text-[11px] flex-shrink-0">
                           !
                         </span>
                         {errors.MODEM_IP}
@@ -234,7 +234,7 @@ const Setup = ({ setupData, onComplete }) => {
               <div className="p-6 flex flex-col gap-4 border-t border-zinc-900">
                 <div>
                   <p className={SECTION_LABEL_CLASS}>Access PIN</p>
-                  <p className="text-[11px] text-zinc-500 leading-relaxed -mt-2">
+                  <p className="text-[13px] text-zinc-500 leading-relaxed -mt-2">
                     This PIN is{" "}
                     <span className="text-zinc-300">not from your modem</span> —
                     it&apos;s a password you choose for CENTCON itself, used as
@@ -250,7 +250,7 @@ const Setup = ({ setupData, onComplete }) => {
                 </div>
                 <div className="w-36 flex flex-col gap-1">
                   <div className="flex items-center gap-1.5">
-                    <label className="text-xs font-medium text-zinc-400 tracking-wide">
+                    <label className="text-sm font-medium text-zinc-400 tracking-wide">
                       4-Character PIN
                     </label>
                     <HelpTooltip
@@ -261,12 +261,12 @@ const Setup = ({ setupData, onComplete }) => {
                       buttonAriaLabel="Learn more about the CENTCON access PIN"
                       label="About the CENTCON PIN"
                     >
-                      <p className="text-[10px] text-zinc-500 leading-relaxed mb-2">
+                      <p className="text-xs text-zinc-500 leading-relaxed mb-2">
                         4 alphanumeric characters (letters and numbers). This
                         protects the CENTCON dashboard from casual access by
                         others on the same machine."
                       </p>
-                      <p className="text-[10px] text-zinc-500 leading-relaxed">
+                      <p className="text-xs text-zinc-500 leading-relaxed">
                         Forgot it? Open the{" "}
                         <code className="text-zinc-400">.env</code> file in the
                         CENTCON folder — all your settings including this PIN
@@ -340,8 +340,8 @@ const Setup = ({ setupData, onComplete }) => {
                     </button>
                   </div>
                   {errors.CENTCON_PIN && (
-                    <p className="flex items-center gap-1.5 text-xs text-red-400 mt-0.5">
-                      <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-red-900/60 font-bold text-[9px] flex-shrink-0">
+                    <p className="flex items-center gap-1.5 text-sm text-red-400 mt-0.5">
+                      <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-red-900/60 font-bold text-[11px] flex-shrink-0">
                         !
                       </span>
                       {errors.CENTCON_PIN}
@@ -357,10 +357,10 @@ const Setup = ({ setupData, onComplete }) => {
                 ref={errorRef}
                 className="mx-6 mb-4 px-4 py-3 rounded-lg bg-red-950/30 border border-red-900/50 flex items-start gap-3"
               >
-                <span className="text-[9px] font-bold tracking-widest uppercase text-red-400 bg-red-900/40 rounded px-1.5 py-0.5 flex-shrink-0 mt-0.5">
+                <span className="text-[11px] font-bold tracking-widest uppercase text-red-400 bg-red-900/40 rounded px-1.5 py-0.5 flex-shrink-0 mt-0.5">
                   ERR
                 </span>
-                <p className="text-xs text-red-300/80 leading-relaxed">
+                <p className="text-sm text-red-300/80 leading-relaxed">
                   {submitError}
                 </p>
               </div>
@@ -371,11 +371,11 @@ const Setup = ({ setupData, onComplete }) => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 rounded-md bg-white text-black text-xs font-bold tracking-[0.2em] uppercase transition-all hover:bg-zinc-200 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full py-2.5 rounded-md bg-white text-black text-sm font-bold tracking-[0.2em] uppercase transition-all hover:bg-zinc-200 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {loading ? "Saving..." : "Complete Setup"}
               </button>
-              <p className="text-center text-[10px] text-zinc-700 leading-relaxed">
+              <p className="text-center text-xs text-zinc-700 leading-relaxed">
                 Your settings will be saved to the{" "}
                 <code className="text-zinc-500">.env</code> file on this machine
                 and loaded on every startup.
@@ -385,12 +385,12 @@ const Setup = ({ setupData, onComplete }) => {
             {/* Compatibility Notice */}
             <div className="px-6 pb-6">
               <div className="rounded-lg border border-zinc-800/60 bg-black px-4 py-3 flex items-start gap-3">
-                <span className="text-amber-500/80 text-xs mt-0.5 flex-shrink-0">
+                <span className="text-amber-500/80 text-sm mt-0.5 flex-shrink-0">
                   ⚠
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="text-[11px] font-semibold text-zinc-400">
+                    <p className="text-[13px] font-semibold text-zinc-400">
                       Compatibility Notice
                     </p>
                     {/* Tooltip */}
@@ -401,14 +401,14 @@ const Setup = ({ setupData, onComplete }) => {
                       buttonAriaLabel="How to check your modem model"
                       label="How to check your modem model"
                     >
-                      <p className="text-[10px] text-zinc-500 leading-relaxed">
+                      <p className="text-xs text-zinc-500 leading-relaxed">
                         Flip your modem over or check the back panel — the model
                         number and software version are usually printed on a
                         sticker.
                       </p>
                     </HelpTooltip>
                   </div>
-                  <p className="text-[10px] text-zinc-600 leading-relaxed">
+                  <p className="text-xs text-zinc-600 leading-relaxed">
                     Built and tested for the{" "}
                     <span className="text-zinc-400 font-medium">
                       Globe G-1426G-A
@@ -431,3 +431,4 @@ const Setup = ({ setupData, onComplete }) => {
 };
 
 export default Setup;
+

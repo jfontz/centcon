@@ -40,7 +40,7 @@ const Field = ({
 
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[10px] font-semibold tracking-[0.15em] uppercase text-zinc-500">
+      <label className="text-xs font-semibold tracking-[0.15em] uppercase text-zinc-500">
         {label}
       </label>
       <div className="relative">
@@ -49,7 +49,7 @@ const Field = ({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className={`w-full px-3 py-2 rounded-md text-sm border outline-none transition-colors bg-black text-white placeholder:text-zinc-700
+          className={`w-full px-3 py-2 rounded-md text-[15px] border outline-none transition-colors bg-black text-white placeholder:text-zinc-700
             ${showToggle ? "pr-9" : ""}
             ${
               error
@@ -101,7 +101,7 @@ const Field = ({
           </button>
         )}
       </div>
-      {error && <p className="text-[10px] text-red-400 leading-snug">{error}</p>}
+      {error && <p className="text-xs text-red-400 leading-snug">{error}</p>}
     </div>
   );
 };
@@ -144,15 +144,15 @@ const BandGrid = ({
             disabled={isDisabled}
             className="w-full flex flex-col items-center gap-1 focus:outline-none cursor-pointer disabled:cursor-not-allowed"
           >
-            <span className="text-[10px] font-bold text-zinc-500">
+            <span className="text-xs font-bold text-zinc-500">
               SSID {getModemIndex(i)}
             </span>
             {loadState === "loaded" && ssid ? (
-              <span className="text-[9px] truncate w-full text-center font-mono leading-tight">
+              <span className="text-[11px] truncate w-full text-center font-mono leading-tight">
                 {ssid}
               </span>
             ) : (
-              <span className="text-[9px] text-zinc-700">—</span>
+              <span className="text-[11px] text-zinc-700">—</span>
             )}
           </button>
           <div className="flex gap-1 mt-1">
@@ -162,7 +162,7 @@ const BandGrid = ({
                 onBroadcastIntent(i, "enable");
               }}
               disabled={disabled}
-              className={`text-[8px] px-1.5 py-0.5 rounded font-bold transition-all cursor-pointer disabled:cursor-not-allowed
+              className={`text-[10px] px-1.5 py-0.5 rounded font-bold transition-all cursor-pointer disabled:cursor-not-allowed
                 ${
                   broadcastIntents?.[i] === "enable"
                     ? "bg-emerald-900 text-emerald-400 border border-emerald-700"
@@ -177,7 +177,7 @@ const BandGrid = ({
                 onBroadcastIntent(i, "disable");
               }}
               disabled={disabled}
-              className={`text-[8px] px-1.5 py-0.5 rounded font-bold transition-all cursor-pointer disabled:cursor-not-allowed
+              className={`text-[10px] px-1.5 py-0.5 rounded font-bold transition-all cursor-pointer disabled:cursor-not-allowed
                 ${
                   broadcastIntents?.[i] === "disable"
                     ? "bg-red-950 text-red-400 border border-red-800"
@@ -424,7 +424,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
             <h2 className="text-sm font-semibold text-white tracking-wide">
               Wi-Fi Credentials
             </h2>
-            <p className="text-[10px] text-zinc-500 mt-0.5">
+            <p className="text-xs text-zinc-500 mt-0.5">
               {loadState === "loading" && "Loading SSIDs from modem..."}
               {loadState === "loaded" &&
                 !isBusy &&
@@ -456,10 +456,10 @@ export default function WiFiCredentialModal({ open, onClose }) {
             className={`flex flex-col gap-3 ${isBusy ? "opacity-40 pointer-events-none" : ""}`}
           >
             <div className="flex items-center justify-between">
-              <label className="text-[10px] font-semibold tracking-[0.15em] uppercase text-zinc-500">
+              <label className="text-xs font-semibold tracking-[0.15em] uppercase text-zinc-500">
                 Select SSID
               </label>
-              <span className="text-[10px] text-zinc-600">
+              <span className="text-xs text-zinc-600">
                 {selected.length === 0 && "None selected"}
                 {selected.length === 1 && "1 band selected"}
                 {selected.length === 2 && "Both bands selected"}
@@ -468,11 +468,11 @@ export default function WiFiCredentialModal({ open, onClose }) {
 
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <span className="text-[9px] font-bold tracking-widest text-blue-500 uppercase">
+                <span className="text-[11px] font-bold tracking-widest text-blue-500 uppercase">
                   2.4 GHz
                 </span>
                 {selected24 !== undefined && (
-                  <span className="text-[9px] text-blue-400 font-mono">
+                  <span className="text-[11px] text-blue-400 font-mono">
                     {wlanInfo?.[selected24]?.SSID}
                   </span>
                 )}
@@ -493,11 +493,11 @@ export default function WiFiCredentialModal({ open, onClose }) {
 
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <span className="text-[9px] font-bold tracking-widest text-purple-500 uppercase">
+                <span className="text-[11px] font-bold tracking-widest text-purple-500 uppercase">
                   5 GHz
                 </span>
                 {selected5 !== undefined && (
-                  <span className="text-[9px] text-purple-400 font-mono">
+                  <span className="text-[11px] text-purple-400 font-mono">
                     {wlanInfo?.[selected5]?.SSID}
                   </span>
                 )}
@@ -527,7 +527,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                     />
                   ))}
                 </div>
-                <span className="text-[10px] text-zinc-600">
+                <span className="text-xs text-zinc-600">
                   Loading SSIDs...
                 </span>
               </div>
@@ -542,10 +542,10 @@ export default function WiFiCredentialModal({ open, onClose }) {
                 className={`flex flex-col gap-4 ${isBusy ? "opacity-40 pointer-events-none" : ""}`}
               >
                 <div>
-                  <span className="text-[10px] font-semibold tracking-[0.15em] uppercase text-zinc-500">
+                  <span className="text-xs font-semibold tracking-[0.15em] uppercase text-zinc-500">
                     New Credentials
                   </span>
-                  <p className="text-[10px] text-zinc-600 mt-1">
+                  <p className="text-xs text-zinc-600 mt-1">
                     Leave a field blank to keep the current value unchanged.
                   </p>
                 </div>
@@ -558,13 +558,13 @@ export default function WiFiCredentialModal({ open, onClose }) {
                     <div key={i} className="flex flex-col gap-2">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`text-[10px] px-2 py-0.5 rounded font-bold tracking-wider
+                          className={`text-xs px-2 py-0.5 rounded font-bold tracking-wider
                           ${isBlue ? "bg-blue-950 text-blue-400" : "bg-purple-950 text-purple-400"}`}
                         >
                           {freq} GHz · SSID {modemIdx}
                         </span>
                         {ssid && (
-                          <span className="text-[10px] text-zinc-600 font-mono">
+                          <span className="text-xs text-zinc-600 font-mono">
                             {ssid}
                           </span>
                         )}
@@ -602,7 +602,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
             loadState === "loaded" &&
             !hasBroadcastIntents && (
               <div className="rounded-lg bg-zinc-900/40 border border-zinc-900 px-4 py-4 text-center">
-                <p className="text-[11px] text-zinc-600">
+                <p className="text-[13px] text-zinc-600">
                   Select an SSID above to edit its credentials.
                 </p>
               </div>
@@ -614,7 +614,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
               <div className="border-t border-zinc-900" />
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-semibold tracking-[0.15em] uppercase text-zinc-500">
+                  <span className="text-xs font-semibold tracking-[0.15em] uppercase text-zinc-500">
                     Log
                   </span>
                   {isBusy && (
@@ -628,33 +628,33 @@ export default function WiFiCredentialModal({ open, onClose }) {
                           />
                         ))}
                       </div>
-                      <span className="text-[10px] text-zinc-600">Running</span>
+                      <span className="text-xs text-zinc-600">Running</span>
                     </div>
                   )}
                   {saveState === "saved" && (
-                    <span className="text-[10px] text-emerald-500 flex items-center gap-1">
+                    <span className="text-xs text-emerald-500 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />{" "}
                       Complete
                     </span>
                   )}
                   {saveState === "error" && (
-                    <span className="text-[10px] text-red-500">Failed</span>
+                    <span className="text-xs text-red-500">Failed</span>
                   )}
                 </div>
                 <div className="rounded-lg bg-black border border-zinc-900 p-3 max-h-40 overflow-y-auto log-scrollbar flex flex-col gap-1.5">
                   {logs.map((entry) => (
                     <div key={entry.id} className="flex items-start gap-2">
                       <span
-                        className={`text-[10px] flex-shrink-0 mt-0.5 ${LOG_LEVEL_STYLES[entry.level] || "text-zinc-500"}`}
+                        className={`text-xs flex-shrink-0 mt-0.5 ${LOG_LEVEL_STYLES[entry.level] || "text-zinc-500"}`}
                       >
                         {LOG_LEVEL_ICON[entry.level] || "·"}
                       </span>
                       <span
-                        className={`text-[11px] leading-relaxed ${LOG_LEVEL_STYLES[entry.level] || "text-zinc-500"}`}
+                        className={`text-[13px] leading-relaxed ${LOG_LEVEL_STYLES[entry.level] || "text-zinc-500"}`}
                       >
                         {entry.message}
                       </span>
-                      <span className="text-[9px] text-zinc-700 font-mono ml-auto flex-shrink-0 mt-0.5">
+                      <span className="text-[11px] text-zinc-700 font-mono ml-auto flex-shrink-0 mt-0.5">
                         {entry.timestamp}
                       </span>
                     </div>
@@ -663,7 +663,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                 </div>
                 {currentStatusText && (
                   <p
-                    className={`text-[10px] px-1
+                    className={`text-xs px-1
                     ${saveState === "saved" ? "text-emerald-500" : saveState === "error" ? "text-red-400" : "text-zinc-500"}`}
                   >
                     {currentStatusText}
@@ -686,7 +686,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                     isBusy ||
                     saveState === "saved"
                   }
-                  className="w-full py-2.5 rounded-md bg-white text-black text-xs font-bold tracking-[0.2em] uppercase hover:bg-zinc-200 active:scale-[0.99] cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  className="w-full py-2.5 rounded-md bg-white text-black text-sm font-bold tracking-[0.2em] uppercase hover:bg-zinc-200 active:scale-[0.99] cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                 >
                   {isBusy
                     ? "Applying..."
@@ -699,12 +699,12 @@ export default function WiFiCredentialModal({ open, onClose }) {
                           : `Apply Changes${selected.length > 1 ? " to Both Bands" : ""}`}
                 </button>
                 {isBusy && (
-                  <p className="text-center text-[10px] text-amber-600">
+                  <p className="text-center text-xs text-amber-600">
                     Do not close this window while changes are being applied.
                   </p>
                 )}
                 {!isBusy && saveState === "idle" && (
-                  <p className="text-center text-[10px] text-zinc-700">
+                  <p className="text-center text-xs text-zinc-700">
                     {hasOnlyBroadcast
                       ? "Selenium will navigate to Wi-Fi Settings → Advanced and update broadcast toggles."
                       : hasBoth
@@ -720,3 +720,4 @@ export default function WiFiCredentialModal({ open, onClose }) {
     </div>
   );
 }
+
