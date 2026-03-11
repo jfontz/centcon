@@ -13,6 +13,11 @@ import { formatUptime } from "../utils/formatters.js";
 
 // API endpoint for fetching modem information
 const API_ENDPOINT = "/login_globe.cgi?info";
+const DEFAULT_MODEM_IP = "192.168.254.254";
+const USER_AGENT = "Mozilla/5.0";
+const LAN_INTERFACE = "Ethernet";
+const WIFI_24_INTERFACE = "802.11";
+const WIFI_5_INTERFACE = "802.11ac";
 
 /**
  * API client for interacting with the modem
@@ -27,7 +32,7 @@ class ModemApiClient {
   static WIFI_5_INDEX = 4; // 5GHz WiFi at index 4
 
   constructor() {
-    this.modemIp = import.meta.env.VITE_MODEM_IP || "192.168.254.254";
+    this.modemIp = import.meta.env.VITE_MODEM_IP || DEFAULT_MODEM_IP;
     // Use Vite proxy in development, direct modem URL in production
     this.baseUrl = import.meta.env.DEV ? "/api" : `http://${this.modemIp}`;
   }
@@ -42,9 +47,9 @@ class ModemApiClient {
 
     // Set appropriate headers based on environment
     const headers = import.meta.env.DEV
-      ? { "User-Agent": "Mozilla/5.0" }
+      ? { "User-Agent": USER_AGENT }
       : {
-          "User-Agent": "Mozilla/5.0",
+          "User-Agent": USER_AGENT,
           Referer: `http://${this.modemIp}/`,
         };
 
@@ -107,7 +112,7 @@ class ModemApiClient {
       model: onuInfo.ModelName || "Unknown",
       software: onuInfo.SoftwareVersion || "Unknown",
       cpuUsage: onuInfo.CPUUsage || 0,
-      memoryUsage: parseInt(memUsage),
+      memoryUsage: parseInt(memUsage, 10),
       uptime: onuInfo.UpTime || 0,
       uptimeFormatted: formatUptime(onuInfo.UpTime || 0),
     };
@@ -190,9 +195,17 @@ class ModemApiClient {
     }
 
     // Count devices by their interface type
-    const lan = countDevicesByType(deviceInfo, "Ethernet", isValidDevice);
-    const wifi24 = countDevicesByType(deviceInfo, "802.11", isValidDevice);
-    const wifi5 = countDevicesByType(deviceInfo, "802.11ac", isValidDevice);
+    const lan = countDevicesByType(deviceInfo, LAN_INTERFACE, isValidDevice);
+    const wifi24 = countDevicesByType(
+      deviceInfo,
+      WIFI_24_INTERFACE,
+      isValidDevice,
+    );
+    const wifi5 = countDevicesByType(
+      deviceInfo,
+      WIFI_5_INTERFACE,
+      isValidDevice,
+    );
 
     return {
       lan,
@@ -201,8 +214,6 @@ class ModemApiClient {
       total: lan + wifi24 + wifi5,
     };
   }
-
-
 
   /**
    * Main method to get parsed modem data
@@ -219,56 +230,3 @@ class ModemApiClient {
 
 // Export singleton instance for use throughout the application
 export const modemApi = new ModemApiClient();
-
-// --- Reboot SSE & API (backend at VITE_REBOOT_API_URL) ---
-const REBOOT_API_BASE =
-  import.meta.env.VITE_REBOOT_API_URL || "http://localhost:8000";
-
-/**
- * Connect to reboot SSE stream. Call onEvent for each event; returns EventSource (call .close() on unmount).
- *
- * Event types:
- * - 'state': { type, state, message, progress, countdown? }
- * - 'log': { type, level, message, timestamp }
- * - 'countdown': { type, countdown }
- * - 'heartbeat': { type }
- *
- * @param {function(object): void} onEvent - callback invoked with each parsed event payload.
- */
-export const connectToRebootEvents = (onEvent) => {
-  const eventSource = new EventSource(`${REBOOT_API_BASE}/events`);
-  eventSource.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      onEvent(data);
-    } catch (e) {
-      console.warn("Reboot SSE parse error", e);
-    }
-  };
-  eventSource.onerror = () => {
-    eventSource.close();
-  };
-  return eventSource;
-};
-
-/**
- * Trigger router reboot. Backend starts Selenium in background; progress comes via SSE.
- * @returns {Promise<{ ok: boolean, message?: string }>}
- */
-export const triggerReboot = async () => {
-  const response = await fetch(`${REBOOT_API_BASE}/reboot`, {
-    method: "POST",
-  });
-  return response.json();
-};
-
-/**
- * Trigger router login. Opens browser and logs in, leaves window open.
- * @returns {Promise<{ ok: boolean, message?: string }>}
- */
-export const triggerLogin = async () => {
-  const response = await fetch(`${REBOOT_API_BASE}/login`, {
-    method: "POST",
-  });
-  return response.json();
-};

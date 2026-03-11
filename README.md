@@ -1,6 +1,6 @@
 # CENTCON
 
-Real-time modem/router monitoring dashboard with one-click automated reboot and assisted modem/router login.
+Real-time modem/router dashboard with Selenium-powered automation for reboots, assisted admin login, and live Wi-Fi credential and broadcast management.
 
 **Stack:** React (Vite) frontend · FastAPI backend · Selenium automation · Server-Sent Events
 
@@ -142,79 +142,134 @@ Once both servers are running and setup is complete:
 ## Project Structure
 
 ```text
-centcon/
-├── .env                        ← your local config (created by setup wizard, not committed)
-├── .env.example                ← template with all variables documented
-├── .gitignore
-├── eslint.config.js
-├── index.html
-├── package.json
-├── package-lock.json
-├── vite.config.js
-│
-├── src/
-│   ├── App.jsx
-│   ├── main.jsx
-│   ├── index.css
-│   │
-│   ├── assets/
-│   │   └── icons/              ← SVG icons + index.js barrel export
-│   │
-│   ├── components/
-│   │   ├── buttons/
-│   │   │   └── SystemControlButton.jsx
-│   │   ├── cards/              ← CPUCard, MemoryCard, LANCard, WiFi24Card, WiFi5Card,
-│   │   │                          TemperatureCard, RuntimeCard, DeviceModelCard, DeviceSoftwareCard
-│   │   ├── header/
-│   │   │   ├── Header.jsx
-│   │   │   ├── HeaderButton.jsx
-│   │   │   ├── MetaInfo.jsx
-│   │   │   └── StatusBadge.jsx
-│   │   ├── log/
-│   │   │   ├── LogContent.jsx
-│   │   │   ├── LogEntry.jsx
-│   │   │   └── LogHeader.jsx
-│   │   ├── modals/
-│   │   │   └── RebootConfirmModal.jsx
-│   │   ├── ui/                 ← IconWrapper, MainLayout, MetricCard, SectionContainer
-│   │   ├── ConnectedDevices.jsx
-│   │   ├── DeviceInformation.jsx
-│   │   ├── LogPanel.jsx
-│   │   ├── SystemControls.jsx
-│   │   └── SystemStatus.jsx
-│   │
-│   ├── context/
-│   │   ├── AuthContext.jsx
-│   │   └── ModemContext.jsx
-│   │
-│   ├── hooks/
-│   │   └── useModemData.js
-│   │
-│   ├── pages/
-│   │   ├── Login.jsx
-│   │   └── Setup.jsx           ← first-run setup wizard
-│   │
-│   ├── services/
-│   │   ├── authAPI.js
-│   │   ├── modemAPI.js
-│   │   └── setupAPI.js
-│   │
-│   └── utils/
-│       ├── formatters.js
-│       ├── getIcon.jsx
-│       ├── modemHelpers.js
-│       └── validators.js
-│
-└── backend/
-    ├── run.py                  ← server entry point
-    ├── main.py                 ← FastAPI app + route definitions
-    ├── state_manager.py        ← SSE state + event emitter
-    ├── selenium_reboot.py      ← automated reboot workflow
-    ├── selenium_login.py       ← automated login workflow
-    ├── setup_utils.py          ← first-run setup logic + .env management
-    ├── requirements.txt
-    └── .venv/                  ← Python virtual environment (not committed)
+└── 📁centcon
+    └── 📁backend
+        ├── main.py                        # FastAPI app, routes, command scheduling
+        ├── requirements.txt
+        ├── run.py                         # Uvicorn entry point
+        ├── selenium_login.py              # Opens Chrome, logs into modem, leaves session open for manual use
+        ├── selenium_reboot.py             # Full reboot automation workflow
+        ├── selenium_wifi_credentials.py   # Changes credentials and broadcast toggles across Basic and Advanced pages in one session
+        ├── setup_utils.py                 # First-run setup helpers for validation, auto-detect, and .env writes
+        ├── state_manager.py               # SSE state broadcasting and subscriptions
+    └── 📁public
+        ├── favicon.svg
+    └── 📁src
+        └── 📁assets
+            └── 📁icons
+                ├── check.svg
+                ├── clear.svg
+                ├── cpu.svg
+                ├── device.svg
+                ├── error.svg
+                ├── hourglass.svg
+                ├── index.js
+                ├── lan.svg
+                ├── load.svg
+                ├── log.svg
+                ├── login.svg
+                ├── logout.svg
+                ├── memory.svg
+                ├── navigate.svg
+                ├── new-tab.svg
+                ├── process.svg
+                ├── reboot.svg
+                ├── refresh-data.svg
+                ├── runtime.svg
+                ├── software.svg
+                ├── temperature.svg
+                ├── warning.svg
+                ├── wifi.svg
+        └── 📁components
+            └── 📁buttons
+                ├── SystemControlButton.jsx
+            └── 📁cards
+                ├── CPUCard.jsx
+                ├── DeviceModelCard.jsx
+                ├── DeviceSoftwareCard.jsx
+                ├── LANCard.jsx
+                ├── MemoryCard.jsx
+                ├── RuntimeCard.jsx
+                ├── TemperatureCard.jsx
+                ├── WiFi24Card.jsx
+                ├── WiFi5Card.jsx
+            └── 📁header
+                ├── Header.jsx
+                ├── HeaderButton.jsx
+                ├── MetaInfo.jsx
+                ├── StatusBadge.jsx
+            └── 📁log
+                ├── LogContent.jsx
+                ├── LogEntry.jsx
+                ├── LogHeader.jsx
+            └── 📁modals
+                ├── RebootConfirmModal.jsx
+                ├── WifiCredentialModal.jsx
+            └── 📁ui
+                ├── HelpTooltip.jsx
+                ├── IconWrapper.jsx
+                ├── InputField.jsx
+                ├── MainLayout.jsx
+                ├── MetricCard.jsx
+                ├── SectionContainer.jsx
+            ├── ConnectedDevices.jsx
+            ├── DeviceInformation.jsx
+            ├── LogPanel.jsx
+            ├── SystemControls.jsx
+            ├── SystemStatus.jsx
+        └── 📁config
+            ├── systemCommands.js          # Button definitions — add/remove buttons here
+        └── 📁context
+            ├── AuthContext.jsx
+            ├── ModemContext.jsx
+        └── 📁hooks
+            ├── useModemData.js
+        └── 📁pages
+            ├── Login.jsx
+            ├── Setup.jsx
+        └── 📁services
+            ├── apiConfig.js               # Shared backend URL constant
+            ├── authAPI.js
+            ├── commandApi.js              # SSE connection and command triggers
+            ├── modemDataApi.js            # Modem data fetching and parsing
+            ├── setupAPI.js
+        └── 📁utils
+            ├── formatters.js
+            ├── getIcon.jsx
+            ├── modemHelpers.js
+            ├── validators.js
+        ├── App.jsx
+        ├── index.css
+        ├── main.jsx
+    ├── .env
+    ├── .env.example
+    ├── .gitignore
+    ├── eslint.config.js
+    ├── index.html
+    ├── LICENSE
+    ├── package-lock.json
+    ├── package.json
+    ├── README.md
+    └── vite.config.js
 ```
+
+---
+
+## Extending CENTCON
+
+The frontend renders system control buttons automatically from the config file, so no changes to `SystemControls.jsx` are needed when adding or removing standard buttons.
+
+Removing a button:
+- Delete its entry from `src/config/systemCommands.js`.
+- Delete its entry from `COMMAND_DEFINITIONS` in `backend/main.py`.
+- Delete its workflow file from `backend/`.
+
+Adding a button:
+- Add a new entry to `src/config/systemCommands.js` with the required fields: `id`, `label`, `buttonClass`, `icon`, `confirm`, `dangerous`, `blocksOthers`, `allowWhileBusy`, `disableSelf`.
+- Create a new Selenium workflow file in `backend/` following the same pattern as `selenium_reboot.py` or `selenium_login.py`.
+- Add a matching entry to `COMMAND_DEFINITIONS` in `backend/main.py`.
+
+> **Note:** Wi-Fi Credentials is a special case — it opens a modal to collect input before triggering, and uses its own dedicated backend route (`/commands/wifi-credentials`) instead of the standard `COMMAND_DEFINITIONS` flow. If you're modifying it, refer to `selenium_wifi_credentials.py` and the route in `main.py` directly.
 
 ---
 
@@ -237,6 +292,9 @@ Ensure Google Chrome is installed in its default location:
 - Windows: `C:\Program Files\Google\Chrome\Application\chrome.exe`
 - macOS: `/Applications/Google Chrome.app`
 - Linux: `/usr/bin/google-chrome`
+
+**Need to see the Selenium browser window?**
+Set `REBOOT_SELENIUM_HEADLESS` or `WIFI_SELENIUM_HEADLESS` to `false` in `.env`, then restart the backend.
 
 **`Module not found` errors**
 Make sure `(.venv)` is visible in your terminal prompt, then re-run:

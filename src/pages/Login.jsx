@@ -10,6 +10,9 @@ import { useAuth } from "../context/AuthContext";
 import { verifyPin } from "../services/authAPI";
 import { login as loginIcon } from "../assets/icons";
 
+const INVALID_PIN_MESSAGE = "Invalid PIN";
+const VERIFYING_MESSAGE = "Verifying...";
+
 const Login = () => {
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
@@ -27,11 +30,11 @@ const Login = () => {
       if (result.ok) {
         login();
       } else {
-        setError("Invalid PIN");
+        setError(INVALID_PIN_MESSAGE);
         setPin("");
       }
     } catch (err) {
-      setError("Connection error. Is the backend running?");
+      setError(err?.message || "Connection error. Is the backend running?");
     } finally {
       setLoading(false);
     }
@@ -56,8 +59,9 @@ const Login = () => {
             <input
               id="pin"
               type="password"
+              // PINs are alphanumeric, so use text input mode intentionally.
               inputMode="text"
-              pattern="[A-Za-z0-9]+"
+              pattern="[A-Z0-9]+"
               value={pin}
               onChange={(e) => setPin(e.target.value.toUpperCase())}
               className="w-[60%] px-4 py-3 bg-black border border-white/15 rounded-md text-white text-center text-md tracking-widest focus:outline-none focus:border-white/30 transition-colors"
@@ -79,7 +83,7 @@ const Login = () => {
              cursor-pointer flex items-center justify-center gap-3"
           >
             {loading ? (
-              "Verifying..."
+              VERIFYING_MESSAGE
             ) : (
               <>
                 <span className="tracking-widest font-normal">LOGIN</span>

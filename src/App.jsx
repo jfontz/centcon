@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import MainLayout from "./components/ui/MainLayout";
 import SystemControls from "./components/SystemControls";
 import SystemStatus from "./components/SystemStatus";
@@ -59,13 +59,6 @@ function AppContent() {
   const { isAuthenticated, showLogin, configLoaded } = useAuth();
   const [setupData, setSetupData] = useState(null);
   const [setupChecked, setSetupChecked] = useState(false);
-  const prevAuthRef = useRef(false);
-  
-  useEffect(() => {
-    if (isAuthenticated && !showLogin) {
-      prevAuthRef.current = true;
-    }
-  }, [isAuthenticated, showLogin]);
 
   // Check if setup is needed on mount
   useEffect(() => {

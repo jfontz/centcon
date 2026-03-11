@@ -14,11 +14,12 @@ const REBOOT_BUSY_STATES = [
 ];
 
 const Header = () => {
-  const { status, refresh, lastUpdated, rebootState } = useModem();
+  const { status, refresh, refreshing, lastUpdated, rebootState } = useModem();
   const { logout: handleLogout, showLogin } = useAuth();
 
   const isRebooting =
     rebootState &&
+    rebootState.command === "reboot" &&
     REBOOT_BUSY_STATES.includes(rebootState.state);
 
   // Change header background to red only on system error
@@ -48,7 +49,7 @@ const Header = () => {
           <HeaderButton
             icon={refreshData}
             label="Refresh"
-            rotate
+            rotate={refreshing}
             buttonClass="btn-header btn-refresh"
             onClick={refresh}
             disabled={isRebooting}

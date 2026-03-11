@@ -1,9 +1,9 @@
 // React hook for managing modem data state
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { modemApi } from "../services/modemAPI";
+import { modemApi } from "../services/modemDataApi";
 
-export const useModemData = (rebootState = { state: "IDLE" }) => {
+export const useModemData = (commandState = { state: "IDLE", command: null }) => {
   const autoRefreshInterval =
     Number(import.meta.env.VITE_AUTO_REFRESH_INTERVAL) || 60000;
   const [data, setData] = useState(null);
@@ -17,13 +17,15 @@ export const useModemData = (rebootState = { state: "IDLE" }) => {
   const isInitialLoad = useRef(true);
   const intervalRef = useRef(null);
 
-  const isRebooting = [
-    "LOGGING_IN",
-    "NAVIGATING",
-    "REBOOTING",
-    "WAITING",
-    "CHECKING_CONNECTION",
-  ].includes(rebootState?.state);
+  const isRebooting =
+    commandState?.command === "reboot" &&
+    [
+      "LOGGING_IN",
+      "NAVIGATING",
+      "REBOOTING",
+      "WAITING",
+      "CHECKING_CONNECTION",
+    ].includes(commandState?.state);
 
   const fetchData = useCallback(async () => {
     // Pause telemetry refresh while reboot workflow is in progress to avoid

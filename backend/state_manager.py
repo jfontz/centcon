@@ -1,18 +1,21 @@
 """
-Shared state and event queue for router reboot workflow.
+Shared state and event queue for command workflows.
 Single source of truth; events are broadcast to all SSE subscribers.
 """
 
 import asyncio
-from typing import Any, AsyncIterator
+from typing import AsyncIterator
 
 # Initial state
 INITIAL_STATE = {
-    "state": "IDLE",      # High-level reboot/login state (IDLE, LOGGING_IN, NAVIGATING, REBOOTING, WAITING, CHECKING_CONNECTION, ONLINE, FAILED)
+    "state": "IDLE",      # High-level command state (IDLE, LOGGING_IN, NAVIGATING, REBOOTING, WAITING, CHECKING_CONNECTION, ONLINE, FAILED, SUCCEEDED)
     "message": "",        # Human-readable status for the UI
     "progress": 0,        # 0–100 approximate progress for StatusBadge
     "countdown": None,    # Remaining seconds in reboot countdown (or None when idle)
+    "command": None,      # Active command id for the current Selenium workflow
 }
+
+HEARTBEAT_TIMEOUT_SECONDS = 15.0
 
 _state: dict = INITIAL_STATE.copy()
 _client_queues: list[asyncio.Queue] = []
@@ -73,6 +76,7 @@ async def emit(event: dict) -> None:
             "state": event.get("state", _state["state"]),
             "message": event.get("message", _state["message"]),
             "progress": event.get("progress", _state["progress"]),
+            "command": event.get("command", _state["command"]),
         })
     if event.get("type") == "countdown":
         update_state({"countdown": event.get("countdown")})
@@ -94,7 +98,7 @@ async def event_stream(queue: asyncio.Queue) -> AsyncIterator[dict]:
     """
     while True:
         try:
-            event = await asyncio.wait_for(queue.get(), timeout=15.0)
+            event = await asyncio.wait_for(queue.get(), timeout=HEARTBEAT_TIMEOUT_SECONDS)
             yield event
         except asyncio.TimeoutError:
             yield {"type": "heartbeat"}

@@ -25,7 +25,7 @@ const ICON_MAP = {
 export const getIcon = (type) => {
   const icon = ICON_MAP[type];
 
-  if (!icon) return <span>•</span>;
+  if (!icon) return <span>{"\u2022"}</span>;
 
   return <img src={icon} className={ICON_CLASSES} alt={type} />;
 };

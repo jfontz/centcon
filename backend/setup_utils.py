@@ -5,12 +5,17 @@ Handles validation, auto-detection, and .env file updates.
 
 import os
 import socket
+import subprocess
 from pathlib import Path
 from typing import Dict, List, Tuple
 from dotenv import load_dotenv, set_key
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 ENV_FILE = ROOT_DIR / ".env"
+DEFAULT_GATEWAY_TIMEOUT = 5
+MODEM_PROBE_TIMEOUT = 2
+DEFAULT_HTTP_PORT = 80
+COMMON_MODEM_IPS = ["192.168.254.254", "192.168.1.1", "192.168.0.1", "10.0.0.1"]
 
 # Required environment variables
 SETUP_VARS = {
@@ -29,7 +34,7 @@ SETUP_VARS = {
         "desc": "Frontend auto-refresh interval (ms)",
         "default": "60000",
     },
-    "VITE_REBOOT_API_URL": {
+    "VITE_BACKEND_URL": {
         "desc": "Backend API URL",
         "default": "http://localhost:8000",
     },
@@ -46,6 +51,10 @@ SETUP_VARS = {
     # Selenium
     "REBOOT_SELENIUM_HEADLESS": {
         "desc": "Run browser in headless mode for reboot automation",
+        "default": "true",
+    },
+    "WIFI_SELENIUM_HEADLESS": {
+        "desc": "Run browser in headless mode for Wi-Fi credentials automation",
         "default": "true",
     },
 }
@@ -82,7 +91,7 @@ def is_valid_ip(ip: str) -> bool:
         return len(parts) == 4 and all(
             part.isdigit() and 0 <= int(part) <= 255 for part in parts
         )
-    except:
+    except Exception:
         return False
 
 
@@ -94,11 +103,12 @@ def is_valid_pin(pin: str) -> bool:
 def auto_detect_modem_ip() -> str:
     """Attempt to auto-detect modem IP."""
     try:
-        import subprocess
-
         if os.name == "nt":
             result = subprocess.run(
-                ["ipconfig"], capture_output=True, text=True, timeout=5
+                ["ipconfig"],
+                capture_output=True,
+                text=True,
+                timeout=DEFAULT_GATEWAY_TIMEOUT,
             )
             for line in result.stdout.split("\n"):
                 if "Default Gateway" in line:
@@ -109,7 +119,10 @@ def auto_detect_modem_ip() -> str:
                             return ip
         else:
             result = subprocess.run(
-                ["ip", "route"], capture_output=True, text=True, timeout=5
+                ["ip", "route"],
+                capture_output=True,
+                text=True,
+                timeout=DEFAULT_GATEWAY_TIMEOUT,
             )
             for line in result.stdout.split("\n"):
                 if "default via" in line:
@@ -118,26 +131,26 @@ def auto_detect_modem_ip() -> str:
                         ip = parts[2]
                         if is_valid_ip(ip):
                             return ip
-    except:
+    except Exception:
         pass
 
-    common_ips = ["192.168.254.254", "192.168.1.1", "192.168.0.1", "10.0.0.1"]
-    for ip in common_ips:
+    for ip in COMMON_MODEM_IPS:
         if is_modem_reachable(ip):
             return ip
 
-    return "192.168.254.254"
+    return COMMON_MODEM_IPS[0]
 
 
-def is_modem_reachable(ip: str, port: int = 80, timeout: int = 2) -> bool:
+def is_modem_reachable(
+    ip: str,
+    port: int = DEFAULT_HTTP_PORT,
+    timeout: int = MODEM_PROBE_TIMEOUT,
+) -> bool:
     """Check if modem is reachable at given IP."""
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(timeout)
-        result = sock.connect_ex((ip, port))
-        sock.close()
-        return result == 0
-    except:
+        with socket.create_connection((ip, port), timeout=timeout):
+            return True
+    except Exception:
         return False
 
 
@@ -193,18 +206,35 @@ def save_to_env(data: Dict[str, str]) -> Tuple[bool, str]:
         if not ENV_FILE.exists():
             ENV_FILE.touch()
 
-        for key, value in data.items():
+        def _validate_setup_value(key: str, value: str) -> Tuple[bool, str | None]:
             if key == "MODEM_IP" and not is_valid_ip(value):
                 return False, f"Invalid IP address: {value}"
             if key == "CENTCON_PIN" and value and not is_valid_pin(value):
                 return False, "PIN must be exactly 4 alphanumeric characters"
+            return True, None
 
-        if all(k in data for k in ["MODEM_IP", "MODEM_USERNAME", "MODEM_PASSWORD"]):
-            valid, error = validate_modem_credentials(
-                data["MODEM_IP"], data["MODEM_USERNAME"], data["MODEM_PASSWORD"]
-            )
+        def _validate_required_creds(payload: Dict[str, str]) -> Tuple[bool, str | None]:
+            if all(
+                k in payload
+                for k in ["MODEM_IP", "MODEM_USERNAME", "MODEM_PASSWORD"]
+            ):
+                valid, error = validate_modem_credentials(
+                    payload["MODEM_IP"],
+                    payload["MODEM_USERNAME"],
+                    payload["MODEM_PASSWORD"],
+                )
+                if not valid:
+                    return False, error
+            return True, None
+
+        for key, value in data.items():
+            valid, error = _validate_setup_value(key, value)
             if not valid:
-                return False, error
+                return False, error or "Invalid configuration value"
+
+        valid, error = _validate_required_creds(data)
+        if not valid:
+            return False, error or "Invalid modem credentials"
 
         for key, value in data.items():
             set_key(ENV_FILE, key, value)

@@ -61,9 +61,11 @@ const StatusBadge = ({ status, rebootState }) => {
   // Once reboot completes (ONLINE/FAILED) or is idle, show actual modem status
   const inRebootFlow =
     rebootState &&
+    rebootState.command === "reboot" &&
     rebootState.state !== "IDLE" &&
     rebootState.state !== "ONLINE" &&
-    rebootState.state !== "FAILED";
+    rebootState.state !== "FAILED" &&
+    rebootState.state !== "SUCCEEDED";
 
   let current;
   if (inRebootFlow && rebootState) {

@@ -1,5 +1,5 @@
 """
-FastAPI app for CENTCON: setup (/api/setup-*), reboot (/reboot), login (/login),
+FastAPI app for CENTCON: setup (/api/setup-*), command execution (/commands),
 state streaming (/events), state polling (/state), PIN verification (/verify-pin),
 and auth configuration (/auth-config).
 """
@@ -27,6 +27,7 @@ from pydantic import BaseModel
 from state_manager import get_state, subscribe, unsubscribe, event_stream
 from selenium_reboot import run_reboot_workflow
 from selenium_login import run_login_workflow
+from selenium_wifi_credentials import run_wifi_credentials_workflow
 
 from setup_utils import (
     check_setup_needed,
@@ -35,9 +36,41 @@ from setup_utils import (
     REQUIRED_VARS,
 )
 
-# Prevent multiple simultaneous reboot processes
-reboot_in_progress = False
-login_in_progress = False
+# Command metadata is the contract between backend scheduling and frontend button behavior.
+COMMAND_DEFINITIONS = {
+    "reboot": {
+        "label": "Reboot Modem",
+        "buttonClass": "btn-reboot",
+        "icon": "reboot",
+        "confirm": True,
+        "dangerous": True,
+        "blocksOthers": True,
+        "allowWhileBusy": False,
+        "disableSelf": True,
+        "workflow": run_reboot_workflow,
+    },
+    "login": {
+        "label": "Login to Modem",
+        "buttonClass": "control-btn",
+        "icon": "newTab",
+        "confirm": False,
+        "dangerous": False,
+        "blocksOthers": False,
+        "allowWhileBusy": True,
+        "disableSelf": True,
+        "workflow": run_login_workflow,
+    },
+}
+
+ERR_UNKNOWN_COMMAND = "Unknown command"
+ERR_ALREADY_IN_PROGRESS = "already in progress"
+ERR_BLOCKING_ACTIVE = "is blocking other commands"
+ERR_REQUIRES_IDLE = "requires all other commands to be idle"
+ERR_BUSY = "cannot run while another command is active"
+OK_STARTED = "started"
+
+# In-process guard only; expected to run as a single-process backend.
+command_in_progress: set[str] = set()
 
 # Load CORS origins from .env or fallback to localhost defaults
 cors_origins_env = os.getenv("CORS_ORIGINS", "")
@@ -101,12 +134,7 @@ async def setup_needed():
 
         return response
     except Exception as e:
-        return {
-            "setupRequired": True,
-            "missingFields": list(REQUIRED_VARS.keys()),
-            "invalidFields": [],
-            "error": str(e),
-        }
+        raise HTTPException(status_code=500, detail=f"Setup check failed: {str(e)}")
 
 
 @app.post("/api/setup-complete")
@@ -141,63 +169,123 @@ async def setup_complete(request: SetupRequest):
         raise HTTPException(status_code=500, detail=f"Setup failed: {str(e)}")
 
 
-# Reboot workflow
-async def _run_reboot_then_clear():
-    global reboot_in_progress
+async def _run_command_then_clear(command_id: str):
+    """Run a registered command workflow and clear its in-progress marker."""
     try:
-        await run_reboot_workflow()
+        workflow = COMMAND_DEFINITIONS[command_id]["workflow"]
+        await workflow()
     finally:
-        reboot_in_progress = False
+        command_in_progress.discard(command_id)
 
 
-@app.post("/reboot")
-async def reboot():
-    """Start router reboot workflow in background; returns immediately."""
-    global reboot_in_progress
-    if reboot_in_progress:
-        raise HTTPException(
-            status_code=409,
-            detail="Reboot already in progress",
-        )
-    state = get_state()
-    if state["state"] not in ("IDLE", "ONLINE", "FAILED"):
-        raise HTTPException(
-            status_code=409,
-            detail="Reboot already in progress",
-        )
-    reboot_in_progress = True
-    asyncio.create_task(_run_reboot_then_clear())
-    return {"ok": True, "message": "Reboot started"}
+@app.get("/commands")
+async def list_commands():
+    """Return available Selenium-backed commands for the dashboard controls."""
+    return {
+        "commands": [
+            {
+                "id": command_id,
+                "label": definition["label"],
+                "buttonClass": definition["buttonClass"],
+                "icon": definition["icon"],
+                "confirm": definition["confirm"],
+                "dangerous": definition["dangerous"],
+                "blocksOthers": definition["blocksOthers"],
+                "allowWhileBusy": definition["allowWhileBusy"],
+                "disableSelf": definition["disableSelf"],
+            }
+            for command_id, definition in COMMAND_DEFINITIONS.items()
+        ]
+    }
 
 
-# Login workflow
-async def _run_login_then_clear():
-    global login_in_progress
+
+# Wifi credentials update endpoint (custom workflow with dynamic input, so not in COMMAND_DEFINITIONS)
+class WifiCredentialsRequest(BaseModel):
+    targets: list[dict]
+
+
+@app.post("/commands/wifi-credentials")
+async def start_wifi_credentials(request: WifiCredentialsRequest):
+    """Start the Wi-Fi credentials Selenium workflow with target SSIDs and new values."""
+    command_id = "wifi-credentials"
+
+    if command_id in command_in_progress:
+        raise HTTPException(status_code=409, detail=f"{command_id} {ERR_ALREADY_IN_PROGRESS}")
+
+    active_blockers = [
+        active_id
+        for active_id in command_in_progress
+        if COMMAND_DEFINITIONS.get(active_id, {}).get("blocksOthers")
+    ]
+    if active_blockers:
+        raise HTTPException(status_code=409, detail=f"{active_blockers[0]} {ERR_BLOCKING_ACTIVE}")
+
+    command_in_progress.add(command_id)
+
+    async def run():
+        try:
+            await run_wifi_credentials_workflow(request.targets)
+        finally:
+            command_in_progress.discard(command_id)
+
     try:
-        await run_login_workflow()
-    finally:
-        login_in_progress = False
-
-
-@app.post("/login")
-async def login_to_modem():
-    """Open browser and login to modem, leave window open for user."""
-    global login_in_progress
-
-    if login_in_progress:
-        raise HTTPException(
-            status_code=409,
-            detail="Login already in progress",
-        )
-
-    login_in_progress = True
-
-    try:
-        asyncio.create_task(_run_login_then_clear())
-        return {"ok": True, "message": "Login started"}
+        asyncio.create_task(run())
+        return {"ok": True, "message": f"{command_id} {OK_STARTED}"}
     except Exception as e:
-        login_in_progress = False
+        command_in_progress.discard(command_id)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/commands/{command_id}")
+async def start_command(command_id: str):
+    """Start a registered Selenium command in the background."""
+    if command_id not in COMMAND_DEFINITIONS:
+        raise HTTPException(status_code=404, detail=ERR_UNKNOWN_COMMAND)
+
+    definition = COMMAND_DEFINITIONS[command_id]
+    if command_id in command_in_progress:
+        raise HTTPException(
+            status_code=409,
+            detail=f"{command_id} {ERR_ALREADY_IN_PROGRESS}",
+        )
+
+    if command_in_progress:
+        # A blocking command is exclusive in both directions:
+        # it prevents later commands from starting, and it cannot start
+        # while any other command is already active.
+        active_blockers = [
+            active_id
+            for active_id in command_in_progress
+            if COMMAND_DEFINITIONS[active_id]["blocksOthers"]
+        ]
+        if active_blockers:
+            raise HTTPException(
+                status_code=409,
+                detail=f"{active_blockers[0]} {ERR_BLOCKING_ACTIVE}",
+            )
+
+        if definition["blocksOthers"]:
+            raise HTTPException(
+                status_code=409,
+                detail=f"{command_id} {ERR_REQUIRES_IDLE}",
+            )
+
+        if not definition["allowWhileBusy"]:
+            raise HTTPException(
+                status_code=409,
+                detail=f"{command_id} {ERR_BUSY}",
+            )
+
+    command_in_progress.add(command_id)
+
+    try:
+        asyncio.create_task(_run_command_then_clear(command_id))
+        return {"ok": True, "message": f"{command_id} {OK_STARTED}"}
+    except Exception as e:
+        command_in_progress.discard(command_id)
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 # SSE events endpoint
@@ -244,7 +332,7 @@ async def events():
 # Polling endpoint for state
 @app.get("/state")
 async def state():
-    """Current reboot state (fallback for environments that cannot use SSE)."""
+    """Current command state (fallback for environments that cannot use SSE)."""
     return get_state()
 
 

@@ -4,10 +4,11 @@ import LogHeader from "./log/LogHeader";
 import LogContent from "./log/LogContent";
 import { getIcon } from "../utils/getIcon.jsx";
 
+const MAX_LOG_ENTRIES = 50;
+
 const LogPanel = () => {
   const [logs, setLogs] = useState([]);
   const logContainerRef = useRef(null);
-  const prevLogsLengthRef = useRef(0);
   const hasShownStartup = useRef(false);
   const { data, loading, error, status, rebootLogs, clearRebootLogs } =
     useModem();
@@ -172,7 +173,7 @@ const LogPanel = () => {
 
     // COMMIT LOGS
     if (newLogs.length > 0) {
-      setLogs((prev) => [...prev, ...newLogs].slice(-50));
+      setLogs((prev) => [...prev, ...newLogs].slice(-MAX_LOG_ENTRIES));
     }
   }, [data, status, error, loading]);
 
@@ -183,7 +184,7 @@ const LogPanel = () => {
 
   return (
     <div className="h-full max-h-[40vh] sm:max-h-[45vh] lg:max-h-[calc(100vh-10rem)] flex flex-col lg:sticky lg:top-28 bg-black text-gray-300 font-mono text-sm overflow-hidden rounded-lg">
-      <LogHeader status={status} loading={loading} onClearLogs={clearLogs} />
+      <LogHeader onClearLogs={clearLogs} />
       <LogContent
         logs={sortedLogs}
         logContainerRef={logContainerRef}

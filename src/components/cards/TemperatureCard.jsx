@@ -3,7 +3,7 @@ import IconWrapper from "../ui/IconWrapper";
 import { temperature } from "../../assets/icons";
 
 const TemperatureCard = ({ value, loading, status, statusColor }) => {
-  const displayValue = value ? `${value} °C` : loading ? "..." : "N/A";
+  const displayValue = value ? `${value} \u00B0C` : loading ? "..." : "N/A";
 
   return (
     <MetricCard
