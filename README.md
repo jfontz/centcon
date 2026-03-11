@@ -293,6 +293,9 @@ Ensure Google Chrome is installed in its default location:
 - macOS: `/Applications/Google Chrome.app`
 - Linux: `/usr/bin/google-chrome`
 
+**Need to see the Selenium browser window?**
+Set `REBOOT_SELENIUM_HEADLESS` or `WIFI_SELENIUM_HEADLESS` to `false` in `.env`, then restart the backend.
+
 **`Module not found` errors**
 Make sure `(.venv)` is visible in your terminal prompt, then re-run:
 ```bash
