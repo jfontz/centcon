@@ -66,10 +66,10 @@ const BandGrid = ({
         disabled || (!isSelected && bandSelected !== undefined);
       const ssid = wlanInfo?.[i]?.SSID;
       const cardClass = isSelected
-        ? `${accentClass} ${borderClass} text-white`
+        ? `${accentClass} ${borderClass} text-white cursor-pointer`
         : isDisabled
           ? "bg-zinc-900/40 border border-zinc-900 text-zinc-700 cursor-not-allowed"
-          : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white";
+          : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white cursor-pointer";
       return (
         <div
           key={i}
@@ -82,7 +82,7 @@ const BandGrid = ({
               onToggle(i);
             }}
             disabled={isDisabled}
-            className="w-full flex flex-col items-center gap-1 focus:outline-none"
+            className="w-full flex flex-col items-center gap-1 focus:outline-none cursor-pointer disabled:cursor-not-allowed"
           >
             <span className="text-[10px] font-bold text-zinc-500">
               SSID {getModemIndex(i)}
@@ -102,7 +102,7 @@ const BandGrid = ({
                 onBroadcastIntent(i, "enable");
               }}
               disabled={disabled}
-              className={`text-[8px] px-1.5 py-0.5 rounded font-bold transition-all
+              className={`text-[8px] px-1.5 py-0.5 rounded font-bold transition-all cursor-pointer disabled:cursor-not-allowed
                 ${
                   broadcastIntents?.[i] === "enable"
                     ? "bg-emerald-900 text-emerald-400 border border-emerald-700"
@@ -117,7 +117,7 @@ const BandGrid = ({
                 onBroadcastIntent(i, "disable");
               }}
               disabled={disabled}
-              className={`text-[8px] px-1.5 py-0.5 rounded font-bold transition-all
+              className={`text-[8px] px-1.5 py-0.5 rounded font-bold transition-all cursor-pointer disabled:cursor-not-allowed
                 ${
                   broadcastIntents?.[i] === "disable"
                     ? "bg-red-950 text-red-400 border border-red-800"
@@ -384,7 +384,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
               isBusy ? "Cannot close while changes are being applied" : "Close"
             }
             className={`transition-colors text-lg leading-none
-              ${isBusy ? "text-zinc-800 cursor-not-allowed" : "text-zinc-600 hover:text-zinc-300"}`}
+              ${isBusy ? "text-zinc-800 cursor-not-allowed" : "text-zinc-600 hover:text-zinc-300 cursor-pointer"}`}
           >
             ✕
           </button>
@@ -624,7 +624,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                     isBusy ||
                     saveState === "saved"
                   }
-                  className="w-full py-2.5 rounded-md bg-white text-black text-xs font-bold tracking-[0.2em] uppercase hover:bg-zinc-200 active:scale-[0.99] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  className="w-full py-2.5 rounded-md bg-white text-black text-xs font-bold tracking-[0.2em] uppercase hover:bg-zinc-200 active:scale-[0.99] cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                 >
                   {isBusy
                     ? "Applying..."
