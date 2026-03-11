@@ -25,26 +25,86 @@ const getFreqLabel = (index) => (index < 4 ? "2.4" : "5");
 const getModemIndex = (index) => index + 1;
 const is24 = (index) => index < 4;
 
-const Field = ({ label, value, placeholder, onChange, error }) => (
-  <div className="flex flex-col gap-1">
-    <label className="text-[10px] font-semibold tracking-[0.15em] uppercase text-zinc-500">
-      {label}
-    </label>
-    <input
-      type="text"
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      className={`w-full px-3 py-2 rounded-md text-sm border outline-none transition-colors bg-black text-white placeholder:text-zinc-700
-        ${
-          error
-            ? "border-red-700 focus:border-red-500"
-            : "border-zinc-800 focus:border-zinc-500"
-        }`}
-    />
-    {error && <p className="text-[10px] text-red-400 leading-snug">{error}</p>}
-  </div>
-);
+const Field = ({
+  label,
+  value,
+  placeholder,
+  onChange,
+  error,
+  type = "text",
+  revealable = false,
+}) => {
+  const [revealed, setRevealed] = useState(false);
+  const showToggle = revealable && type === "password";
+  const inputType = showToggle && revealed ? "text" : type;
+
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-[10px] font-semibold tracking-[0.15em] uppercase text-zinc-500">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          type={inputType}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          className={`w-full px-3 py-2 rounded-md text-sm border outline-none transition-colors bg-black text-white placeholder:text-zinc-700
+            ${showToggle ? "pr-9" : ""}
+            ${
+              error
+                ? "border-red-700 focus:border-red-500"
+                : "border-zinc-800 focus:border-zinc-500"
+            }`}
+        />
+        {showToggle && (
+          <button
+            type="button"
+            onClick={() => setRevealed((prev) => !prev)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+            aria-label={revealed ? "Hide password" : "Show password"}
+            title={revealed ? "Hide password" : "Show password"}
+          >
+            {/* TODO: Replace temporary eye icon with the final asset. */}
+            {revealed ? (
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-10-8-10-8a21.56 21.56 0 0 1 5.06-6.94" />
+                <path d="M1 1l22 22" />
+                <path d="M9.88 9.88a3 3 0 0 0 4.24 4.24" />
+                <path d="M21 12s-1.16 3.09-4 5.12" />
+                <path d="M10.12 10.12a3 3 0 0 1 3.76 3.76" />
+              </svg>
+            ) : (
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M2 12s3-8 10-8 10 8 10 8-3 8-10 8-10-8-10-8Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            )}
+          </button>
+        )}
+      </div>
+      {error && <p className="text-[10px] text-red-400 leading-snug">{error}</p>}
+    </div>
+  );
+};
 
 const BandGrid = ({
   indices,
@@ -523,6 +583,8 @@ export default function WiFiCredentialModal({ open, onClose }) {
                           label="New Password"
                           value={fields[i]?.newPass || ""}
                           placeholder="Enter new password"
+                          type="password"
+                          revealable
                           onChange={(e) =>
                             handleFieldChange(i, "newPass", e.target.value)
                           }
