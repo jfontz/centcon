@@ -1,6 +1,6 @@
 # CENTCON
 
-Real-time modem/router dashboard with Selenium-powered automation for reboots, assisted admin login, and live Wi-Fi credential management.
+Real-time modem/router dashboard with Selenium-powered automation for reboots, assisted admin login, and live Wi-Fi credential and broadcast management.
 
 **Stack:** React (Vite) frontend · FastAPI backend · Selenium automation · Server-Sent Events
 
@@ -149,7 +149,7 @@ Once both servers are running and setup is complete:
         ├── run.py                         # Uvicorn entry point
         ├── selenium_login.py              # Opens Chrome, logs into modem, leaves session open for manual use
         ├── selenium_reboot.py             # Full reboot automation workflow
-        ├── selenium_wifi_credentials.py   # Changes 2.4/5 GHz SSID and password in one session, emits SSE logs
+        ├── selenium_wifi_credentials.py   # Changes credentials and broadcast toggles across Basic and Advanced pages in one session
         ├── setup_utils.py                 # First-run setup helpers for validation, auto-detect, and .env writes
         ├── state_manager.py               # SSE state broadcasting and subscriptions
     └── 📁public
