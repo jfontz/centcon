@@ -196,8 +196,16 @@ class ModemApiClient {
 
     // Count devices by their interface type
     const lan = countDevicesByType(deviceInfo, LAN_INTERFACE, isValidDevice);
-    const wifi24 = countDevicesByType(deviceInfo, WIFI_24_INTERFACE, isValidDevice);
-    const wifi5 = countDevicesByType(deviceInfo, WIFI_5_INTERFACE, isValidDevice);
+    const wifi24 = countDevicesByType(
+      deviceInfo,
+      WIFI_24_INTERFACE,
+      isValidDevice,
+    );
+    const wifi5 = countDevicesByType(
+      deviceInfo,
+      WIFI_5_INTERFACE,
+      isValidDevice,
+    );
 
     return {
       lan,
