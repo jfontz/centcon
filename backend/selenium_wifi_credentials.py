@@ -121,8 +121,11 @@ def _run_wifi_credentials_blocking(
 
     try:
         options = webdriver.ChromeOptions()
+        if os.getenv("WIFI_SELENIUM_HEADLESS", "true").lower() == "true":
+            options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
 
         driver = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=options
@@ -380,3 +383,7 @@ async def run_wifi_credentials_workflow(targets: list[dict]) -> None:
             loop, router_url, username, password, targets
         ),
     )
+
+
+
+# TODO: Manually edit and correct icons emmitted regarding "Wi-Fi Credentials" command.

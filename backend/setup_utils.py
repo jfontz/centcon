@@ -53,6 +53,10 @@ SETUP_VARS = {
         "desc": "Run browser in headless mode for reboot automation",
         "default": "true",
     },
+    "WIFI_SELENIUM_HEADLESS": {
+        "desc": "Run browser in headless mode for Wi-Fi credentials automation",
+        "default": "true",
+    },
 }
 
 
