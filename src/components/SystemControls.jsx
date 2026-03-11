@@ -3,6 +3,7 @@ import * as icons from "../assets/icons";
 import { useModem } from "../context/ModemContext";
 import SystemControlButton from "./buttons/SystemControlButton";
 import SectionContainer from "./ui/SectionContainer";
+import WiFiCredentialModal from "./modals/WiFiCredentialModal";
 
 const SystemControls = () => {
   const {
@@ -14,9 +15,9 @@ const SystemControls = () => {
     commandBackendError,
   } = useModem();
   const [pendingCommandIds, setPendingCommandIds] = useState([]);
+  const [wifiModalOpen, setWifiModalOpen] = useState(false);
 
   useEffect(() => {
-    // Keep pending ids only until the backend has marked that command terminal.
     setPendingCommandIds((prev) =>
       prev.filter((commandId) => {
         const status = commandStatuses[commandId];
@@ -24,6 +25,14 @@ const SystemControls = () => {
       }),
     );
   }, [commandStatuses]);
+
+  const handleTrigger = (commandId) => {
+    if (commandId === "wifi-credentials") {
+      setWifiModalOpen(true);
+      return { ok: true };
+    }
+    return triggerCommand(commandId);
+  };
 
   return (
     <div className="bg-black text-white text-sm">
@@ -47,11 +56,21 @@ const SystemControls = () => {
               backendError={commandBackendError}
               pendingCommandIds={pendingCommandIds}
               setPendingCommandIds={setPendingCommandIds}
-              onTrigger={triggerCommand}
+              onTrigger={handleTrigger}
             />
           ))}
         </div>
       </SectionContainer>
+
+      <WiFiCredentialModal
+        open={wifiModalOpen}
+        onClose={() => {
+          setWifiModalOpen(false);
+          setPendingCommandIds((prev) =>
+            prev.filter((id) => id !== "wifi-credentials"),
+          );
+        }}
+      />
     </div>
   );
 };

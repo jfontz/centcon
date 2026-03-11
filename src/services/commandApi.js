@@ -46,3 +46,20 @@ export const triggerCommand = async (commandId) => {
   });
   return response.json();
 };
+
+/**
+ * Trigger the Wi-Fi credentials Selenium workflow.
+ * @param {Array<{ssid_index: number, freq: string, modem_index: string, new_name: string, new_pass: string}>} targets
+ * @returns {Promise<{ ok: boolean, message?: string }>}
+ */
+export const triggerWifiCredentials = async (targets) => {
+  const response = await fetch(
+    `${COMMAND_API_BASE}/commands/wifi-credentials`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ targets }),
+    },
+  );
+  return response.json();
+};

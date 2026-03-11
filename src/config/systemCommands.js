@@ -34,13 +34,14 @@ const SYSTEM_COMMANDS = [
     disableSelf: true,
   },
   {
-    id: "open-reboot-page",
-    label: "Open Reboot Page",
+    id: "wifi-credentials",
+    label: "Wi-Fi Credentials",
     buttonClass: "control-btn",
-    icon: "navigate",
+    icon: "wifi",
     confirm: false,
+    dangerous: false,
     blocksOthers: false,
-    allowWhileBusy: true,
+    allowWhileBusy: false,
     disableSelf: true,
   },
 ];

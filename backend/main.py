@@ -27,7 +27,7 @@ from pydantic import BaseModel
 from state_manager import get_state, subscribe, unsubscribe, event_stream
 from selenium_reboot import run_reboot_workflow
 from selenium_login import run_login_workflow
-from selenium_open_reboot_page import run_open_reboot_page_workflow
+from selenium_wifi_credentials import run_wifi_credentials_workflow
 
 from setup_utils import (
     check_setup_needed,
@@ -59,17 +59,6 @@ COMMAND_DEFINITIONS = {
         "allowWhileBusy": True,
         "disableSelf": True,
         "workflow": run_login_workflow,
-    },
-    "open-reboot-page": {
-        "label": "Open Reboot Page",
-        "buttonClass": "control-btn",
-        "icon": "navigate",
-        "confirm": False,
-        "dangerous": False,
-        "blocksOthers": False,
-        "allowWhileBusy": True,
-        "disableSelf": True,
-        "workflow": run_open_reboot_page_workflow,
     },
 }
 
@@ -210,6 +199,44 @@ async def list_commands():
     }
 
 
+
+# Wifi credentials update endpoint (custom workflow with dynamic input, so not in COMMAND_DEFINITIONS)
+class WifiCredentialsRequest(BaseModel):
+    targets: list[dict]
+
+
+@app.post("/commands/wifi-credentials")
+async def start_wifi_credentials(request: WifiCredentialsRequest):
+    """Start the Wi-Fi credentials Selenium workflow with target SSIDs and new values."""
+    command_id = "wifi-credentials"
+
+    if command_id in command_in_progress:
+        raise HTTPException(status_code=409, detail=f"{command_id} {ERR_ALREADY_IN_PROGRESS}")
+
+    active_blockers = [
+        active_id
+        for active_id in command_in_progress
+        if COMMAND_DEFINITIONS.get(active_id, {}).get("blocksOthers")
+    ]
+    if active_blockers:
+        raise HTTPException(status_code=409, detail=f"{active_blockers[0]} {ERR_BLOCKING_ACTIVE}")
+
+    command_in_progress.add(command_id)
+
+    async def run():
+        try:
+            await run_wifi_credentials_workflow(request.targets)
+        finally:
+            command_in_progress.discard(command_id)
+
+    try:
+        asyncio.create_task(run())
+        return {"ok": True, "message": f"{command_id} {OK_STARTED}"}
+    except Exception as e:
+        command_in_progress.discard(command_id)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/commands/{command_id}")
 async def start_command(command_id: str):
     """Start a registered Selenium command in the background."""
@@ -258,6 +285,7 @@ async def start_command(command_id: str):
     except Exception as e:
         command_in_progress.discard(command_id)
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 # SSE events endpoint
