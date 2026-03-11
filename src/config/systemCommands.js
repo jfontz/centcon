@@ -35,7 +35,7 @@ const SYSTEM_COMMANDS = [
   },
   {
     id: "wifi-credentials",
-    label: "Wi-Fi Credentials",
+    label: "Change Wi-Fi Credentials",
     buttonClass: "control-btn",
     icon: "wifi",
     confirm: false,
