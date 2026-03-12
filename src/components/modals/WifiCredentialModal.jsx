@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import { useModem } from "../../context/ModemContext";
 import { triggerWifiCredentials } from "../../services/commandApi";
 import { modemApi } from "../../services/modemDataApi";
@@ -643,7 +644,13 @@ export default function WiFiCredentialModal({ open, onClose }) {
                 </div>
                 <div className="rounded-lg bg-black border border-zinc-900 p-3 max-h-40 overflow-y-auto log-scrollbar flex flex-col gap-1.5">
                   {logs.map((entry) => (
-                    <div key={entry.id} className="flex items-start gap-2">
+                    <motion.div
+                      key={entry.id}
+                      className="flex items-start gap-2"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                    >
                       <span
                         className={`text-xs flex-shrink-0 mt-0.5 ${LOG_LEVEL_STYLES[entry.level] || "text-zinc-500"}`}
                       >
@@ -655,9 +662,14 @@ export default function WiFiCredentialModal({ open, onClose }) {
                         {entry.message}
                       </span>
                       <span className="text-[11px] text-zinc-700 font-mono ml-auto flex-shrink-0 mt-0.5">
-                        {entry.timestamp}
+                        {entry.timestamp
+                          ? new Date(entry.timestamp).toLocaleTimeString(
+                              "en-US",
+                              { hour12: false },
+                            )
+                          : ""}
                       </span>
-                    </div>
+                    </motion.div>
                   ))}
                   <div ref={logEndRef} />
                 </div>

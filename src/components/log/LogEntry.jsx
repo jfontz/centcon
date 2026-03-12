@@ -1,8 +1,14 @@
 import { formatLogTime } from "../../utils/formatters";
+import { motion } from "framer-motion";
 
 const LogEntry = ({ log, getIcon }) => {
   return (
-    <div className="flex items-start gap-3">
+    <motion.div
+      className="flex items-start gap-3"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+    >
       <span className="text-gray-500 shrink-0">{getIcon(log.type)}</span>
       <span
         className={`
@@ -25,7 +31,7 @@ const LogEntry = ({ log, getIcon }) => {
         )}
         {log.text}
       </span>
-    </div>
+    </motion.div>
   );
 };
 
