@@ -91,15 +91,18 @@ const SystemControlButton = ({
   // disableSelf covers the common UX case where a button should lock itself
   // as soon as it is clicked, even if it does not block other commands.
   const selfDisabled =
-    command.disableSelf &&
-    (isSelfPending || status?.active || isActiveCommand);
+    command.disableSelf && (isSelfPending || status?.active || isActiveCommand);
   const backendDisabled = backendOnline === false;
   const disabled =
     backendDisabled ||
     anotherBlockingCommandExists ||
     disallowedWhileBusy ||
     selfDisabled;
-  const overlayText = getOverlayText({ command, commandState, isActiveCommand });
+  const overlayText = getOverlayText({
+    command,
+    commandState,
+    isActiveCommand,
+  });
   const disabledTitle = backendDisabled
     ? backendError || "Command backend offline."
     : undefined;
@@ -155,7 +158,9 @@ const SystemControlButton = ({
           alt={command.label}
           className="w-4.5 h-4.5 pointer-events-none select-none"
         />
-        <p>{overlayText != null ? overlayText : command.label}</p>
+        <p className="w-min min-w-28 max-w-30 text-center sm:w-auto sm:min-w-0 sm:max-w-none">
+          {overlayText != null ? overlayText : command.label}
+        </p>{" "}
       </button>
       <RebootConfirmModal
         isOpen={showConfirmModal}
