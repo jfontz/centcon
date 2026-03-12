@@ -10,16 +10,15 @@ const LogPanel = () => {
   const [logs, setLogs] = useState([]);
   const logContainerRef = useRef(null);
   const hasShownStartup = useRef(false);
-  const { data, loading, error, status, rebootLogs, clearRebootLogs } =
+  const { data, loading, error, status, commandLogs, clearCommandLogs } =
     useModem();
-
-  const rebootEntries = rebootLogs.map((r) => ({
-    type: r.level,
-    text: r.message,
-    timestamp: r.timestamp,
-    id: r.id,
+  const commandEntries = commandLogs.map((entry) => ({
+    type: entry.level,
+    text: entry.message,
+    timestamp: entry.timestamp,
+    id: entry.id,
   }));
-  const merged = [...logs, ...rebootEntries];
+  const merged = [...logs, ...commandEntries];
   const sortedLogs = [...merged].sort(
     (a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0),
   );
@@ -56,6 +55,7 @@ const LogPanel = () => {
             ? "Modem connection restored"
             : "Modem unreachable - Cannot fetch data",
           timestamp,
+          id: crypto.randomUUID(),
         });
       }
       prevModemReachable.current = modemReachable;
@@ -69,11 +69,13 @@ const LogPanel = () => {
           type: "header",
           text: "CENTCON Monitoring Started",
           timestamp,
+          id: crypto.randomUUID(),
         });
         newLogs.push({
           type: "navigate",
           text: `Connected to modem: ${data.device?.model || "Unknown"}`,
           timestamp,
+          id: crypto.randomUUID(),
         });
         hasShownStartup.current = true;
       }
@@ -92,6 +94,7 @@ const LogPanel = () => {
             ? "LOS (Loss of Signal) - Physical fiber connection lost"
             : "LOS cleared - Fiber signal restored",
           timestamp,
+          id: crypto.randomUUID(),
         });
         prevLosRef.current = hasLOS;
       }
@@ -109,6 +112,7 @@ const LogPanel = () => {
               ? "Internet connection restored"
               : "Internet connection lost - WAN disconnected",
             timestamp,
+            id: crypto.randomUUID(),
           });
         }
         prevInternetUp.current = internetUp;
@@ -122,6 +126,7 @@ const LogPanel = () => {
             type: "warning",
             text: `High CPU usage detected: ${cpuUsage}%`,
             timestamp,
+            id: crypto.randomUUID(),
           });
         }
         if (memoryUsage > 90) {
@@ -129,6 +134,7 @@ const LogPanel = () => {
             type: "warning",
             text: `High memory usage detected: ${memoryUsage}%`,
             timestamp,
+            id: crypto.randomUUID(),
           });
         }
       }
@@ -141,6 +147,7 @@ const LogPanel = () => {
             type: "warning",
             text: `High temperature detected: ${temp}°C`,
             timestamp,
+            id: crypto.randomUUID(),
           });
         }
       }
@@ -168,6 +175,7 @@ const LogPanel = () => {
         type: "success",
         text: "Status check — All systems operational",
         timestamp,
+        id: crypto.randomUUID(),
       });
     }
 
@@ -179,7 +187,7 @@ const LogPanel = () => {
 
   const clearLogs = () => {
     setLogs([]);
-    clearRebootLogs();
+    clearCommandLogs();
   };
 
   return (

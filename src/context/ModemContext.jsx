@@ -87,7 +87,7 @@ export const ModemProvider = ({ children }) => {
             ...prev,
             {
               ...event,
-              id: `${event.command || "system"}-${timestamp}-${prev.length}`,
+              id: crypto.randomUUID(),
               timestamp,
             },
           ]);
@@ -138,8 +138,6 @@ export const ModemProvider = ({ children }) => {
         triggerCommand,
         clearCommandLogs,
         rebootState: commandState,
-        rebootLogs: commandLogs,
-        clearRebootLogs: clearCommandLogs,
       }}
     >
       {children}
