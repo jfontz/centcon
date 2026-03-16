@@ -25,6 +25,7 @@ const LogPanel = () => {
   const prevLosRef = useRef(null);
   const prevModemReachable = useRef(null);
   const prevInternetUp = useRef(null);
+  const prevWanIpRef = useRef(null);
 
   // Auto-scroll to bottom (newest log) when logs change
   useEffect(() => {
@@ -117,6 +118,25 @@ const LogPanel = () => {
         prevInternetUp.current = internetUp;
       }
 
+      // 4. WAN IP Change Detection
+      const currentIp = data?.wan?.ipv4;
+      if (
+        currentIp &&
+        currentIp !== "Empty" &&
+        prevWanIpRef.current !== null &&
+        prevWanIpRef.current !== currentIp
+      ) {
+        newLogs.push({
+          type: "warning",
+          text: "WAN IP changed — If you're hosting anything locally, your external IP has updated.",
+          timestamp,
+          id: crypto.randomUUID(),
+        });
+      }
+      if (currentIp && currentIp !== "Empty") {
+        prevWanIpRef.current = currentIp;
+      }
+
       // DEVICE HEALTH WARNINGS
       if (data.device) {
         const { cpuUsage, memoryUsage } = data.device;
@@ -156,6 +176,7 @@ const LogPanel = () => {
     if (!modemReachable) {
       prevLosRef.current = null;
       prevInternetUp.current = null;
+      prevWanIpRef.current = null;
     }
 
     // STATUS CHECK LOG — only when everything is OK
