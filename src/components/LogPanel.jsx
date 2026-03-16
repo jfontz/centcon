@@ -17,6 +17,7 @@ const LogPanel = () => {
     text: entry.message,
     timestamp: entry.timestamp,
     id: entry.id,
+    command: entry.command, // used by LogContent for operation grouping
   }));
   const merged = [...logs, ...commandEntries];
   const sortedLogs = [...merged].sort(
