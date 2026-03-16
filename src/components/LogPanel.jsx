@@ -47,13 +47,12 @@ const LogPanel = () => {
       // First check - set the ref but DON'T log
       prevModemReachable.current = modemReachable;
     } else if (prevModemReachable.current !== modemReachable) {
-      // Only log if startup has been shown (prevents log on initial load)
       if (hasShownStartup.current) {
         newLogs.push({
           type: modemReachable ? "success" : "error",
           text: modemReachable
-            ? "Modem connection restored"
-            : "Modem unreachable - Cannot fetch data",
+            ? "Modem connection restored — Dashboard is back online."
+            : "Modem unreachable — Make sure your device is connected to the local network.",
           timestamp,
           id: crypto.randomUUID(),
         });
@@ -91,8 +90,8 @@ const LogPanel = () => {
         newLogs.push({
           type: hasLOS ? "error" : "success",
           text: hasLOS
-            ? "LOS (Loss of Signal) - Physical fiber connection lost"
-            : "LOS cleared - Fiber signal restored",
+            ? "Fiber signal lost — Check the fiber cable on your modem. Try rebooting. If the problem persists, contact Globe at 211."
+            : "Fiber signal restored — Connection is back.",
           timestamp,
           id: crypto.randomUUID(),
         });
@@ -109,8 +108,8 @@ const LogPanel = () => {
           newLogs.push({
             type: internetUp ? "success" : "error",
             text: internetUp
-              ? "Internet connection restored"
-              : "Internet connection lost - WAN disconnected",
+              ? "Internet connection restored."
+              : "Internet connection lost — WAN disconnected. Try rebooting your modem. If the problem persists, contact Globe at 211.",
             timestamp,
             id: crypto.randomUUID(),
           });
@@ -124,7 +123,7 @@ const LogPanel = () => {
         if (cpuUsage > 80) {
           newLogs.push({
             type: "warning",
-            text: `High CPU usage detected: ${cpuUsage}%`,
+            text: `High CPU usage (${cpuUsage}%) — Modem is under load. Consider rebooting if performance degrades.`,
             timestamp,
             id: crypto.randomUUID(),
           });
@@ -132,7 +131,7 @@ const LogPanel = () => {
         if (memoryUsage > 90) {
           newLogs.push({
             type: "warning",
-            text: `High memory usage detected: ${memoryUsage}%`,
+            text: `High memory usage (${memoryUsage}%) — Modem memory is critically low. A reboot is recommended.`,
             timestamp,
             id: crypto.randomUUID(),
           });
@@ -145,7 +144,7 @@ const LogPanel = () => {
         if (temp > 70) {
           newLogs.push({
             type: "warning",
-            text: `High temperature detected: ${temp}°C`,
+            text: `High temperature (${temp}°C) — Ensure the modem has adequate ventilation and is not enclosed.`,
             timestamp,
             id: crypto.randomUUID(),
           });
@@ -153,7 +152,7 @@ const LogPanel = () => {
       }
     }
 
-    // Reset LOS and Internet tracking when modem becomes unreachable
+    // Reset all tracking refs when modem becomes unreachable
     if (!modemReachable) {
       prevLosRef.current = null;
       prevInternetUp.current = null;
