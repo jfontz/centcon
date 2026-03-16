@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { useModem } from "../../context/ModemContext";
 import { triggerWifiCredentials } from "../../services/commandApi";
 import { modemApi } from "../../services/modemDataApi";
+import { eye } from "../../assets/icons";
+import { eyeSlash } from "../../assets/icons";
 
 const LOG_LEVEL_STYLES = {
   header: "text-zinc-300 font-semibold",
@@ -66,38 +68,10 @@ const Field = ({
             aria-label={revealed ? "Hide password" : "Show password"}
             title={revealed ? "Hide password" : "Show password"}
           >
-            {/* TODO: Replace temporary eye icon with the final asset. */}
             {revealed ? (
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-10-8-10-8a21.56 21.56 0 0 1 5.06-6.94" />
-                <path d="M1 1l22 22" />
-                <path d="M9.88 9.88a3 3 0 0 0 4.24 4.24" />
-                <path d="M21 12s-1.16 3.09-4 5.12" />
-                <path d="M10.12 10.12a3 3 0 0 1 3.76 3.76" />
-              </svg>
+              <img src={eye} width={20} height={20} />
             ) : (
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M2 12s3-8 10-8 10 8 10 8-3 8-10 8-10-8-10-8Z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
+              <img src={eyeSlash} width={20} height={20} />
             )}
           </button>
         )}
@@ -732,4 +706,3 @@ export default function WiFiCredentialModal({ open, onClose }) {
     </div>
   );
 }
-
