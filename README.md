@@ -1,6 +1,6 @@
 # CENTCON
 
-Real-time modem/router dashboard with Selenium-powered automation for reboots, assisted admin login, and live Wi-Fi credential and broadcast management.
+Real-time modem/router dashboard with Selenium-powered automation for reboots, assisted admin login, and live Wi-Fi credential and broadcast management. Includes a live event log with passive network monitoring, device tracking, and grouped operation logs.
 
 **Stack:** React (Vite) frontend · FastAPI backend · Selenium automation · Server-Sent Events
 
@@ -136,6 +136,31 @@ Once both servers are running and setup is complete:
 1. Open `http://localhost:5173` — you should see the login screen. Enter the `CENTCON_PIN` you set during setup.
 2. Open `http://localhost:8000/docs` — you should see the FastAPI interactive API docs.
 3. On the dashboard, click **"Reboot Modem"** to test the full automation sequence. This will log into your modem and trigger a real reboot — only do this if you're okay with a brief network interruption.
+
+---
+
+## Event Log
+
+The log panel runs passively in the background and records events as they are detected on each data refresh. It does not require any interaction.
+
+**Monitored events:**
+
+| Event | Description |
+|-------|-------------|
+| LOS (Loss of Signal) | Fiber signal lost — TX and RX power both read as zero |
+| LOS cleared | Fiber signal restored |
+| Internet lost | WAN connection dropped while fiber is still up |
+| Internet restored | WAN connection re-established |
+| Modem unreachable | Dashboard cannot reach the modem API |
+| Modem restored | Modem API is reachable again |
+| WAN IP changed | External IP address changed since last poll |
+| Device connected | A new device appeared on the network between polls |
+| High device count | Total connected devices hit an unusual threshold or spiked suddenly |
+| High CPU usage | Modem CPU exceeded 80% |
+| High memory usage | Modem memory usage exceeded 90% |
+| High temperature | Optical transceiver temperature exceeded 70°C |
+
+Automation events (reboot, Wi-Fi credential changes) are grouped together in the log under a labeled block so they're easy to scan separately from passive monitoring events.
 
 ---
 
