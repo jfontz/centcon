@@ -190,30 +190,24 @@ class ModemApiClient {
    * @returns {Object} Object with lan, wifi24, wifi5 counts and total
    */
   parseConnectedDevices(deviceInfo) {
-    if (!deviceInfo) {
-      return { lan: 0, wifi24: 0, wifi5: 0, total: 0 };
-    }
-
-    // Count devices by their interface type
-    const lan = countDevicesByType(deviceInfo, LAN_INTERFACE, isValidDevice);
-    const wifi24 = countDevicesByType(
-      deviceInfo,
-      WIFI_24_INTERFACE,
-      isValidDevice,
-    );
-    const wifi5 = countDevicesByType(
-      deviceInfo,
-      WIFI_5_INTERFACE,
-      isValidDevice,
-    );
-
-    return {
-      lan,
-      wifi24,
-      wifi5,
-      total: lan + wifi24 + wifi5,
-    };
+  if (!deviceInfo) {
+    return { lan: 0, wifi24: 0, wifi5: 0, total: 0, devices: [] };
   }
+
+  const lan = countDevicesByType(deviceInfo, LAN_INTERFACE, isValidDevice);
+  const wifi24 = countDevicesByType(deviceInfo, WIFI_24_INTERFACE, isValidDevice);
+  const wifi5 = countDevicesByType(deviceInfo, WIFI_5_INTERFACE, isValidDevice);
+
+  const devices = deviceInfo
+    .filter(isValidDevice)
+    .map((d) => ({
+      hostname: d.HostName || "Unknown",
+      ip: d.IPAddress || "",
+      interface: d.InterfaceType || "",
+    }));
+
+  return { lan, wifi24, wifi5, total: lan + wifi24 + wifi5, devices };
+}
 
   /**
    * Main method to get parsed modem data

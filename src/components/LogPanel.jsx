@@ -26,6 +26,7 @@ const LogPanel = () => {
   const prevModemReachable = useRef(null);
   const prevInternetUp = useRef(null);
   const prevWanIpRef = useRef(null);
+  const prevDevicesRef = useRef(null);
 
   // Auto-scroll to bottom (newest log) when logs change
   useEffect(() => {
@@ -137,6 +138,31 @@ const LogPanel = () => {
         prevWanIpRef.current = currentIp;
       }
 
+      // 5. Device Connected Detection
+      // Uses hostname|ip as a stable key since MAC is not exposed by this modem's API
+      const currentDevices = data?.connectedDevices?.devices ?? [];
+      const currentDeviceKeys = new Set(
+        currentDevices.map((d) => `${d.hostname}|${d.ip}`),
+      );
+
+      if (prevDevicesRef.current === null) {
+        // First poll — set baseline without logging
+        prevDevicesRef.current = currentDeviceKeys;
+      } else {
+        const newDevices = currentDevices.filter(
+          (d) => !prevDevicesRef.current.has(`${d.hostname}|${d.ip}`),
+        );
+        newDevices.forEach((d) => {
+          newLogs.push({
+            type: "progress",
+            text: `Device connected: ${d.hostname} (${d.interface})`,
+            timestamp,
+            id: crypto.randomUUID(),
+          });
+        });
+        prevDevicesRef.current = currentDeviceKeys;
+      }
+
       // DEVICE HEALTH WARNINGS
       if (data.device) {
         const { cpuUsage, memoryUsage } = data.device;
@@ -177,6 +203,7 @@ const LogPanel = () => {
       prevLosRef.current = null;
       prevInternetUp.current = null;
       prevWanIpRef.current = null;
+      prevDevicesRef.current = null;
     }
 
     // STATUS CHECK LOG — only when everything is OK
