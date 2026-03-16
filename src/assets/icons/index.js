@@ -20,6 +20,8 @@ import wifi from "./wifi.svg";
 import warning from "./warning.svg";
 import error from "./error.svg";
 import login from "./login.svg";
+import eye from "./eye.svg";
+import eyeSlash from "./eye-slash.svg";
 
 export {
   check,
@@ -44,4 +46,6 @@ export {
   warning,
   error,
   login,
+  eye,
+  eyeSlash,
 };
