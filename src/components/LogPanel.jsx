@@ -153,9 +153,15 @@ const LogPanel = () => {
           (d) => !prevDevicesRef.current.has(`${d.hostname}|${d.ip}`),
         );
         newDevices.forEach((d) => {
+          const band =
+            d.interface === "802.11ac"
+              ? "5GHz"
+              : d.interface === "802.11"
+                ? "2.4GHz"
+                : d.interface;
           newLogs.push({
             type: "progress",
-            text: `Device connected: ${d.hostname} (${d.interface})`,
+            text: `Device connected: ${d.hostname} (${band})`,
             timestamp,
             id: crypto.randomUUID(),
           });
