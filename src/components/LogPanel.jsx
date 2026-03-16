@@ -27,6 +27,11 @@ const LogPanel = () => {
   const prevInternetUp = useRef(null);
   const prevWanIpRef = useRef(null);
   const prevDevicesRef = useRef(null);
+  const prevDeviceCountRef = useRef(null);
+
+  // Thresholds for device detection
+  const DEVICE_COUNT_THRESHOLD = 20;
+  const DEVICE_SPIKE_THRESHOLD = 3;
 
   // Auto-scroll to bottom (newest log) when logs change
   useEffect(() => {
@@ -169,6 +174,34 @@ const LogPanel = () => {
         prevDevicesRef.current = currentDeviceKeys;
       }
 
+      // 6. High Device Count Detection
+      const currentTotal = data?.connectedDevices?.total ?? 0;
+      const prevTotal = prevDeviceCountRef.current;
+
+      if (prevTotal !== null) {
+        const spike = currentTotal - prevTotal >= DEVICE_SPIKE_THRESHOLD;
+        const overThreshold =
+          currentTotal >= DEVICE_COUNT_THRESHOLD &&
+          (prevTotal < DEVICE_COUNT_THRESHOLD || spike);
+
+        if (spike && !overThreshold) {
+          newLogs.push({
+            type: "warning",
+            text: `Device count jumped to ${currentTotal} — Unusual number of devices joined the network.`,
+            timestamp,
+            id: crypto.randomUUID(),
+          });
+        } else if (overThreshold) {
+          newLogs.push({
+            type: "warning",
+            text: `High device count (${currentTotal}) — Consider checking for unknown or unauthorized devices.`,
+            timestamp,
+            id: crypto.randomUUID(),
+          });
+        }
+      }
+      prevDeviceCountRef.current = currentTotal;
+
       // DEVICE HEALTH WARNINGS
       if (data.device) {
         const { cpuUsage, memoryUsage } = data.device;
@@ -210,6 +243,7 @@ const LogPanel = () => {
       prevInternetUp.current = null;
       prevWanIpRef.current = null;
       prevDevicesRef.current = null;
+      prevDeviceCountRef.current = null;
     }
 
     // STATUS CHECK LOG — only when everything is OK
