@@ -39,7 +39,7 @@ SETUP_VARS = {
         "default": "http://localhost:8000",
     },
     # Backend
-    "API_HOST": {"desc": "Backend network interface", "default": "0.0.0.0"},
+    "API_HOST": {"desc": "Backend network interface", "default": "127.0.0.1"},
     "API_PORT": {"desc": "Backend API port", "default": "8000"},
     # CORS
     "CORS_ORIGINS": {
