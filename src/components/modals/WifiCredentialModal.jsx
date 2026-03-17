@@ -3,12 +3,24 @@ import { motion } from "framer-motion";
 import { useModem } from "../../context/ModemContext";
 import { triggerWifiCredentials } from "../../services/commandApi";
 import { modemApi } from "../../services/modemDataApi";
-import { eye } from "../../assets/icons";
-import { eyeSlash } from "../../assets/icons";
+import {
+  eye,
+  eyeSlash,
+  check,
+  process,
+  hourglass,
+  action,
+  info,
+  error as errorIcon,
+  warning,
+  navigate,
+} from "../../assets/icons";
 
 const LOG_LEVEL_STYLES = {
   header: "text-zinc-300 font-semibold",
   progress: "text-zinc-500",
+  action: "text-zinc-400",
+  info: "text-zinc-300",
   success: "text-emerald-400",
   error: "text-red-400",
   warning: "text-amber-400",
@@ -16,12 +28,26 @@ const LOG_LEVEL_STYLES = {
 };
 
 const LOG_LEVEL_ICON = {
-  header: "◈",
-  progress: "→",
-  success: "✓",
-  error: "✕",
-  warning: "⚠",
-  navigate: "⤷",
+  header: process,
+  progress: hourglass,
+  action: action,
+  info: info,
+  success: check,
+  error: errorIcon,
+  warning: warning,
+  navigate: navigate,
+};
+
+const LOG_ICON_CLASSES =
+  "w-3.5 h-3.5 inline-block pointer-events-none select-none flex-shrink-0 mt-0.5";
+
+const getLogIcon = (level) => {
+  const icon = LOG_LEVEL_ICON[level];
+  if (!icon)
+    return (
+      <span className="text-xs text-zinc-500 flex-shrink-0 mt-0.5">·</span>
+    );
+  return <img src={icon} className={LOG_ICON_CLASSES} alt={level} />;
 };
 
 const getFreqLabel = (index) => (index < 4 ? "2.4" : "5");
@@ -502,9 +528,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                     />
                   ))}
                 </div>
-                <span className="text-xs text-zinc-600">
-                  Loading SSIDs...
-                </span>
+                <span className="text-xs text-zinc-600">Loading SSIDs...</span>
               </div>
             )}
           </div>
@@ -625,11 +649,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2, ease: "easeOut" }}
                     >
-                      <span
-                        className={`text-xs flex-shrink-0 mt-0.5 ${LOG_LEVEL_STYLES[entry.level] || "text-zinc-500"}`}
-                      >
-                        {LOG_LEVEL_ICON[entry.level] || "·"}
-                      </span>
+                      {getLogIcon(entry.level)}
                       <span
                         className={`text-[13px] leading-relaxed ${LOG_LEVEL_STYLES[entry.level] || "text-zinc-500"}`}
                       >
