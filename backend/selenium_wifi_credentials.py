@@ -105,7 +105,9 @@ def _run_wifi_credentials_blocking(
         original_value = name_field.get_attribute("value")
 
         driver.execute_script(
-            f"document.getElementById('{select_id}').selectize.setValue('{value}')"
+            "document.getElementById(arguments[0]).selectize.setValue(arguments[1])",
+            select_id,
+            value,
         )
 
         wait.until(
