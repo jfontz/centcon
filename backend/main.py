@@ -38,7 +38,16 @@ from setup_utils import (
     REQUIRED_VARS,
 )
 
-# Command metadata is the contract between backend scheduling and frontend button behavior.
+# Command definitions
+# Each entry defines a Selenium-backed command exposed to the frontend.
+# The frontend reads this list from GET /commands and renders buttons accordingly.
+# - workflow:       async function to run when the command is triggered
+# - confirm:        whether the frontend should show a confirmation dialog first
+# - dangerous:      marks the button as destructive (red styling)
+# - blocksOthers:   if True, this command cannot run while any other is active,
+#                   and prevents other commands from starting while it runs
+# - allowWhileBusy: if True, this command can be triggered even while another is running
+# - disableSelf:    if True, the button disables itself while the command is in progress
 COMMAND_DEFINITIONS = {
     "reboot": {
         "label": "Reboot Modem",
@@ -64,6 +73,7 @@ COMMAND_DEFINITIONS = {
     },
 }
 
+# Error and status message constants
 ERR_UNKNOWN_COMMAND = "Unknown command"
 ERR_ALREADY_IN_PROGRESS = "already in progress"
 ERR_BLOCKING_ACTIVE = "is blocking other commands"
@@ -71,14 +81,16 @@ ERR_REQUIRES_IDLE = "requires all other commands to be idle"
 ERR_BUSY = "cannot run while another command is active"
 OK_STARTED = "started"
 
-# In-process guard only; expected to run as a single-process backend.
+# In-process guard to prevent concurrent command execution.
+# Expected to run as a single-process backend — no distributed locking needed.
 command_in_progress: set[str] = set()
 
-# Load CORS origins from .env or fallback to localhost defaults
+# CORS configuration
+# Load allowed origins from .env. Falls back to standard localhost dev ports
+# if the variable is missing or empty.
 cors_origins_env = os.getenv("CORS_ORIGINS", "")
 cors_origins = [origin.strip() for origin in cors_origins_env.split(",") if origin]
 
-# Fallback: allow standard localhost ports if empty
 if not cors_origins:
     cors_origins = [
         "http://localhost:5173",
@@ -86,17 +98,15 @@ if not cors_origins:
     ]
 
 
-# Lifespan context
+# App setup
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     yield
     # cleanup if any
 
 
-# FastAPI app
 app = FastAPI(title="Centcon Reboot API", lifespan=lifespan)
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
@@ -105,6 +115,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# Request models
 class SetupRequest(BaseModel):
     MODEM_IP: str
     MODEM_USERNAME: str
@@ -116,6 +128,7 @@ class PinVerifyRequest(BaseModel):
     pin: str
 
 
+# Setup endpoints
 @app.get("/api/setup-needed")
 async def setup_needed():
     """Check if first-run setup is required."""
@@ -129,7 +142,7 @@ async def setup_needed():
             "fieldDescriptions": REQUIRED_VARS,
         }
 
-        # If setup is needed, provide defaults
+        # Provide defaults only when setup is needed so the wizard can pre-fill fields
         if setup_required:
             defaults = get_defaults()
             response["defaults"] = defaults
@@ -141,23 +154,22 @@ async def setup_needed():
 
 @app.post("/api/setup-complete")
 async def setup_complete(request: SetupRequest):
-    """Complete first-run setup by saving validated configuration."""
+    """Complete first-run setup by saving validated configuration to .env."""
     try:
-        # Get all defaults (includes frontend, backend, CORS, auth, selenium, etc.)
+        # Start from full defaults so all non-wizard fields get written too
         defaults = get_defaults()
 
-        # Merge submitted data from form on top of defaults
+        # Overlay the user-submitted values on top of defaults
         data = {
             **defaults,
             **{
                 "MODEM_IP": request.MODEM_IP.strip(),
                 "MODEM_USERNAME": request.MODEM_USERNAME.strip(),
-                "MODEM_PASSWORD": request.MODEM_PASSWORD,  # Don't strip password
+                "MODEM_PASSWORD": request.MODEM_PASSWORD,  # intentionally not stripped
                 "CENTCON_PIN": request.CENTCON_PIN.strip(),
             },
         }
 
-        # Save everything to .env
         success, message = save_to_env(data)
 
         if success:
@@ -171,8 +183,9 @@ async def setup_complete(request: SetupRequest):
         raise HTTPException(status_code=500, detail=f"Setup failed: {str(e)}")
 
 
+# Command helpers
 async def _run_command_then_clear(command_id: str):
-    """Run a registered command workflow and clear its in-progress marker."""
+    """Run a registered command workflow and clear its in-progress marker when done."""
     try:
         workflow = COMMAND_DEFINITIONS[command_id]["workflow"]
         await workflow()
@@ -201,18 +214,29 @@ async def list_commands():
     }
 
 
+# Wi-Fi credentials endpoint
+# This command is not in COMMAND_DEFINITIONS because it requires dynamic input
+# (target SSIDs, new names/passwords, broadcast intents) collected from the modal.
+# It uses its own request model with strict server-side validation.
 
-# Wifi credentials update endpoint (custom workflow with dynamic input, so not in COMMAND_DEFINITIONS)
+# Regex for valid Wi-Fi SSID names — letters, numbers, spaces, underscore, hyphen only
 SSID_NAME_REGEX = re.compile(r"^[A-Za-z0-9 _-]+$")
 
 
 class WifiTarget(BaseModel):
-    ssid_index: int
-    freq: Literal["2.4", "5"]
-    modem_index: str
-    new_name: str = ""
-    new_pass: str = ""
-    broadcast_intent: Optional[Literal["enable", "disable"]] = None
+    """
+    Validated representation of a single SSID target for the credentials workflow.
+
+    All fields are validated server-side regardless of frontend validation.
+    The band consistency validator ensures freq, ssid_index, and modem_index agree
+    so no inconsistent state can reach Selenium.
+    """
+    ssid_index: int                                          # 0–7 (position in wlan_info array)
+    freq: Literal["2.4", "5"]                               # Wi-Fi band
+    modem_index: str                                         # "1"–"8" (displayed SSID number on modem)
+    new_name: str = ""                                       # New SSID name, empty = keep current
+    new_pass: str = ""                                       # New password, empty = keep current
+    broadcast_intent: Optional[Literal["enable", "disable"]] = None  # None = no broadcast change
 
     @field_validator("ssid_index")
     @classmethod
@@ -262,6 +286,10 @@ class WifiTarget(BaseModel):
 
     @model_validator(mode="after")
     def validate_band_consistency(self):
+        """
+        Cross-field check: ensures freq, ssid_index, and modem_index are internally consistent.
+        The frontend always sends these in sync; a mismatch here indicates a malformed request.
+        """
         if self.freq == "2.4" and not (0 <= self.ssid_index <= 3):
             raise ValueError("ssid_index must be 0–3 for 2.4 GHz")
         if self.freq == "5" and not (4 <= self.ssid_index <= 7):
@@ -290,6 +318,7 @@ async def start_wifi_credentials(request: WifiCredentialsRequest):
     if command_id in command_in_progress:
         raise HTTPException(status_code=409, detail=f"{command_id} {ERR_ALREADY_IN_PROGRESS}")
 
+    # Block if a blocking command (e.g. reboot) is already running
     active_blockers = [
         active_id
         for active_id in command_in_progress
@@ -300,6 +329,7 @@ async def start_wifi_credentials(request: WifiCredentialsRequest):
 
     command_in_progress.add(command_id)
 
+    # Convert validated Pydantic models to plain dicts for the Selenium workflow
     targets_payload = [target.dict() for target in request.targets]
 
     async def run():
@@ -316,6 +346,7 @@ async def start_wifi_credentials(request: WifiCredentialsRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# Generic command endpoint
 @app.post("/commands/{command_id}")
 async def start_command(command_id: str):
     """Start a registered Selenium command in the background."""
@@ -323,6 +354,7 @@ async def start_command(command_id: str):
         raise HTTPException(status_code=404, detail=ERR_UNKNOWN_COMMAND)
 
     definition = COMMAND_DEFINITIONS[command_id]
+
     if command_id in command_in_progress:
         raise HTTPException(
             status_code=409,
@@ -331,8 +363,8 @@ async def start_command(command_id: str):
 
     if command_in_progress:
         # A blocking command is exclusive in both directions:
-        # it prevents later commands from starting, and it cannot start
-        # while any other command is already active.
+        # it cannot start while anything else is active, and nothing else
+        # can start while it is active.
         active_blockers = [
             active_id
             for active_id in command_in_progress
@@ -366,30 +398,30 @@ async def start_command(command_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
 # SSE events endpoint
 @app.get("/events")
 async def events():
     """
-    Server-Sent Events endpoint for realtime updates.
+    Server-Sent Events endpoint for realtime dashboard updates.
 
-    Event payloads:
-    - 'state': {type, state, message, progress, countdown?}
-        Reboot/login workflow state machine updates. Also used to pause
-        frontend auto-refresh during reboot and resume once ONLINE.
-    - 'log': {type, level, message, timestamp}
-        Timeline entries for the log panel (header/progress/error messages).
-    - 'countdown': {type, countdown}
-        Remaining seconds in the reboot wait period; drives StatusBadge only
-        to avoid spamming the log panel.
-    - 'heartbeat': {type}
-        Keep-alive ping emitted when no other events have occurred recently.
+    Event payload types:
+    - state:     {type, state, message, progress, countdown?}
+                 Workflow state machine updates. Also used to pause/resume
+                 frontend auto-refresh during reboot.
+    - log:       {type, level, message, timestamp}
+                 Timeline entries for the log panel.
+    - countdown: {type, countdown}
+                 Remaining seconds in the reboot wait period.
+                 Drives the StatusBadge only — not logged to the log panel
+                 to avoid spamming it every second.
+    - heartbeat: {type}
+                 Keep-alive ping emitted when no other events have occurred recently.
     """
 
     async def generate():
         queue = await subscribe()
         try:
-            # Send current state immediately so new clients get latest
+            # Send current state immediately so new clients don't miss the latest
             current = get_state()
             yield f"data: {json.dumps({'type': 'state', **current})}\n\n"
             async for event in event_stream(queue):
@@ -403,21 +435,21 @@ async def events():
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
+            "X-Accel-Buffering": "no",  # prevents nginx from buffering SSE responses
         },
     )
 
 
-# Polling endpoint for state
+# Utility endpoints
 @app.get("/state")
 async def state():
-    """Current command state (fallback for environments that cannot use SSE)."""
+    """Current command state — fallback polling endpoint for environments that cannot use SSE."""
     return get_state()
 
 
 @app.post("/verify-pin")
 async def verify_pin(request: PinVerifyRequest):
-    """Verify PIN for CENTCON access."""
+    """Verify the CENTCON access PIN. Case-insensitive comparison."""
     centcon_pin = os.getenv("CENTCON_PIN", "")
 
     if request.pin.upper() == centcon_pin.upper():
@@ -425,10 +457,9 @@ async def verify_pin(request: PinVerifyRequest):
     return {"ok": False, "message": "Invalid PIN"}
 
 
-# Auth config endpoint
 @app.get("/auth-config")
 async def auth_config():
-    """Return authentication configuration."""
+    """Return authentication configuration — whether the login screen is enabled."""
     show_login = os.getenv("CENTCON_SHOW_LOGIN", "true").lower() == "true"
     return {
         "showLogin": show_login,
