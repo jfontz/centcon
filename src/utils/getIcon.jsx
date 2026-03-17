@@ -1,12 +1,13 @@
 import {
   check,
   process,
-  log as logIcon,
+  info,
   hourglass,
   warning,
   error,
   navigate,
   load,
+  action,
 } from "../assets/icons";
 
 const ICON_CLASSES = "w-4 h-4 inline-block pointer-events-none select-none";
@@ -14,10 +15,11 @@ const ICON_CLASSES = "w-4 h-4 inline-block pointer-events-none select-none";
 const ICON_MAP = {
   header: process,
   navigate: navigate,
-  info: logIcon,
+  info: info,
   success: check,
   progress: hourglass,
   checking: load,
+  action: action,
   error: error,
   warning: warning,
 };
