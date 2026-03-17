@@ -15,10 +15,13 @@ const LogEntry = ({ log, getIcon }) => {
           ${log.type === "header" ? "text-white" : ""}
           ${log.type === "success" ? "text-green-400" : ""}
           ${log.type === "progress" ? "text-blue-400" : ""}
+          ${log.type === "action" ? "text-gray-400" : ""}
           ${log.type === "error" ? "text-red-400" : ""}
           ${log.type === "warning" ? "text-yellow-400" : ""}
           ${
-            log.type === "info" || log.type === "checking" || log.type === "navigate"
+            log.type === "info" ||
+            log.type === "checking" ||
+            log.type === "navigate"
               ? "text-gray-300"
               : ""
           }
