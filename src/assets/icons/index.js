@@ -22,6 +22,8 @@ import error from "./error.svg";
 import login from "./login.svg";
 import eye from "./eye.svg";
 import eyeSlash from "./eye-slash.svg";
+import info from "./info.svg";
+import action from "./action.svg";
 
 export {
   check,
@@ -48,4 +50,6 @@ export {
   login,
   eye,
   eyeSlash,
+  info,
+  action,
 };
