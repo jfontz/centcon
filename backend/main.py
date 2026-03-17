@@ -17,12 +17,14 @@ if _env.exists():
 import asyncio
 import json
 import os
+import re
+from typing import Literal, Optional
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, model_validator
 
 from state_manager import get_state, subscribe, unsubscribe, event_stream
 from selenium_reboot import run_reboot_workflow
@@ -201,8 +203,83 @@ async def list_commands():
 
 
 # Wifi credentials update endpoint (custom workflow with dynamic input, so not in COMMAND_DEFINITIONS)
+SSID_NAME_REGEX = re.compile(r"^[A-Za-z0-9 _-]+$")
+
+
+class WifiTarget(BaseModel):
+    ssid_index: int
+    freq: Literal["2.4", "5"]
+    modem_index: str
+    new_name: str = ""
+    new_pass: str = ""
+    broadcast_intent: Optional[Literal["enable", "disable"]] = None
+
+    @field_validator("ssid_index")
+    @classmethod
+    def validate_ssid_index(cls, value: int) -> int:
+        if value < 0 or value > 7:
+            raise ValueError("ssid_index must be between 0 and 7")
+        return value
+
+    @field_validator("modem_index", mode="before")
+    @classmethod
+    def validate_modem_index(cls, value) -> str:
+        if value is None:
+            raise ValueError("modem_index is required")
+        raw = str(value)
+        if not raw.isdigit():
+            raise ValueError("modem_index must be a number between 1 and 8")
+        idx = int(raw)
+        if idx < 1 or idx > 8:
+            raise ValueError("modem_index must be between 1 and 8")
+        return str(idx)
+
+    @field_validator("new_name", mode="before")
+    @classmethod
+    def validate_new_name(cls, value) -> str:
+        if value is None or value == "":
+            return ""
+        trimmed = str(value).strip()
+        if trimmed == "":
+            raise ValueError("Wi-Fi name is required.")
+        if len(trimmed) > 32:
+            raise ValueError("Wi-Fi name must be 1–32 characters.")
+        if not SSID_NAME_REGEX.match(trimmed):
+            raise ValueError("Use letters, numbers, spaces, underscore, or hyphen.")
+        return trimmed
+
+    @field_validator("new_pass", mode="before")
+    @classmethod
+    def validate_new_pass(cls, value) -> str:
+        if value is None or value == "":
+            return ""
+        raw = str(value)
+        if len(raw) < 8 or len(raw) > 63:
+            raise ValueError("Password must be 8–63 characters.")
+        if raw.strip() != raw:
+            raise ValueError("Password cannot start or end with spaces.")
+        return raw
+
+    @model_validator(mode="after")
+    def validate_band_consistency(self):
+        if self.freq == "2.4" and not (0 <= self.ssid_index <= 3):
+            raise ValueError("ssid_index must be 0–3 for 2.4 GHz")
+        if self.freq == "5" and not (4 <= self.ssid_index <= 7):
+            raise ValueError("ssid_index must be 4–7 for 5 GHz")
+
+        modem_idx = int(self.modem_index)
+        if self.freq == "2.4" and not (1 <= modem_idx <= 4):
+            raise ValueError("modem_index must be 1–4 for 2.4 GHz")
+        if self.freq == "5" and not (5 <= modem_idx <= 8):
+            raise ValueError("modem_index must be 5–8 for 5 GHz")
+        if modem_idx != self.ssid_index + 1:
+            raise ValueError("modem_index must match ssid_index + 1")
+
+        return self
+
+
 class WifiCredentialsRequest(BaseModel):
-    targets: list[dict]
+    targets: list[WifiTarget]
 
 
 @app.post("/commands/wifi-credentials")
@@ -223,9 +300,11 @@ async def start_wifi_credentials(request: WifiCredentialsRequest):
 
     command_in_progress.add(command_id)
 
+    targets_payload = [target.dict() for target in request.targets]
+
     async def run():
         try:
-            await run_wifi_credentials_workflow(request.targets)
+            await run_wifi_credentials_workflow(targets_payload)
         finally:
             command_in_progress.discard(command_id)
 
