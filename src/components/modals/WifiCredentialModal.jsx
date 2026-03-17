@@ -726,3 +726,6 @@ export default function WiFiCredentialModal({ open, onClose }) {
     </div>
   );
 }
+
+
+// TODO: Finalize modal style (text color and bg color to black and white only)
