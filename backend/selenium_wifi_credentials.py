@@ -92,7 +92,7 @@ def _run_wifi_credentials_blocking(
 
                     time.sleep(0.5)
                 break
-        _log("navigate", f"Advanced Settings expanded for {band_label}")
+        _log("info", f"Advanced Settings expanded for {band_label}")
 
     def _select_ssid_via_selectize(
         driver, wait, select_id: str, value: str, name_field_id: str
@@ -132,14 +132,14 @@ def _run_wifi_credentials_blocking(
 
         if intent == "enable" and not is_active:
             toggle.click()
-            _log("progress", f"Broadcast enabled for SSID {modem_index}")
+            _log("info", f"Broadcast enabled for SSID {modem_index}")
         elif intent == "disable" and is_active:
             toggle.click()
-            _log("progress", f"Broadcast disabled for SSID {modem_index}")
+            _log("info", f"Broadcast disabled for SSID {modem_index}")
         else:
             state = "on" if is_active else "off"
             _log(
-                "progress",
+                "info",
                 f"SSID {modem_index} broadcast already {state} — skipped",
             )
 
@@ -273,10 +273,10 @@ def _run_wifi_credentials_blocking(
 
                 # Expand Advanced Settings only if we need to change SSID number
                 if modem_index != DEFAULT_SSID_24G:
-                    _log("progress", f"Expanding Advanced Settings for 2.4 GHz")
+                    _log("action", f"Expanding Advanced Settings for 2.4 GHz")
                     _expand_advanced_settings(driver, wait, "2.4 GHz")
 
-                    _log("progress", f"Selecting SSID {modem_index} on 2.4 GHz")
+                    _log("action", f"Selecting SSID {modem_index} on 2.4 GHz")
                     _emit_sync(
                         {
                             "type": "state",
@@ -292,27 +292,27 @@ def _run_wifi_credentials_blocking(
                         modem_index,
                         ID_24G_WIFI_NAME,
                     )
-                    _log("success", f"2.4 GHz SSID {modem_index} selected")
+                    _log("info", f"2.4 GHz SSID {modem_index} selected")
                 else:
-                    _log("progress", f"Using default 2.4 GHz SSID {modem_index}")
+                    _log("info", f"Using default 2.4 GHz SSID {modem_index}")
 
                 if target_24g.get("new_name"):
                     _fill_field(driver, ID_24G_WIFI_NAME, target_24g["new_name"])
-                    _log("progress", f"Wi-Fi name set for 2.4 GHz SSID {modem_index}")
+                    _log("info", f"Wi-Fi name set for 2.4 GHz SSID {modem_index}")
 
                 if target_24g.get("new_pass"):
                     _fill_field(driver, ID_24G_WIFI_PASS, target_24g["new_pass"])
-                    _log("progress", f"Password set for 2.4 GHz SSID {modem_index}")
+                    _log("info", f"Password set for 2.4 GHz SSID {modem_index}")
 
             # ── Handle 5 GHz ────────────────────────────────────────────────────
             if target_5g:
                 modem_index = str(target_5g["modem_index"])
 
                 if modem_index != DEFAULT_SSID_5G:
-                    _log("progress", f"Expanding Advanced Settings for 5 GHz")
+                    _log("action", f"Expanding Advanced Settings for 5 GHz")
                     _expand_advanced_settings(driver, wait, "5 GHz")
 
-                    _log("progress", f"Selecting SSID {modem_index} on 5 GHz")
+                    _log("action", f"Selecting SSID {modem_index} on 5 GHz")
                     _emit_sync(
                         {
                             "type": "state",
@@ -328,17 +328,17 @@ def _run_wifi_credentials_blocking(
                         modem_index,
                         ID_5G_WIFI_NAME,
                     )
-                    _log("success", f"5 GHz SSID {modem_index} selected")
+                    _log("info", f"5 GHz SSID {modem_index} selected")
                 else:
-                    _log("progress", f"Using default 5 GHz SSID {modem_index}")
+                    _log("info", f"Using default 5 GHz SSID {modem_index}")
 
                 if target_5g.get("new_name"):
                     _fill_field(driver, ID_5G_WIFI_NAME, target_5g["new_name"])
-                    _log("progress", f"Wi-Fi name set for 5 GHz SSID {modem_index}")
+                    _log("info", f"Wi-Fi name set for 5 GHz SSID {modem_index}")
 
                 if target_5g.get("new_pass"):
                     _fill_field(driver, ID_5G_WIFI_PASS, target_5g["new_pass"])
-                    _log("progress", f"Password set for 5 GHz SSID {modem_index}")
+                    _log("info", f"Password set for 5 GHz SSID {modem_index}")
 
             # ── Save Changes ─────────────────────────────────────────────────────
             _emit_sync(
@@ -462,6 +462,3 @@ async def run_wifi_credentials_workflow(targets: list[dict]) -> None:
             loop, router_url, username, password, targets
         ),
     )
-
-
-# TODO: Manually edit and correct icons emmitted regarding "Wi-Fi Credentials" command.
