@@ -153,15 +153,23 @@ The log panel runs passively in the background and records events as they are de
 | Internet restored | WAN connection re-established |
 | Modem unreachable | Dashboard cannot reach the modem API |
 | Modem restored | Modem API is reachable again |
+| Modem reachable (LOS active) | Modem API is back but fiber signal is still lost — surfaced after a connectivity gap |
 | WAN IP changed | External IP address changed since last poll |
 | Device connected | A new device appeared on the network between polls |
 | High device count | Total connected devices hit an unusual threshold or spiked suddenly |
 | High CPU usage | Modem CPU exceeded 80% |
 | High memory usage | Modem memory usage exceeded 90% |
 | High temperature | Optical transceiver temperature exceeded 70°C |
-| Modem reachable (LOS active) | Modem API is back but fiber signal is still lost — surfaced after a connectivity gap |
 
 Automation events (reboot, Wi-Fi credential changes) are grouped together in the log under a labeled block so they're easy to scan separately from passive monitoring events.
+
+---
+
+## Connected Devices
+
+The Connected Devices section shows a count of devices by interface type (LAN, 2.4GHz, 5GHz). Clicking **View all** opens a modal listing every connected device with its hostname, IP address, and band.
+
+Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is saved locally in the browser and persists across modem reboots. It is only lost if a device's IP address changes (e.g. after a DHCP lease expiry that assigns a different IP).
 
 ---
 
@@ -183,13 +191,17 @@ Automation events (reboot, Wi-Fi credential changes) are grouped together in the
     └── 📁src
         └── 📁assets
             └── 📁icons
+                ├── action.svg
                 ├── check.svg
                 ├── clear.svg
                 ├── cpu.svg
                 ├── device.svg
                 ├── error.svg
+                ├── eye.svg
+                ├── eye-slash.svg
                 ├── hourglass.svg
                 ├── index.js
+                ├── info.svg
                 ├── lan.svg
                 ├── load.svg
                 ├── log.svg
@@ -229,6 +241,7 @@ Automation events (reboot, Wi-Fi credential changes) are grouped together in the
                 ├── LogEntry.jsx
                 ├── LogHeader.jsx
             └── 📁modals
+                ├── DeviceListModal.jsx
                 ├── RebootConfirmModal.jsx
                 ├── WifiCredentialModal.jsx
             └── 📁ui
