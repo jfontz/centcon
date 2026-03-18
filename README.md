@@ -256,8 +256,6 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
             ├── LogPanel.jsx
             ├── SystemControls.jsx
             ├── SystemStatus.jsx
-        └── 📁config
-            ├── systemCommands.js          # Button definitions — add/remove buttons here
         └── 📁context
             ├── AuthContext.jsx
             ├── ModemContext.jsx
@@ -269,7 +267,7 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
         └── 📁services
             ├── apiConfig.js               # Shared backend URL constant
             ├── authAPI.js
-            ├── commandApi.js              # SSE connection and command triggers
+            ├── commandApi.js              # SSE connection, command triggers, and command metadata fetching
             ├── modemDataApi.js            # Modem data fetching and parsing
             ├── setupAPI.js
         └── 📁utils
@@ -296,17 +294,15 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
 
 ## Extending CENTCON
 
-The frontend renders system control buttons automatically from the config file, so no changes to `SystemControls.jsx` are needed when adding or removing standard buttons.
+The frontend fetches command metadata from `GET /commands` on mount, so `COMMAND_DEFINITIONS` in `backend/main.py` is the single source of truth for button definitions. No separate frontend config file exists.
 
 Removing a button:
-- Delete its entry from `src/config/systemCommands.js`.
 - Delete its entry from `COMMAND_DEFINITIONS` in `backend/main.py`.
 - Delete its workflow file from `backend/`.
 
 Adding a button:
-- Add a new entry to `src/config/systemCommands.js` with the required fields: `id`, `label`, `buttonClass`, `icon`, `confirm`, `dangerous`, `blocksOthers`, `allowWhileBusy`, `disableSelf`.
+- Add a new entry to `COMMAND_DEFINITIONS` in `backend/main.py` with the required fields: `label`, `buttonClass`, `icon`, `confirm`, `dangerous`, `blocksOthers`, `allowWhileBusy`, `disableSelf`, and `workflow`.
 - Create a new Selenium workflow file in `backend/` following the same pattern as `selenium_reboot.py` or `selenium_login.py`.
-- Add a matching entry to `COMMAND_DEFINITIONS` in `backend/main.py`.
 
 > **Note:** Wi-Fi Credentials is a special case — it opens a modal to collect input before triggering, and uses its own dedicated backend route (`/commands/wifi-credentials`) instead of the standard `COMMAND_DEFINITIONS` flow. If you're modifying it, refer to `selenium_wifi_credentials.py` and the route in `main.py` directly.
 

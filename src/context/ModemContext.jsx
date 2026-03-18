@@ -6,9 +6,9 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { useModemData } from "../hooks/useModemData";
-import SYSTEM_COMMANDS from "../config/systemCommands";
 import {
   connectToCommandEvents,
+  fetchCommands,
   triggerCommand as apiTriggerCommand,
 } from "../services/commandApi";
 
@@ -39,9 +39,8 @@ export const ModemProvider = ({ children }) => {
   const [commandStatuses, setCommandStatuses] = useState({});
   const [commandBackendOnline, setCommandBackendOnline] = useState(true);
   const [commandBackendError, setCommandBackendError] = useState("");
+  const [commands, setCommands] = useState([]);
   const modemState = useModemData(commandState);
-
-  const commands = SYSTEM_COMMANDS;
 
   const markBackendOnline = () => {
     setCommandBackendOnline(true);
@@ -52,6 +51,26 @@ export const ModemProvider = ({ children }) => {
     setCommandBackendOnline(false);
     setCommandBackendError(BACKEND_OFFLINE_MESSAGE);
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!commandBackendOnline) return;
+
+    const loadCommands = async () => {
+      try {
+        const list = await fetchCommands();
+        if (!cancelled) setCommands(list);
+      } catch {
+        if (!cancelled) setCommands([]);
+      }
+    };
+
+    loadCommands();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [commandBackendOnline]);
 
   useEffect(() => {
     const eventSource = connectToCommandEvents(

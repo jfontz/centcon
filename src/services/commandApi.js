@@ -31,9 +31,22 @@ export const connectToCommandEvents = (onEvent, { onOpen, onError } = {}) => {
     if (onError) {
       onError(event);
     }
-    eventSource.close();
   };
   return eventSource;
+};
+
+/**
+ * Fetch available command metadata from the backend.
+ * @returns {Promise<Array>} Array of command definitions.
+ */
+export const fetchCommands = async () => {
+  const response = await fetch(`${COMMAND_API_BASE}/commands`);
+  const data = await response.json();
+  if (!response.ok) {
+    const message = data?.detail || data?.message || "Failed to load commands";
+    throw new Error(message);
+  }
+  return data?.commands || [];
 };
 
 /**
@@ -44,7 +57,12 @@ export const triggerCommand = async (commandId) => {
   const response = await fetch(`${COMMAND_API_BASE}/commands/${commandId}`, {
     method: "POST",
   });
-  return response.json();
+  const data = await response.json();
+  if (!response.ok) {
+    const message = data?.detail || data?.message || "Command failed";
+    throw new Error(message);
+  }
+  return data;
 };
 
 /**
@@ -61,5 +79,10 @@ export const triggerWifiCredentials = async (targets) => {
       body: JSON.stringify({ targets }),
     },
   );
-  return response.json();
+  const data = await response.json();
+  if (!response.ok) {
+    const message = data?.detail || data?.message || "Command failed";
+    throw new Error(message);
+  }
+  return data;
 };
