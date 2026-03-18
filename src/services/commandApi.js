@@ -31,7 +31,6 @@ export const connectToCommandEvents = (onEvent, { onOpen, onError } = {}) => {
     if (onError) {
       onError(event);
     }
-    eventSource.close();
   };
   return eventSource;
 };
