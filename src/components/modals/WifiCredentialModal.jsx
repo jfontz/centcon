@@ -127,7 +127,7 @@ const BandGrid = ({
         disabled || (!isSelected && bandSelected !== undefined);
       const ssid = wlanInfo?.[i]?.SSID;
       const cardClass = isSelected
-        ? `${accentClass} ${borderClass} text-white cursor-pointer`
+        ? "bg-zinc-900 border border-zinc-600 text-white cursor-pointer"
         : isDisabled
           ? "bg-zinc-900/40 border border-zinc-900 text-zinc-700 cursor-not-allowed"
           : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white cursor-pointer";
@@ -145,11 +145,11 @@ const BandGrid = ({
             disabled={isDisabled}
             className="w-full flex flex-col items-center gap-1 focus:outline-none cursor-pointer disabled:cursor-not-allowed"
           >
-            <span className="text-xs font-bold text-zinc-500">
+            <span className={`text-xs font-bold ${isSelected ? "text-zinc-300" : "text-zinc-500"}`}>
               SSID {getModemIndex(i)}
             </span>
             {loadState === "loaded" && ssid ? (
-              <span className="text-[11px] truncate w-full text-center font-mono leading-tight">
+              <span className={`text-[11px] truncate w-full text-center font-mono leading-tight ${isSelected ? "text-zinc-300" : ""}`}>
                 {ssid}
               </span>
             ) : (
@@ -166,7 +166,7 @@ const BandGrid = ({
               className={`text-[10px] px-1.5 py-0.5 rounded font-bold transition-all cursor-pointer disabled:cursor-not-allowed
                 ${
                   broadcastIntents?.[i] === "enable"
-                    ? "bg-emerald-900 text-emerald-400 border border-emerald-700"
+                    ? "bg-zinc-800 text-white border border-zinc-600"
                     : "bg-zinc-800 text-zinc-600 border border-zinc-700 hover:text-zinc-400"
                 }`}
             >
@@ -181,7 +181,7 @@ const BandGrid = ({
               className={`text-[10px] px-1.5 py-0.5 rounded font-bold transition-all cursor-pointer disabled:cursor-not-allowed
                 ${
                   broadcastIntents?.[i] === "disable"
-                    ? "bg-red-950 text-red-400 border border-red-800"
+                    ? "bg-zinc-800 text-white border border-zinc-600"
                     : "bg-zinc-800 text-zinc-600 border border-zinc-700 hover:text-zinc-400"
                 }`}
             >
@@ -245,12 +245,10 @@ export default function WiFiCredentialModal({ open, onClose }) {
     const TERMINAL_STATES = ["ONLINE", "FAILED", "SUCCEEDED"];
 
     if (!TERMINAL_STATES.includes(commandState.state)) {
-      // Seen an active state — safe to accept terminal next
       seenActiveStateRef.current = true;
       return;
     }
 
-    // Ignore stale terminal state from previous run
     if (!seenActiveStateRef.current) return;
 
     if (commandState.state === "ONLINE") setSaveState("saved");
@@ -343,7 +341,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
     setSaveState("saving");
     setLogs([]);
     logStartIndexRef.current = commandLogs.length;
-    seenActiveStateRef.current = false; // reset for this run
+    seenActiveStateRef.current = false;
 
     const targetIndices = Array.from(
       new Set([
@@ -469,11 +467,11 @@ export default function WiFiCredentialModal({ open, onClose }) {
 
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold tracking-widest text-blue-500 uppercase">
+                <span className="text-[11px] font-bold tracking-widest text-zinc-400 uppercase">
                   2.4 GHz
                 </span>
                 {selected24 !== undefined && (
-                  <span className="text-[11px] text-blue-400 font-mono">
+                  <span className="text-[11px] text-zinc-400 font-mono">
                     {wlanInfo?.[selected24]?.SSID}
                   </span>
                 )}
@@ -484,8 +482,8 @@ export default function WiFiCredentialModal({ open, onClose }) {
                 selected={selected}
                 onToggle={handleToggle}
                 loadState={loadState}
-                accentClass="bg-blue-950"
-                borderClass="border border-blue-700"
+                accentClass=""
+                borderClass=""
                 disabled={isBusy}
                 broadcastIntents={broadcastIntents}
                 onBroadcastIntent={handleBroadcastIntent}
@@ -494,11 +492,11 @@ export default function WiFiCredentialModal({ open, onClose }) {
 
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold tracking-widest text-purple-500 uppercase">
+                <span className="text-[11px] font-bold tracking-widest text-zinc-400 uppercase">
                   5 GHz
                 </span>
                 {selected5 !== undefined && (
-                  <span className="text-[11px] text-purple-400 font-mono">
+                  <span className="text-[11px] text-zinc-400 font-mono">
                     {wlanInfo?.[selected5]?.SSID}
                   </span>
                 )}
@@ -509,8 +507,8 @@ export default function WiFiCredentialModal({ open, onClose }) {
                 selected={selected}
                 onToggle={handleToggle}
                 loadState={loadState}
-                accentClass="bg-purple-950"
-                borderClass="border border-purple-700"
+                accentClass=""
+                borderClass=""
                 disabled={isBusy}
                 broadcastIntents={broadcastIntents}
                 onBroadcastIntent={handleBroadcastIntent}
@@ -552,14 +550,10 @@ export default function WiFiCredentialModal({ open, onClose }) {
                   const freq = getFreqLabel(i);
                   const modemIdx = getModemIndex(i);
                   const ssid = wlanInfo?.[i]?.SSID;
-                  const isBlue = is24(i);
                   return (
                     <div key={i} className="flex flex-col gap-2">
                       <div className="flex items-center gap-2">
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded font-bold tracking-wider
-                          ${isBlue ? "bg-blue-950 text-blue-400" : "bg-purple-950 text-purple-400"}`}
-                        >
+                        <span className="text-xs px-2 py-0.5 rounded font-bold tracking-wider bg-zinc-800 text-zinc-300">
                           {freq} GHz · SSID {modemIdx}
                         </span>
                         {ssid && (
