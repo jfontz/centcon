@@ -145,11 +145,15 @@ const BandGrid = ({
             disabled={isDisabled}
             className="w-full flex flex-col items-center gap-1 focus:outline-none cursor-pointer disabled:cursor-not-allowed"
           >
-            <span className={`text-xs font-bold ${isSelected ? "text-zinc-300" : "text-zinc-500"}`}>
+            <span
+              className={`text-xs font-bold ${isSelected ? "text-zinc-300" : "text-zinc-500"}`}
+            >
               SSID {getModemIndex(i)}
             </span>
             {loadState === "loaded" && ssid ? (
-              <span className={`text-[11px] truncate w-full text-center font-mono leading-tight ${isSelected ? "text-zinc-300" : ""}`}>
+              <span
+                className={`text-[11px] truncate w-full text-center font-mono leading-tight ${isSelected ? "text-zinc-300" : ""}`}
+              >
                 {ssid}
               </span>
             ) : (
@@ -255,10 +259,12 @@ export default function WiFiCredentialModal({ open, onClose }) {
     if (commandState.state === "FAILED") setSaveState("error");
   }, [commandState, saveState]);
 
-  // Auto-scroll log to bottom
+  // Auto-scroll log to bottom within the log container only
   useEffect(() => {
-    if (logs.length > 0)
-      logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (logs.length > 0 && logEndRef.current) {
+      const container = logEndRef.current.parentElement;
+      container.scrollTop = container.scrollHeight;
+    }
   }, [logs]);
 
   const handleToggle = (index) => {
@@ -720,6 +726,5 @@ export default function WiFiCredentialModal({ open, onClose }) {
     </div>
   );
 }
-
 
 // TODO: Finalize modal style (text color and bg color to black and white only)
