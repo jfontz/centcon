@@ -57,9 +57,15 @@ const LogPanel = () => {
     } else if (prevModemReachable.current !== modemReachable) {
       if (hasShownStartup.current) {
         newLogs.push({
-          type: modemReachable ? "success" : "error",
+          type: modemReachable
+            ? prevLosRef.current === true
+              ? "warning"
+              : "success"
+            : "error",
           text: modemReachable
-            ? "Modem connection restored — Dashboard is back online."
+            ? prevLosRef.current === true
+              ? "Modem reachable — Dashboard is back, but fiber signal is still lost."
+              : "Modem connection restored — Dashboard is back online."
             : "Modem unreachable — Make sure your device is connected to the local network.",
           timestamp,
           id: crypto.randomUUID(),
@@ -240,8 +246,6 @@ const LogPanel = () => {
 
     // Reset all tracking refs when modem becomes unreachable
     if (!modemReachable) {
-      prevLosRef.current = null;
-      prevInternetUp.current = null;
       prevWanIpRef.current = null;
       prevDevicesRef.current = null;
       prevDeviceCountRef.current = null;
