@@ -71,6 +71,17 @@ COMMAND_DEFINITIONS = {
         "disableSelf": True,
         "workflow": run_login_workflow,
     },
+    "wifi-credentials": {
+        "label": "Change Wi-Fi Credentials",
+        "buttonClass": "control-btn",
+        "icon": "wifi",
+        "confirm": False,
+        "dangerous": False,
+        "blocksOthers": False,
+        "allowWhileBusy": False,
+        "disableSelf": True,
+        "workflow": None,  # handled by /commands/wifi-credentials
+    },
 }
 
 # Error and status message constants
@@ -354,6 +365,11 @@ async def start_command(command_id: str):
         raise HTTPException(status_code=404, detail=ERR_UNKNOWN_COMMAND)
 
     definition = COMMAND_DEFINITIONS[command_id]
+    if not definition.get("workflow"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"{command_id} requires payload; use /commands/wifi-credentials",
+        )
 
     if command_id in command_in_progress:
         raise HTTPException(
@@ -368,7 +384,7 @@ async def start_command(command_id: str):
         active_blockers = [
             active_id
             for active_id in command_in_progress
-            if COMMAND_DEFINITIONS[active_id]["blocksOthers"]
+            if COMMAND_DEFINITIONS.get(active_id, {}).get("blocksOthers")
         ]
         if active_blockers:
             raise HTTPException(
