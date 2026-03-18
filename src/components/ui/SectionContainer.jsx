@@ -1,14 +1,12 @@
-const SectionContainer = ({ title, children, className = "" }) => {
+const SectionContainer = ({ title, children, className = "", action }) => {
   return (
     <div className={`card-dark relative flex flex-col ${className}`}>
-      {/* The Section Title */}
       {title && (
-        <h2 className="section-header mb-6">
-          {title}
-        </h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="section-header">{title}</h2>
+          {action && <div>{action}</div>}
+        </div>
       )}
-
-      {/* Content Area */}
       <div className="flex-1">{children}</div>
     </div>
   );
