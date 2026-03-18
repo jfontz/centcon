@@ -36,6 +36,20 @@ export const connectToCommandEvents = (onEvent, { onOpen, onError } = {}) => {
 };
 
 /**
+ * Fetch available command metadata from the backend.
+ * @returns {Promise<Array>} Array of command definitions.
+ */
+export const fetchCommands = async () => {
+  const response = await fetch(`${COMMAND_API_BASE}/commands`);
+  const data = await response.json();
+  if (!response.ok) {
+    const message = data?.detail || data?.message || "Failed to load commands";
+    throw new Error(message);
+  }
+  return data?.commands || [];
+};
+
+/**
  * Trigger a Selenium-backed modem command.
  * @returns {Promise<{ ok: boolean, message?: string }>}
  */
