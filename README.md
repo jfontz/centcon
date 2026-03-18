@@ -159,6 +159,7 @@ The log panel runs passively in the background and records events as they are de
 | High CPU usage | Modem CPU exceeded 80% |
 | High memory usage | Modem memory usage exceeded 90% |
 | High temperature | Optical transceiver temperature exceeded 70°C |
+| Modem reachable (LOS active) | Modem API is back but fiber signal is still lost — surfaced after a connectivity gap |
 
 Automation events (reboot, Wi-Fi credential changes) are grouped together in the log under a labeled block so they're easy to scan separately from passive monitoring events.
 
