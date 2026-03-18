@@ -16,7 +16,7 @@ Real-time modem/router dashboard with Selenium-powered automation for reboots, a
 | Device Model | G-1426G-A |
 | Software Version | 3TN00802HJLI90 |
 
-If you have a different modem model or firmware version, the reboot automation sequence will likely fail or navigate incorrectly. You would need to update the Selenium logic in the backend to match your modem's admin interface.
+If you have a different modem model or firmware version, the Selenium automation sequences (reboot, login, and Wi-Fi credential changes) will likely fail or navigate incorrectly. You would need to update the Selenium logic in the backend to match your modem's admin interface.
 
 ---
 
