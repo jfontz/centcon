@@ -57,7 +57,12 @@ export const triggerCommand = async (commandId) => {
   const response = await fetch(`${COMMAND_API_BASE}/commands/${commandId}`, {
     method: "POST",
   });
-  return response.json();
+  const data = await response.json();
+  if (!response.ok) {
+    const message = data?.detail || data?.message || "Command failed";
+    throw new Error(message);
+  }
+  return data;
 };
 
 /**
@@ -74,5 +79,10 @@ export const triggerWifiCredentials = async (targets) => {
       body: JSON.stringify({ targets }),
     },
   );
-  return response.json();
+  const data = await response.json();
+  if (!response.ok) {
+    const message = data?.detail || data?.message || "Command failed";
+    throw new Error(message);
+  }
+  return data;
 };
