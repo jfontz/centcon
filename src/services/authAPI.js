@@ -37,7 +37,12 @@ export const verifyPin = async (pin) => {
   }
 
   if (!response.ok) {
-    throw new Error(`PIN verification failed (${response.status})`);
+    const data = await response.json().catch(() => ({}));
+    const err = new Error(
+      data?.detail || `PIN verification failed (${response.status})`,
+    );
+    err.status = response.status;
+    throw err;
   }
 
   return response.json();

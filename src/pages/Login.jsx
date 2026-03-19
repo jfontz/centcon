@@ -5,19 +5,29 @@
  * Only visible when login is enabled in the backend configuration.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { verifyPin } from "../services/authAPI";
 import { login as loginIcon } from "../assets/icons";
 
 const INVALID_PIN_MESSAGE = "Invalid PIN";
 const VERIFYING_MESSAGE = "Verifying...";
+const RATE_LIMITED_MESSAGE = "Too many attempts. Try again in";
+const LOCKOUT_KEY = "centcon_pin_lockout_until";
+
+const getRemainingSeconds = () => {
+  const until = sessionStorage.getItem(LOCKOUT_KEY);
+  if (!until) return 0;
+  const remaining = Math.ceil((parseInt(until) - Date.now()) / 1000);
+  return remaining > 0 ? remaining : 0;
+};
 
 const Login = () => {
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const [countdown, setCountdown] = useState(() => getRemainingSeconds());
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,11 +44,23 @@ const Login = () => {
         setPin("");
       }
     } catch (err) {
-      setError(err?.message || "Connection error. Is the backend running?");
+      if (err?.status === 429) {
+        const until = Date.now() + 60 * 1000;
+        sessionStorage.setItem(LOCKOUT_KEY, until.toString());
+        setCountdown(60);
+      } else {
+        setError(err?.message || "Connection error. Is the backend running?");
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4">
@@ -72,11 +94,13 @@ const Login = () => {
             />
           </div>
 
-          <div className="h-5 text-red-400 text-sm text-center">{error}</div>
+          <div className="h-5 text-red-400 text-sm text-center">
+            {countdown > 0 ? `${RATE_LIMITED_MESSAGE} ${countdown}s` : error}
+          </div>
 
           <button
             type="submit"
-            disabled={loading || pin.length === 0}
+            disabled={loading || pin.length === 0 || countdown > 0}
             className="group w-full py-3 text-white font-medium rounded-md 
              hover:text-gray-300 transition-colors 
              disabled:opacity-50 disabled:cursor-not-allowed 
