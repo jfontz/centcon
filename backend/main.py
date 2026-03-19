@@ -21,10 +21,12 @@ import re
 from typing import Literal, Optional
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, field_validator, model_validator
+from collections import defaultdict
+import time
 
 from state_manager import get_state, subscribe, unsubscribe, event_stream
 from selenium_reboot import run_reboot_workflow
@@ -95,6 +97,10 @@ OK_STARTED = "started"
 # In-process guard to prevent concurrent command execution.
 # Expected to run as a single-process backend — no distributed locking needed.
 command_in_progress: set[str] = set()
+
+_pin_attempts: dict[str, list[float]] = defaultdict(list)
+_MAX_PIN_ATTEMPTS = 5
+_PIN_WINDOW_SECONDS = 60
 
 # CORS configuration
 # Load allowed origins from .env. Falls back to standard localhost dev ports
@@ -464,13 +470,23 @@ async def state():
 
 
 @app.post("/verify-pin")
-async def verify_pin(request: PinVerifyRequest):
-    """Verify the CENTCON access PIN. Case-insensitive comparison."""
-    centcon_pin = os.getenv("CENTCON_PIN", "")
+async def verify_pin(request: PinVerifyRequest, req: Request):
+    """Verify the CENTCON access PIN. Rate-limited to 5 attempts per 60 seconds."""
+    if _is_rate_limited(req.client.host):
+        raise HTTPException(status_code=429, detail="Too many attempts. Try again in a minute.")
 
+    centcon_pin = os.getenv("CENTCON_PIN", "")
     if request.pin.upper() == centcon_pin.upper():
         return {"ok": True, "message": "PIN verified"}
     return {"ok": False, "message": "Invalid PIN"}
+
+def _is_rate_limited(ip: str) -> bool:
+    now = time.time()
+    _pin_attempts[ip] = [t for t in _pin_attempts[ip] if now - t < _PIN_WINDOW_SECONDS]
+    if len(_pin_attempts[ip]) >= _MAX_PIN_ATTEMPTS:
+        return True
+    _pin_attempts[ip].append(now)
+    return False
 
 
 @app.get("/auth-config")
