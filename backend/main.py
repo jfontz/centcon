@@ -497,6 +497,3 @@ async def auth_config():
         "showLogin": show_login,
         "message": "Login enabled" if show_login else "Login disabled",
     }
-
-
-# TODO: Use concurrently (or similar) to start frontend and backend together for faster launch.
