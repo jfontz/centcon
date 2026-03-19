@@ -276,17 +276,9 @@ const Setup = ({ setupData, onComplete }) => {
                 <div>
                   <p className={SECTION_LABEL_CLASS}>Access PIN</p>
                   <p className="text-[13px] text-zinc-500 leading-relaxed -mt-2">
-                    This PIN is{" "}
-                    <span className="text-zinc-300">not from your modem</span> —
-                    it&apos;s a password you choose for CENTCON itself, used as
-                    a simple lock screen when you open the tool.{" "}
-                    <span className="text-zinc-400">
-                      Store it somewhere safe.
-                    </span>{" "}
-                    If you ever forget it or want to change any of your
-                    settings, you can view and edit everything in the{" "}
-                    <code className="text-zinc-400">.env</code> file in the
-                    CENTCON folder.
+                    A personal PIN you choose to lock the dashboard. Editable
+                    anytime in the <code className="text-zinc-400">.env</code>{" "}
+                    file if forgotten.
                   </p>
                 </div>
                 <div className="w-36 flex flex-col gap-1">
