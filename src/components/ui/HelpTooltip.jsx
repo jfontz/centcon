@@ -22,7 +22,7 @@ const HelpTooltip = ({
       <div className={`absolute ${offsetClass} ${alignClass} ${widthClass} hidden group-hover:block z-10`}>
         {!isTop && (
           <div
-            className={`w-2 h-2 bg-zinc-900 border-l border-t border-zinc-700 rotate-45 ml-3 -mb-1 ${arrowClass}`}
+            className={`w-2 h-2 bg-zinc-900 border-l border-t border-zinc-700 rotate-45 -mb-1 ${arrowClass}`}
           />
         )}
         <div className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 shadow-xl">
