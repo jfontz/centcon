@@ -204,28 +204,67 @@ const Setup = ({ setupData, onComplete }) => {
 
                 <div className="grid grid-cols-2 gap-3">
                   {allFields.includes("MODEM_USERNAME") && (
-                    <InputField
-                      field="MODEM_USERNAME"
-                      label="Username"
-                      placeholder={defaults?.MODEM_USERNAME || "admin"}
-                      formData={formData}
-                      errors={errors}
-                      loading={loading}
-                      onChange={handleChange}
-                    />
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-1.5">
+                        <label className="text-xs font-medium text-zinc-400 tracking-wide">
+                          Username
+                        </label>
+                        <HelpTooltip
+                          placement="bottom"
+                          widthClass="w-56"
+                          alignClass="-left-2"
+                          arrowClass="ml-3"
+                          buttonAriaLabel="Learn more about Username"
+                        >
+                          <p className="text-xs text-zinc-500 leading-relaxed">
+                            Your modem's admin username — found on the sticker
+                            on the back or underside of your modem.
+                          </p>
+                        </HelpTooltip>
+                      </div>
+                      <InputField
+                        field="MODEM_USERNAME"
+                        label={null}
+                        placeholder={defaults?.MODEM_USERNAME || "admin"}
+                        formData={formData}
+                        errors={errors}
+                        loading={loading}
+                        onChange={handleChange}
+                      />
+                    </div>
                   )}
                   {allFields.includes("MODEM_PASSWORD") && (
-                    <InputField
-                      field="MODEM_PASSWORD"
-                      label="Password"
-                      type="password"
-                      revealable
-                      placeholder={PASSWORD_PLACEHOLDER}
-                      formData={formData}
-                      errors={errors}
-                      loading={loading}
-                      onChange={handleChange}
-                    />
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-1.5">
+                        <label className="text-xs font-medium text-zinc-400 tracking-wide">
+                          Password
+                        </label>
+                        <HelpTooltip
+                          placement="bottom"
+                          widthClass="w-56"
+                          alignClass="-right-2"
+                          arrowClass="ml-auto mr-3"
+                          buttonAriaLabel="Learn more about Password"
+                        >
+                          <p className="text-xs text-zinc-500 leading-relaxed">
+                            Your modem's admin password — found on the same
+                            sticker as the username. This is not your Wi-Fi
+                            password.
+                          </p>
+                        </HelpTooltip>
+                      </div>
+                      <InputField
+                        field="MODEM_PASSWORD"
+                        label={null}
+                        type="password"
+                        revealable
+                        placeholder={PASSWORD_PLACEHOLDER}
+                        formData={formData}
+                        errors={errors}
+                        loading={loading}
+                        onChange={handleChange}
+                      />
+                    </div>
                   )}
                 </div>
               </div>
