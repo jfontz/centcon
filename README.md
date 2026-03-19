@@ -46,18 +46,15 @@ cd centcon
 
 ### 2. Install Frontend Dependencies
 
-From the project root:
-
 ```bash
 npm install
 ```
 
 ### 3. Set Up the Python Backend
 
-Navigate to the backend directory and create a virtual environment:
+From the project root, create a virtual environment:
 
 ```bash
-cd backend
 python -m venv .venv
 ```
 
@@ -77,7 +74,7 @@ source .venv/bin/activate
 You should see `(.venv)` appear in your terminal prompt. Then install dependencies:
 
 ```bash
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 ```
 
 This installs FastAPI, Selenium, webdriver-manager, and uvicorn. ChromeDriver is managed automatically.
@@ -96,14 +93,19 @@ npm run dev
 
 Runs at `http://localhost:5173`
 
-**Terminal 2 — Backend** (from `backend/` directory, with venv active):
+**Terminal 2 — Backend** (from project root, with venv active):
 
 ```bash
-source .venv/bin/activate   # macOS/Linux
-# or
-.venv\Scripts\activate      # Windows
+# Windows (Command Prompt)
+.venv\Scripts\activate
 
-python run.py
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+
+# macOS/Linux
+source .venv/bin/activate
+
+python backend/run.py
 ```
 
 Runs at `http://localhost:8000`
@@ -334,7 +336,7 @@ Set `REBOOT_SELENIUM_HEADLESS` or `WIFI_SELENIUM_HEADLESS` to `false` in `.env`,
 **`Module not found` errors**
 Make sure `(.venv)` is visible in your terminal prompt, then re-run:
 ```bash
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 ```
 
 **Setup wizard keeps appearing even after completing setup**
