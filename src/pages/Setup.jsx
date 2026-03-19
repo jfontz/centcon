@@ -140,7 +140,7 @@ const Setup = ({ setupData, onComplete }) => {
                       <HelpTooltip
                         placement="bottom"
                         widthClass="w-64"
-                        alignClass="left-0"
+                        alignClass="-left-2"
                         arrowClass="ml-3"
                         buttonAriaLabel="Get help finding your modem IP address"
                         label="What is the modem IP address?"
@@ -297,7 +297,7 @@ const Setup = ({ setupData, onComplete }) => {
                     <HelpTooltip
                       placement="top"
                       widthClass="w-56"
-                      alignClass="left-0"
+                      alignClass="-left-2"
                       arrowClass="ml-3"
                       buttonAriaLabel="Learn more about the CENTCON access PIN"
                       label="About the CENTCON PIN"
