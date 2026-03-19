@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { eye } from "../../assets/icons";
 import { eyeSlash } from "../../assets/icons";
+import HelpTooltip from "./HelpTooltip";
 
 const InputField = ({
   field,
@@ -14,6 +15,7 @@ const InputField = ({
   loading,
   onChange,
   revealable = false,
+  tooltip = null,
 }) => {
   const [revealed, setRevealed] = useState(false);
   const showToggle = revealable && type === "password";
@@ -21,9 +23,26 @@ const InputField = ({
 
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium text-zinc-400 tracking-wide">
-        {label}
-      </label>
+      {(label || tooltip) && (
+        <div className="flex items-center gap-1.5">
+          {label && (
+            <label className="text-xs font-medium text-zinc-400 tracking-wide">
+              {label}
+            </label>
+          )}
+          {tooltip && (
+            <HelpTooltip
+              placement="bottom"
+              widthClass="w-56"
+              alignClass="left-0"
+              arrowClass="ml-3"
+              buttonAriaLabel={`Learn more about ${label}`}
+            >
+              <p className="text-xs text-zinc-500 leading-relaxed">{tooltip}</p>
+            </HelpTooltip>
+          )}
+        </div>
+      )}
       <div className="relative">
         <input
           type={inputType}
