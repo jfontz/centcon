@@ -28,7 +28,7 @@ from pydantic import BaseModel, field_validator, model_validator
 from collections import defaultdict
 import time
 
-from state_manager import get_state, subscribe, unsubscribe, event_stream
+from state_manager import get_state, subscribe, unsubscribe, event_stream, emit
 from selenium_reboot import run_reboot_workflow
 from selenium_login import run_login_workflow
 from selenium_wifi_credentials import run_wifi_credentials_workflow
@@ -349,9 +349,24 @@ async def start_wifi_credentials(request: WifiCredentialsRequest):
     # Convert validated Pydantic models to plain dicts for the Selenium workflow
     targets_payload = [target.dict() for target in request.targets]
 
+    # Timeout matches the frontend modal timeout — if Selenium hangs on a step,
+    # the backend fails cleanly and emits FAILED so the modal unlocks.
+    WIFI_WORKFLOW_TIMEOUT = 90  # seconds
+
     async def run():
         try:
-            await run_wifi_credentials_workflow(targets_payload)
+            await asyncio.wait_for(
+                run_wifi_credentials_workflow(targets_payload),
+                timeout=WIFI_WORKFLOW_TIMEOUT,
+            )
+        except asyncio.TimeoutError:
+            await emit({
+                "type": "state",
+                "state": "FAILED",
+                "message": "Workflow timed out — Selenium took too long on a step.",
+                "progress": 0,
+                "command": "wifi-credentials",
+            })
         finally:
             command_in_progress.discard(command_id)
 

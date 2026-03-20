@@ -349,6 +349,12 @@ export default function WiFiCredentialModal({ open, onClose }) {
     logStartIndexRef.current = commandLogs.length;
     seenActiveStateRef.current = false;
 
+    // Start timeout — if no terminal SSE state arrives in time, unlock the modal
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      setSaveState((current) => (current === "saving" ? "error" : current));
+    }, WORKFLOW_TIMEOUT_MS);
+
     const targetIndices = Array.from(
       new Set([
         ...selected,
@@ -376,6 +382,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
 
   const handleClose = () => {
     if (isBusy) return;
+    clearTimeout(saveTimeoutRef.current);
     onClose();
     setTimeout(() => {
       setLoadState("idle");
