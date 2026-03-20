@@ -212,8 +212,13 @@ export default function WiFiCredentialModal({ open, onClose }) {
   const logEndRef = useRef(null);
   const logStartIndexRef = useRef(null);
   const seenActiveStateRef = useRef(false);
+  const saveTimeoutRef = useRef(null);
 
   const isBusy = saveState === "saving";
+
+  // Auto-unlock the modal if no terminal SSE state arrives within this window.
+  // Covers network loss mid-operation where SSE never delivers FAILED/ONLINE.
+  const WORKFLOW_TIMEOUT_MS = 90000; // 90 seconds
 
   // Fetch real SSID names when modal opens
   useEffect(() => {
@@ -255,8 +260,14 @@ export default function WiFiCredentialModal({ open, onClose }) {
 
     if (!seenActiveStateRef.current) return;
 
-    if (commandState.state === "ONLINE") setSaveState("saved");
-    if (commandState.state === "FAILED") setSaveState("error");
+    if (commandState.state === "ONLINE") {
+      clearTimeout(saveTimeoutRef.current);
+      setSaveState("saved");
+    }
+    if (commandState.state === "FAILED") {
+      clearTimeout(saveTimeoutRef.current);
+      setSaveState("error");
+    }
   }, [commandState, saveState]);
 
   // Auto-scroll log to bottom within the log container only
