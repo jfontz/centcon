@@ -11,11 +11,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, WebDriverException
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
 
 from state_manager import emit, reset_state
 
@@ -84,12 +82,9 @@ def _run_wifi_credentials_blocking(
             if toggle.text.strip() == "Advanced Settings":
                 parent = toggle.find_element(By.XPATH, "..")
                 parent_class = parent.get_attribute("class") or ""
-                # Only click if not already expanded
                 if ":base-active" not in parent_class:
                     toggle.click()
-                    # Brief wait for accordion animation
                     import time
-
                     time.sleep(0.5)
                 break
         _log("info", f"Advanced Settings expanded for {band_label}")
@@ -140,10 +135,7 @@ def _run_wifi_credentials_blocking(
             _log("info", f"Broadcast disabled for SSID {modem_index}")
         else:
             state = "on" if is_active else "off"
-            _log(
-                "info",
-                f"SSID {modem_index} broadcast already {state} — skipped",
-            )
+            _log("info", f"SSID {modem_index} broadcast already {state} — skipped")
 
     def _handle_advanced_broadcast(
         driver, wait, router_url: str, targets_with_intent: list[dict]
@@ -166,21 +158,20 @@ def _run_wifi_credentials_blocking(
             confirm_btn = driver.find_element(
                 By.CSS_SELECTOR, "input.button.-primary[value='Confirm']"
             )
-        confirm_btn.click()
-        _log("progress", "Clicking Confirm — waiting for modem to apply")
-        wait_save = WebDriverWait(driver, 60)
-        try:
-            wait_save.until(EC.staleness_of(confirm_btn))
-            wait_save.until(
-                EC.presence_of_element_located((By.ID, f"{ID_TOGGLE_PREFIX}1"))
-            )
-            _log("success", "Broadcast changes saved")
-        except TimeoutException:
-            # Modem applied changes but page reload took too long — not a failure
-            _log(
-                "success",
-                "Broadcast changes applied (page reload timed out — this is normal)",
-            )
+            confirm_btn.click()
+            _log("progress", "Clicking Confirm — waiting for modem to apply")
+            wait_save = WebDriverWait(driver, 60)
+            try:
+                wait_save.until(EC.staleness_of(confirm_btn))
+                wait_save.until(
+                    EC.presence_of_element_located((By.ID, f"{ID_TOGGLE_PREFIX}1"))
+                )
+                _log("success", "Broadcast changes saved")
+            except TimeoutException:
+                _log(
+                    "success",
+                    "Broadcast changes applied (page reload timed out — this is normal)",
+                )
 
     driver = None
     wait_time = 15
@@ -194,34 +185,21 @@ def _run_wifi_credentials_blocking(
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
+        options.add_argument("--no-proxy-server")
 
-        driver = webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()), options=options
-        )
+        # Selenium's built-in driver manager handles ChromeDriver automatically.
+        # No network calls needed after first run — works offline.
+        driver = webdriver.Chrome(options=options)
         driver.implicitly_wait(wait_time)
         wait = WebDriverWait(driver, wait_time)
 
         # ── State: starting ──────────────────────────────────────────────────
-        _emit_sync(
-            {
-                "type": "state",
-                "state": "RUNNING",
-                "message": "Opening browser",
-                "progress": 5,
-            }
-        )
+        _emit_sync({"type": "state", "state": "RUNNING", "message": "Opening browser", "progress": 5})
         _log("header", "Wi-Fi credential change started")
 
         # ── Login ────────────────────────────────────────────────────────────
         driver.get(router_url)
-        _emit_sync(
-            {
-                "type": "state",
-                "state": "LOGGING_IN",
-                "message": "Logging into modem",
-                "progress": 15,
-            }
-        )
+        _emit_sync({"type": "state", "state": "LOGGING_IN", "message": "Logging into modem", "progress": 15})
 
         wait.until(EC.presence_of_element_located((By.ID, "username")))
         elem = driver.find_element(By.ID, "username")
@@ -239,28 +217,14 @@ def _run_wifi_credentials_blocking(
             wait.until(EC.presence_of_element_located((By.CLASS_NAME, "logout-btn")))
             _log("success", "Login successful")
         except TimeoutException:
-            _emit_sync(
-                {
-                    "type": "state",
-                    "state": "FAILED",
-                    "message": "Login failed",
-                    "progress": 0,
-                }
-            )
+            _emit_sync({"type": "state", "state": "FAILED", "message": "Login failed", "progress": 0})
             _log("error", "Login failed — check credentials in .env")
             driver.quit()
             return
 
         if has_cred_changes:
             # ── Navigate to Wi-Fi Basic ──────────────────────────────────────────
-            _emit_sync(
-                {
-                    "type": "state",
-                    "state": "RUNNING",
-                    "message": "Navigating to Wi-Fi Settings",
-                    "progress": 25,
-                }
-            )
+            _emit_sync({"type": "state", "state": "RUNNING", "message": "Navigating to Wi-Fi Settings", "progress": 25})
             driver.get(router_url + "wifi_globe.cgi?basic")
             wait.until(EC.presence_of_element_located((By.ID, ID_24G_WIFI_NAME)))
             _log("navigate", "Opened Wi-Fi Settings → Basic")
@@ -272,28 +236,12 @@ def _run_wifi_credentials_blocking(
             # ── Handle 2.4 GHz ──────────────────────────────────────────────────
             if target_24g:
                 modem_index = str(target_24g["modem_index"])
-
-                # Expand Advanced Settings only if we need to change SSID number
                 if modem_index != DEFAULT_SSID_24G:
                     _log("action", f"Expanding Advanced Settings for 2.4 GHz")
                     _expand_advanced_settings(driver, wait, "2.4 GHz")
-
                     _log("action", f"Selecting SSID {modem_index} on 2.4 GHz")
-                    _emit_sync(
-                        {
-                            "type": "state",
-                            "state": "RUNNING",
-                            "message": f"Selecting 2.4 GHz SSID {modem_index}",
-                            "progress": 40,
-                        }
-                    )
-                    _select_ssid_via_selectize(
-                        driver,
-                        wait,
-                        ID_24G_SSID_NUM,
-                        modem_index,
-                        ID_24G_WIFI_NAME,
-                    )
+                    _emit_sync({"type": "state", "state": "RUNNING", "message": f"Selecting 2.4 GHz SSID {modem_index}", "progress": 40})
+                    _select_ssid_via_selectize(driver, wait, ID_24G_SSID_NUM, modem_index, ID_24G_WIFI_NAME)
                     _log("info", f"2.4 GHz SSID {modem_index} selected")
                 else:
                     _log("info", f"Using default 2.4 GHz SSID {modem_index}")
@@ -309,27 +257,12 @@ def _run_wifi_credentials_blocking(
             # ── Handle 5 GHz ────────────────────────────────────────────────────
             if target_5g:
                 modem_index = str(target_5g["modem_index"])
-
                 if modem_index != DEFAULT_SSID_5G:
                     _log("action", f"Expanding Advanced Settings for 5 GHz")
                     _expand_advanced_settings(driver, wait, "5 GHz")
-
                     _log("action", f"Selecting SSID {modem_index} on 5 GHz")
-                    _emit_sync(
-                        {
-                            "type": "state",
-                            "state": "RUNNING",
-                            "message": f"Selecting 5 GHz SSID {modem_index}",
-                            "progress": 60,
-                        }
-                    )
-                    _select_ssid_via_selectize(
-                        driver,
-                        wait,
-                        ID_5G_SSID_NUM,
-                        modem_index,
-                        ID_5G_WIFI_NAME,
-                    )
+                    _emit_sync({"type": "state", "state": "RUNNING", "message": f"Selecting 5 GHz SSID {modem_index}", "progress": 60})
+                    _select_ssid_via_selectize(driver, wait, ID_5G_SSID_NUM, modem_index, ID_5G_WIFI_NAME)
                     _log("info", f"5 GHz SSID {modem_index} selected")
                 else:
                     _log("info", f"Using default 5 GHz SSID {modem_index}")
@@ -343,14 +276,7 @@ def _run_wifi_credentials_blocking(
                     _log("info", f"Password set for 5 GHz SSID {modem_index}")
 
             # ── Save Changes ─────────────────────────────────────────────────────
-            _emit_sync(
-                {
-                    "type": "state",
-                    "state": "RUNNING",
-                    "message": "Saving changes",
-                    "progress": 80,
-                }
-            )
+            _emit_sync({"type": "state", "state": "RUNNING", "message": "Saving changes", "progress": 80})
             _log("progress", "Clicking Save Changes — waiting for modem to apply")
 
             save_btn = driver.find_element(
@@ -358,33 +284,17 @@ def _run_wifi_credentials_blocking(
             )
             save_btn.click()
 
-            # Wait for page to reload (save takes ~10s — modem rerenders the page when done)
             wait_save = WebDriverWait(driver, 30)
+            # Wait for page to reload (save takes ~10s — modem rerenders the page when done)
             wait_save.until(EC.staleness_of(save_btn))
             wait_save.until(EC.presence_of_element_located((By.ID, ID_24G_WIFI_NAME)))
-
             _log("success", "Changes saved successfully")
 
         if has_broadcast_intents:
-            _emit_sync(
-                {
-                    "type": "state",
-                    "state": "RUNNING",
-                    "message": "Updating broadcast settings",
-                    "progress": 85,
-                }
-            )
+            _emit_sync({"type": "state", "state": "RUNNING", "message": "Updating broadcast settings", "progress": 85})
             _handle_advanced_broadcast(driver, wait, router_url, targets)
 
-        _emit_sync(
-            {
-                "type": "state",
-                "state": "ONLINE",
-                "message": "Wi-Fi credentials updated",
-                "progress": 100,
-            }
-        )
-
+        _emit_sync({"type": "state", "state": "ONLINE", "message": "Wi-Fi credentials updated", "progress": 100})
         driver.quit()
 
     except WebDriverException as e:
@@ -398,25 +308,11 @@ def _run_wifi_credentials_blocking(
         ]
 
         if any(indicator in error_msg for indicator in browser_closed_indicators):
-            _emit_sync(
-                {
-                    "type": "state",
-                    "state": "FAILED",
-                    "message": "Browser was closed by user",
-                    "progress": 0,
-                }
-            )
+            _emit_sync({"type": "state", "state": "FAILED", "message": "Browser was closed by user", "progress": 0})
             _log("warning", "Workflow cancelled — browser was closed")
         else:
             clean_msg = str(e).split("Stacktrace:")[0].strip()
-            _emit_sync(
-                {
-                    "type": "state",
-                    "state": "FAILED",
-                    "message": clean_msg,
-                    "progress": 0,
-                }
-            )
+            _emit_sync({"type": "state", "state": "FAILED", "message": clean_msg, "progress": 0})
             _log("error", f"Browser error: {clean_msg}")
 
         if driver:
@@ -427,14 +323,7 @@ def _run_wifi_credentials_blocking(
 
     except Exception as e:
         error_msg = str(e).split("Stacktrace:")[0].strip()
-        _emit_sync(
-            {
-                "type": "state",
-                "state": "FAILED",
-                "message": error_msg,
-                "progress": 0,
-            }
-        )
+        _emit_sync({"type": "state", "state": "FAILED", "message": error_msg, "progress": 0})
         _log("error", f"Workflow failed: {error_msg}")
 
         if driver:
