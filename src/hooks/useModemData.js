@@ -12,7 +12,7 @@ export const useModemData = (commandState = { state: "IDLE", command: null }) =>
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [status, setStatus] = useState("offline");
-  // 'online' | 'offline' | 'error'
+  // 'online' | 'offline' | 'los' | 'error'
 
   const isInitialLoad = useRef(true);
   const intervalRef = useRef(null);
@@ -50,12 +50,13 @@ export const useModemData = (commandState = { state: "IDLE", command: null }) =>
 
       // LOS (Loss of Signal): treat fiber loss as a higher-priority failure than WAN down.
       // Globe G-1426G-A reports both TX and RX power as exactly 0 when the optical link is gone.
+      // This applies to both simulated LOS (fiber unplugged) and actual ISP-side LOS.
       const hasLOS =
         Number(modemData?.optical?.txPower ?? 0) === 0 &&
         Number(modemData?.optical?.rxPower ?? 0) === 0;
 
       if (hasLOS) {
-        setStatus("error");
+        setStatus("los");
       } else if (modemData?.wan?.connected) {
         setStatus("online");
       } else {

@@ -22,8 +22,8 @@ const Header = () => {
     rebootState.command === "reboot" &&
     REBOOT_BUSY_STATES.includes(rebootState.state);
 
-  // Change header background to red only on system error
-  const headerBg = status === "error" ? "bg-red-500/5" : "";
+  // Change header background to red on system error or LOS
+  const headerBg = status === "error" || status === "los" ? "bg-red-500/5" : "";
 
   return (
     <header

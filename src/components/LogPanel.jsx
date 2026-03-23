@@ -100,6 +100,15 @@ const LogPanel = () => {
 
       if (prevLosRef.current === null) {
         prevLosRef.current = hasLOS;
+        // Log immediately if LOS is detected on startup — don't wait for a transition
+        if (hasLOS) {
+          newLogs.push({
+            type: "error",
+            text: "Fiber signal lost — Check the fiber cable on your modem. Try rebooting. If the problem persists, contact Globe at 211.",
+            timestamp,
+            id: crypto.randomUUID(),
+          });
+        }
       } else if (prevLosRef.current !== hasLOS) {
         newLogs.push({
           type: hasLOS ? "error" : "success",
@@ -260,6 +269,7 @@ const LogPanel = () => {
           !data?.wan?.connected)) ||
       error ||
       status === "error" ||
+      status === "los" ||
       status === "offline";
 
     if (!hasAnyIssues && newLogs.length === 0 && !loading && data) {
