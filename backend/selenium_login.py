@@ -15,11 +15,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, WebDriverException
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
 
 from state_manager import emit, reset_state
 
@@ -51,17 +49,15 @@ def _log_ts() -> str:
 
 
 def _build_driver() -> webdriver.Chrome:
-    """Create a Chrome driver configured for the login workflow."""
+    """Create a Chrome driver using Selenium's built-in driver manager.
+    No network calls needed after first run — works offline."""
     options = webdriver.ChromeOptions()
     # IMPORTANT: Never run headless for login - user must see and control the browser.
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--no-proxy-server")
 
-    driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()), options=options
-    )
-    driver.implicitly_wait(WAIT_TIME_SECONDS)
-    return driver
+    return webdriver.Chrome(options=options)
 
 
 def _safe_quit(driver: webdriver.Chrome | None) -> None:
@@ -164,7 +160,6 @@ def _run_login_blocking(
             _emit_state("FAILED", "Browser was closed by user", LOGIN_FAILED_PROGRESS)
             _log("warning", "Login cancelled - Browser was closed by user")
         else:
-            # Strip stacktrace for cleaner error message
             clean_msg = str(e).split("Stacktrace:")[0].strip()
             _emit_state("FAILED", clean_msg, LOGIN_FAILED_PROGRESS)
             _log("error", f"Browser error: {clean_msg}")

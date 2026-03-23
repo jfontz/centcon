@@ -23,11 +23,9 @@ from dotenv import load_dotenv
 
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
 
 from state_manager import emit, get_state, reset_state
 
@@ -70,20 +68,17 @@ def _build_waiting_message(countdown: int) -> str:
 
 
 def _build_driver() -> webdriver.Chrome:
-    """Create a Chrome driver configured for this reboot workflow."""
+    """Create a Chrome driver using Selenium's built-in driver manager.
+    No network calls needed after first run — works offline."""
     options = webdriver.ChromeOptions()
     if os.getenv("REBOOT_SELENIUM_HEADLESS", "true").lower() == "true":
         options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
+    options.add_argument("--no-proxy-server")
 
-    driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()),
-        options=options,
-    )
-    driver.implicitly_wait(WAIT_TIME_SECONDS)
-    return driver
+    return webdriver.Chrome(options=options)
 
 
 def _login_to_router(
@@ -203,7 +198,6 @@ async def _wait_for_router_online(router_url: str) -> bool:
 def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
     """
     Run Selenium in a worker thread and emit events back into the main asyncio loop.
-
     Returns ROUTER_URL if the reboot command was issued successfully, else None.
     """
 
