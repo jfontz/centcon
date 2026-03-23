@@ -77,7 +77,7 @@ You should see `(.venv)` appear in your terminal prompt. Then install dependenci
 pip install -r backend/requirements.txt
 ```
 
-This installs FastAPI, Selenium, webdriver-manager, and uvicorn. ChromeDriver is managed automatically.
+This installs FastAPI, Selenium, and uvicorn. ChromeDriver is managed automatically by Selenium's built-in driver manager.
 
 ---
 
@@ -323,6 +323,9 @@ Run PowerShell as Administrator and allow script execution:
 ```powershell
 Set-ExecutionPolicy RemoteSigned
 ```
+
+**`ChromeDriver version mismatch` error**
+Delete any manually installed ChromeDriver from your PATH (e.g. `C:\WebDrivers\chromedriver.exe`). Selenium's built-in manager will use the correct version automatically.
 
 **`ChromeDriver error` or `Chrome binary not found`**
 Ensure Google Chrome is installed in its default location:
