@@ -52,7 +52,7 @@ const Header = () => {
             rotate={refreshing}
             buttonClass="btn-header btn-refresh"
             onClick={refresh}
-            disabled={isRebooting}
+            disabled={isRebooting || refreshing}
             title={isRebooting ? "Cannot refresh while rebooting" : "Refresh status"}
           />
 
