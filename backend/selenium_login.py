@@ -2,7 +2,7 @@
 Selenium automation for router login only.
 
 Opens a visible Chrome window, logs in with stored credentials, and leaves the
-session open so the user can manually inspect or change modem settings.
+session open so the user can manually inspect or change router settings.
 All notable steps and errors are emitted as log events via state_manager.
 """
 
@@ -111,7 +111,7 @@ def _run_login_blocking(
 
         # Navigate to router login page
         driver.get(router_url)
-        _emit_state("LOGGING_IN", "Logging into modem", LOGGING_IN_PROGRESS)
+        _emit_state("LOGGING_IN", "Logging into router", LOGGING_IN_PROGRESS)
 
         # Wait for and fill username field
         WebDriverWait(driver, WAIT_TIME_SECONDS).until(
@@ -181,9 +181,9 @@ async def run_login_workflow() -> None:
     """
 
     # Load env
-    router_url = os.getenv("MODEM_URL")
-    username = os.getenv("MODEM_USERNAME")
-    password = os.getenv("MODEM_PASSWORD")
+    router_url = os.getenv("ROUTER_URL")
+    username = os.getenv("ROUTER_USERNAME")
+    password = os.getenv("ROUTER_PASSWORD")
 
     if not router_url or not username or not password:
         raise RuntimeError("Missing router credentials in .env")

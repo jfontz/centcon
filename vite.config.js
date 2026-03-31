@@ -5,21 +5,21 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd());
 
-  const modemIp = env.VITE_MODEM_IP;
-  const modemUrl = `http://${modemIp}`;
+  const routerIp = env.VITE_ROUTER_IP;
+  const routerUrl = `http://${routerIp}`;
 
   return {
     plugins: [react(), tailwindcss()],
     server: {
       proxy: {
         "/api": {
-          target: modemUrl,
+          target: routerUrl,
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ""),
           configure: (proxy) => {
             proxy.on("proxyReq", (proxyReq) => {
-              proxyReq.setHeader("Referer", `${modemUrl}/`);
-              proxyReq.setHeader("Origin", modemUrl);
+              proxyReq.setHeader("Referer", `${routerUrl}/`);
+              proxyReq.setHeader("Origin", routerUrl);
             });
           },
         },

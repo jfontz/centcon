@@ -52,7 +52,7 @@ from setup_utils import (
 # - disableSelf:    if True, the button disables itself while the command is in progress
 COMMAND_DEFINITIONS = {
     "reboot": {
-        "label": "Reboot Modem",
+        "label": "Reboot Router",
         "buttonClass": "btn-reboot",
         "icon": "reboot",
         "confirm": True,
@@ -63,7 +63,7 @@ COMMAND_DEFINITIONS = {
         "workflow": run_reboot_workflow,
     },
     "login": {
-        "label": "Login to Modem",
+        "label": "Login to Router",
         "buttonClass": "control-btn",
         "icon": "newTab",
         "confirm": False,
@@ -135,9 +135,9 @@ app.add_middleware(
 
 # Request models
 class SetupRequest(BaseModel):
-    MODEM_IP: str
-    MODEM_USERNAME: str
-    MODEM_PASSWORD: str
+    ROUTER_IP: str
+    ROUTER_USERNAME: str
+    ROUTER_PASSWORD: str
     CENTCON_PIN: str
 
 
@@ -180,9 +180,9 @@ async def setup_complete(request: SetupRequest):
         data = {
             **defaults,
             **{
-                "MODEM_IP": request.MODEM_IP.strip(),
-                "MODEM_USERNAME": request.MODEM_USERNAME.strip(),
-                "MODEM_PASSWORD": request.MODEM_PASSWORD,  # intentionally not stripped
+                "ROUTER_IP": request.ROUTER_IP.strip(),
+                "ROUTER_USERNAME": request.ROUTER_USERNAME.strip(),
+                "ROUTER_PASSWORD": request.ROUTER_PASSWORD,  # intentionally not stripped
                 "CENTCON_PIN": request.CENTCON_PIN.strip(),
             },
         }
@@ -245,12 +245,12 @@ class WifiTarget(BaseModel):
     Validated representation of a single SSID target for the credentials workflow.
 
     All fields are validated server-side regardless of frontend validation.
-    The band consistency validator ensures freq, ssid_index, and modem_index agree
+    The band consistency validator ensures freq, ssid_index, and router_index agree
     so no inconsistent state can reach Selenium.
     """
     ssid_index: int                                          # 0–7 (position in wlan_info array)
     freq: Literal["2.4", "5"]                               # Wi-Fi band
-    modem_index: str                                         # "1"–"8" (displayed SSID number on modem)
+    router_index: str                                         # "1"–"8" (displayed SSID number on router)
     new_name: str = ""                                       # New SSID name, empty = keep current
     new_pass: str = ""                                       # New password, empty = keep current
     broadcast_intent: Optional[Literal["enable", "disable"]] = None  # None = no broadcast change
@@ -262,17 +262,17 @@ class WifiTarget(BaseModel):
             raise ValueError("ssid_index must be between 0 and 7")
         return value
 
-    @field_validator("modem_index", mode="before")
+    @field_validator("router_index", mode="before")
     @classmethod
-    def validate_modem_index(cls, value) -> str:
+    def validate_router_index(cls, value) -> str:
         if value is None:
-            raise ValueError("modem_index is required")
+            raise ValueError("router_index is required")
         raw = str(value)
         if not raw.isdigit():
-            raise ValueError("modem_index must be a number between 1 and 8")
+            raise ValueError("router_index must be a number between 1 and 8")
         idx = int(raw)
         if idx < 1 or idx > 8:
-            raise ValueError("modem_index must be between 1 and 8")
+            raise ValueError("router_index must be between 1 and 8")
         return str(idx)
 
     @field_validator("new_name", mode="before")
@@ -304,7 +304,7 @@ class WifiTarget(BaseModel):
     @model_validator(mode="after")
     def validate_band_consistency(self):
         """
-        Cross-field check: ensures freq, ssid_index, and modem_index are internally consistent.
+        Cross-field check: ensures freq, ssid_index, and router_index are internally consistent.
         The frontend always sends these in sync; a mismatch here indicates a malformed request.
         """
         if self.freq == "2.4" and not (0 <= self.ssid_index <= 3):
@@ -312,13 +312,13 @@ class WifiTarget(BaseModel):
         if self.freq == "5" and not (4 <= self.ssid_index <= 7):
             raise ValueError("ssid_index must be 4–7 for 5 GHz")
 
-        modem_idx = int(self.modem_index)
-        if self.freq == "2.4" and not (1 <= modem_idx <= 4):
-            raise ValueError("modem_index must be 1–4 for 2.4 GHz")
-        if self.freq == "5" and not (5 <= modem_idx <= 8):
-            raise ValueError("modem_index must be 5–8 for 5 GHz")
-        if modem_idx != self.ssid_index + 1:
-            raise ValueError("modem_index must match ssid_index + 1")
+        router_idx = int(self.router_index)
+        if self.freq == "2.4" and not (1 <= router_idx <= 4):
+            raise ValueError("router_index must be 1–4 for 2.4 GHz")
+        if self.freq == "5" and not (5 <= router_idx <= 8):
+            raise ValueError("router_index must be 5–8 for 5 GHz")
+        if router_idx != self.ssid_index + 1:
+            raise ValueError("router_index must match ssid_index + 1")
 
         return self
 

@@ -13,23 +13,23 @@ from dotenv import load_dotenv, set_key
 ROOT_DIR = Path(__file__).resolve().parent.parent
 ENV_FILE = ROOT_DIR / ".env"
 DEFAULT_GATEWAY_TIMEOUT = 5
-MODEM_PROBE_TIMEOUT = 2
+ROUTER_PROBE_TIMEOUT = 2
 DEFAULT_HTTP_PORT = 80
-COMMON_MODEM_IPS = ["192.168.254.254", "192.168.1.1", "192.168.0.1", "10.0.0.1"]
+COMMON_ROUTER_IPS = ["192.168.254.254", "192.168.1.1", "192.168.0.1", "10.0.0.1"]
 
 # Required environment variables
 SETUP_VARS = {
-    # Modem
-    "MODEM_IP": {"desc": "IP address of your modem", "default": None},
-    "MODEM_USERNAME": {"desc": "Username for modem login", "default": "admin"},
-    "MODEM_PASSWORD": {"desc": "Password for modem login", "default": ""},
+    # Router
+    "ROUTER_IP": {"desc": "IP address of your router", "default": None},
+    "ROUTER_USERNAME": {"desc": "Username for router login", "default": "admin"},
+    "ROUTER_PASSWORD": {"desc": "Password for router login", "default": ""},
     # Centcon PIN
     "CENTCON_PIN": {"desc": "4-character PIN for CENTCON access", "default": None},
     # Frontend
-    "VITE_MODEM_IP": {
-        "desc": "Exposed modem IP for frontend",
+    "VITE_ROUTER_IP": {
+        "desc": "Exposed router IP for frontend",
         "default": None,
-    },  # will copy MODEM_IP
+    },  # will copy ROUTER_IP
     "VITE_AUTO_REFRESH_INTERVAL": {
         "desc": "Frontend auto-refresh interval (ms)",
         "default": "60000",
@@ -75,7 +75,7 @@ def check_setup_needed() -> Tuple[bool, List[str], List[str]]:
         value = os.getenv(key)
         if not value or value.strip() == "":
             missing.append(key)
-        elif key == "MODEM_IP" and not is_valid_ip(value):
+        elif key == "ROUTER_IP" and not is_valid_ip(value):
             invalid.append(key)
         elif key == "CENTCON_PIN" and not is_valid_pin(value):
             invalid.append(key)
@@ -100,8 +100,8 @@ def is_valid_pin(pin: str) -> bool:
     return len(pin) == 4 and pin.isalnum()
 
 
-def auto_detect_modem_ip() -> str:
-    """Attempt to auto-detect modem IP."""
+def auto_detect_router_ip() -> str:
+    """Attempt to auto-detect router IP."""
     try:
         if os.name == "nt":
             result = subprocess.run(
@@ -134,19 +134,19 @@ def auto_detect_modem_ip() -> str:
     except Exception:
         pass
 
-    for ip in COMMON_MODEM_IPS:
-        if is_modem_reachable(ip):
+    for ip in COMMON_ROUTER_IPS:
+        if is_router_reachable(ip):
             return ip
 
-    return COMMON_MODEM_IPS[0]
+    return COMMON_ROUTER_IPS[0]
 
 
-def is_modem_reachable(
+def is_router_reachable(
     ip: str,
     port: int = DEFAULT_HTTP_PORT,
-    timeout: int = MODEM_PROBE_TIMEOUT,
+    timeout: int = ROUTER_PROBE_TIMEOUT,
 ) -> bool:
-    """Check if modem is reachable at given IP."""
+    """Check if router is reachable at given IP."""
     try:
         with socket.create_connection((ip, port), timeout=timeout):
             return True
@@ -172,13 +172,13 @@ def get_defaults() -> Dict[str, str]:
         elif meta["default"] is not None:
             defaults[key] = meta["default"]
 
-    # Auto-detect MODEM_IP if missing
-    if "MODEM_IP" not in defaults or not defaults["MODEM_IP"]:
-        defaults["MODEM_IP"] = auto_detect_modem_ip()
+    # Auto-detect ROUTER_IP if missing
+    if "ROUTER_IP" not in defaults or not defaults["ROUTER_IP"]:
+        defaults["ROUTER_IP"] = auto_detect_router_ip()
 
-    # Copy MODEM_IP to VITE_MODEM_IP if missing
-    if "VITE_MODEM_IP" not in defaults or not defaults["VITE_MODEM_IP"]:
-        defaults["VITE_MODEM_IP"] = defaults["MODEM_IP"]
+    # Copy ROUTER_IP to VITE_ROUTER_IP if missing
+    if "VITE_ROUTER_IP" not in defaults or not defaults["VITE_ROUTER_IP"]:
+        defaults["VITE_ROUTER_IP"] = defaults["ROUTER_IP"]
 
     # CENTCON_PIN: do not generate, leave blank if not set
     if "CENTCON_PIN" not in defaults:
@@ -187,14 +187,14 @@ def get_defaults() -> Dict[str, str]:
     return defaults
 
 
-def validate_modem_credentials(
+def validate_router_credentials(
     ip: str, username: str, password: str
 ) -> Tuple[bool, str]:
-    """Validate modem credentials by attempting connection."""
+    """Validate router credentials by attempting connection."""
     if not is_valid_ip(ip):
         return False, "Invalid IP address format"
-    if not is_modem_reachable(ip):
-        return False, f"Cannot reach modem at {ip}"
+    if not is_router_reachable(ip):
+        return False, f"Cannot reach router at {ip}"
     if not username or not password:
         return False, "Username and password are required"
     return True, ""
@@ -207,7 +207,7 @@ def save_to_env(data: Dict[str, str]) -> Tuple[bool, str]:
             ENV_FILE.touch()
 
         def _validate_setup_value(key: str, value: str) -> Tuple[bool, str | None]:
-            if key == "MODEM_IP" and not is_valid_ip(value):
+            if key == "ROUTER_IP" and not is_valid_ip(value):
                 return False, f"Invalid IP address: {value}"
             if key == "CENTCON_PIN" and value and not is_valid_pin(value):
                 return False, "PIN must be exactly 4 alphanumeric characters"
@@ -216,12 +216,12 @@ def save_to_env(data: Dict[str, str]) -> Tuple[bool, str]:
         def _validate_required_creds(payload: Dict[str, str]) -> Tuple[bool, str | None]:
             if all(
                 k in payload
-                for k in ["MODEM_IP", "MODEM_USERNAME", "MODEM_PASSWORD"]
+                for k in ["ROUTER_IP", "ROUTER_USERNAME", "ROUTER_PASSWORD"]
             ):
-                valid, error = validate_modem_credentials(
-                    payload["MODEM_IP"],
-                    payload["MODEM_USERNAME"],
-                    payload["MODEM_PASSWORD"],
+                valid, error = validate_router_credentials(
+                    payload["ROUTER_IP"],
+                    payload["ROUTER_USERNAME"],
+                    payload["ROUTER_PASSWORD"],
                 )
                 if not valid:
                     return False, error
@@ -234,14 +234,14 @@ def save_to_env(data: Dict[str, str]) -> Tuple[bool, str]:
 
         valid, error = _validate_required_creds(data)
         if not valid:
-            return False, error or "Invalid modem credentials"
+            return False, error or "Invalid router credentials"
 
         for key, value in data.items():
             set_key(ENV_FILE, key, value)
 
-        if "MODEM_IP" in data:
-            modem_url = f"http://{data['MODEM_IP']}/"
-            set_key(ENV_FILE, "MODEM_URL", modem_url)
+        if "ROUTER_IP" in data:
+            router_url = f"http://{data['ROUTER_IP']}/"
+            set_key(ENV_FILE, "ROUTER_URL", router_url)
 
         return True, "Setup completed successfully"
 

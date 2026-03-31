@@ -1,9 +1,9 @@
-// React hook for managing modem data state
+// React hook for managing router data state
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { modemApi } from "../services/modemDataApi";
+import { routerApi } from "../services/routerDataApi";
 
-export const useModemData = (commandState = { state: "IDLE", command: null }) => {
+export const useRouterData = (commandState = { state: "IDLE", command: null }) => {
   const autoRefreshInterval =
     Number(import.meta.env.VITE_AUTO_REFRESH_INTERVAL) || 60000;
   const [data, setData] = useState(null);
@@ -29,7 +29,7 @@ export const useModemData = (commandState = { state: "IDLE", command: null }) =>
 
   const fetchData = useCallback(async () => {
     // Pause telemetry refresh while reboot workflow is in progress to avoid
-    // spamming "offline" readings while the modem is intentionally unreachable.
+    // spamming "offline" readings while the router is intentionally unreachable.
     if (isRebooting) {
       console.log("Auto-refresh paused during reboot");
       return;
@@ -44,20 +44,20 @@ export const useModemData = (commandState = { state: "IDLE", command: null }) =>
 
       setError(null);
 
-      const modemData = await modemApi.getData();
+      const routerData = await routerApi.getData();
 
-      setData(modemData);
+      setData(routerData);
 
       // LOS (Loss of Signal): treat fiber loss as a higher-priority failure than WAN down.
       // Globe G-1426G-A reports both TX and RX power as exactly 0 when the optical link is gone.
       // This applies to both simulated LOS (fiber unplugged) and actual ISP-side LOS.
       const hasLOS =
-        Number(modemData?.optical?.txPower ?? 0) === 0 &&
-        Number(modemData?.optical?.rxPower ?? 0) === 0;
+        Number(routerData?.optical?.txPower ?? 0) === 0 &&
+        Number(routerData?.optical?.rxPower ?? 0) === 0;
 
       if (hasLOS) {
         setStatus("los");
-      } else if (modemData?.wan?.connected) {
+      } else if (routerData?.wan?.connected) {
         setStatus("online");
       } else {
         setStatus("offline");
@@ -69,7 +69,7 @@ export const useModemData = (commandState = { state: "IDLE", command: null }) =>
         isInitialLoad.current = false;
       }
     } catch (err) {
-      console.error("Error fetching modem data:", err);
+      console.error("Error fetching router data:", err);
 
       const message = err?.message || "";
 
@@ -81,15 +81,15 @@ export const useModemData = (commandState = { state: "IDLE", command: null }) =>
         return;
       }
 
-      // Proxy alive but modem unreachable
+      // Proxy alive but router unreachable
       if (message.includes("HTTP 500")) {
-        setError("Modem unreachable");
+        setError("Router unreachable");
         setStatus("offline");
         setData(null);
         return;
       }
 
-      // Other fetch/parse errors — treat as modem unreachable
+      // Other fetch/parse errors — treat as router unreachable
       setError(message);
       setStatus("offline");
       setData(null);

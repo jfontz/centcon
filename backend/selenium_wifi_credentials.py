@@ -1,5 +1,5 @@
 """
-Selenium workflow for changing Wi-Fi credentials on the Globe G-1426G-A modem.
+Selenium workflow for changing Wi-Fi credentials on the Globe G-1426G-A router.
 Handles 2.4 GHz and 5 GHz SSIDs independently in a single session with one save.
 """
 
@@ -53,9 +53,9 @@ def _run_wifi_credentials_blocking(
 ) -> None:
     """
     targets: list of dicts, each with:
-        ssid_index  (int)  0–7
+        ssid_index  (int)  0-7
         freq        (str)  "2.4" or "5"
-        modem_index (str)  "1"–"4" for 2.4, "5"–"8" for 5
+        router_index (str)  "1"-"4" for 2.4, "5"-"8" for 5
         new_name    (str)  new Wi-Fi name, or "" to keep current
         new_pass    (str)  new password, or "" to keep current
         broadcast_intent (str | None) "enable" | "disable" | None
@@ -116,26 +116,26 @@ def _run_wifi_credentials_blocking(
         field.clear()
         field.send_keys(value)
 
-    def _reconcile_broadcast_toggle(driver, modem_index: str, intent: str):
+    def _reconcile_broadcast_toggle(driver, router_index: str, intent: str):
         """
         Check current broadcast toggle state and click only if it doesn't match intent.
-        modem_index: "1"–"8"
+        router_index: "1"–"8"
         intent: "enable" or "disable"
         """
-        toggle_id = f"{ID_TOGGLE_PREFIX}{modem_index}"
+        toggle_id = f"{ID_TOGGLE_PREFIX}{router_index}"
         toggle = driver.find_element(By.ID, toggle_id)
         classes = toggle.get_attribute("class") or ""
         is_active = "-active" in classes
 
         if intent == "enable" and not is_active:
             toggle.click()
-            _log("info", f"Broadcast enabled for SSID {modem_index}")
+            _log("info", f"Broadcast enabled for SSID {router_index}")
         elif intent == "disable" and is_active:
             toggle.click()
-            _log("info", f"Broadcast disabled for SSID {modem_index}")
+            _log("info", f"Broadcast disabled for SSID {router_index}")
         else:
             state = "on" if is_active else "off"
-            _log("info", f"SSID {modem_index} broadcast already {state} — skipped")
+            _log("info", f"SSID {router_index} broadcast already {state} — skipped")
 
     def _handle_advanced_broadcast(
         driver, wait, router_url: str, targets_with_intent: list[dict]
@@ -150,8 +150,8 @@ def _run_wifi_credentials_blocking(
             intent = t.get("broadcast_intent")
             if not intent:
                 continue
-            modem_index = str(t["modem_index"])
-            _reconcile_broadcast_toggle(driver, modem_index, intent)
+            router_index = str(t["router_index"])
+            _reconcile_broadcast_toggle(driver, router_index, intent)
             any_changed = True
 
         if any_changed:
@@ -159,7 +159,7 @@ def _run_wifi_credentials_blocking(
                 By.CSS_SELECTOR, "input.button.-primary[value='Confirm']"
             )
             confirm_btn.click()
-            _log("progress", "Clicking Confirm — waiting for modem to apply")
+            _log("progress", "Clicking Confirm — waiting for router to apply")
             wait_save = WebDriverWait(driver, 60)
             try:
                 wait_save.until(EC.staleness_of(confirm_btn))
@@ -199,7 +199,7 @@ def _run_wifi_credentials_blocking(
 
         # ── Login ────────────────────────────────────────────────────────────
         driver.get(router_url)
-        _emit_sync({"type": "state", "state": "LOGGING_IN", "message": "Logging into modem", "progress": 15})
+        _emit_sync({"type": "state", "state": "LOGGING_IN", "message": "Logging into router", "progress": 15})
 
         wait.until(EC.presence_of_element_located((By.ID, "username")))
         elem = driver.find_element(By.ID, "username")
@@ -235,49 +235,49 @@ def _run_wifi_credentials_blocking(
 
             # ── Handle 2.4 GHz ──────────────────────────────────────────────────
             if target_24g:
-                modem_index = str(target_24g["modem_index"])
-                if modem_index != DEFAULT_SSID_24G:
+                router_index = str(target_24g["router_index"])
+                if router_index != DEFAULT_SSID_24G:
                     _log("action", f"Expanding Advanced Settings for 2.4 GHz")
                     _expand_advanced_settings(driver, wait, "2.4 GHz")
-                    _log("action", f"Selecting SSID {modem_index} on 2.4 GHz")
-                    _emit_sync({"type": "state", "state": "RUNNING", "message": f"Selecting 2.4 GHz SSID {modem_index}", "progress": 40})
-                    _select_ssid_via_selectize(driver, wait, ID_24G_SSID_NUM, modem_index, ID_24G_WIFI_NAME)
-                    _log("info", f"2.4 GHz SSID {modem_index} selected")
+                    _log("action", f"Selecting SSID {router_index} on 2.4 GHz")
+                    _emit_sync({"type": "state", "state": "RUNNING", "message": f"Selecting 2.4 GHz SSID {router_index}", "progress": 40})
+                    _select_ssid_via_selectize(driver, wait, ID_24G_SSID_NUM, router_index, ID_24G_WIFI_NAME)
+                    _log("info", f"2.4 GHz SSID {router_index} selected")
                 else:
-                    _log("info", f"Using default 2.4 GHz SSID {modem_index}")
+                    _log("info", f"Using default 2.4 GHz SSID {router_index}")
 
                 if target_24g.get("new_name"):
                     _fill_field(driver, ID_24G_WIFI_NAME, target_24g["new_name"])
-                    _log("info", f"Wi-Fi name set for 2.4 GHz SSID {modem_index}")
+                    _log("info", f"Wi-Fi name set for 2.4 GHz SSID {router_index}")
 
                 if target_24g.get("new_pass"):
                     _fill_field(driver, ID_24G_WIFI_PASS, target_24g["new_pass"])
-                    _log("info", f"Password set for 2.4 GHz SSID {modem_index}")
+                    _log("info", f"Password set for 2.4 GHz SSID {router_index}")
 
             # ── Handle 5 GHz ────────────────────────────────────────────────────
             if target_5g:
-                modem_index = str(target_5g["modem_index"])
-                if modem_index != DEFAULT_SSID_5G:
+                router_index = str(target_5g["router_index"])
+                if router_index != DEFAULT_SSID_5G:
                     _log("action", f"Expanding Advanced Settings for 5 GHz")
                     _expand_advanced_settings(driver, wait, "5 GHz")
-                    _log("action", f"Selecting SSID {modem_index} on 5 GHz")
-                    _emit_sync({"type": "state", "state": "RUNNING", "message": f"Selecting 5 GHz SSID {modem_index}", "progress": 60})
-                    _select_ssid_via_selectize(driver, wait, ID_5G_SSID_NUM, modem_index, ID_5G_WIFI_NAME)
-                    _log("info", f"5 GHz SSID {modem_index} selected")
+                    _log("action", f"Selecting SSID {router_index} on 5 GHz")
+                    _emit_sync({"type": "state", "state": "RUNNING", "message": f"Selecting 5 GHz SSID {router_index}", "progress": 60})
+                    _select_ssid_via_selectize(driver, wait, ID_5G_SSID_NUM, router_index, ID_5G_WIFI_NAME)
+                    _log("info", f"5 GHz SSID {router_index} selected")
                 else:
-                    _log("info", f"Using default 5 GHz SSID {modem_index}")
+                    _log("info", f"Using default 5 GHz SSID {router_index}")
 
                 if target_5g.get("new_name"):
                     _fill_field(driver, ID_5G_WIFI_NAME, target_5g["new_name"])
-                    _log("info", f"Wi-Fi name set for 5 GHz SSID {modem_index}")
+                    _log("info", f"Wi-Fi name set for 5 GHz SSID {router_index}")
 
                 if target_5g.get("new_pass"):
                     _fill_field(driver, ID_5G_WIFI_PASS, target_5g["new_pass"])
-                    _log("info", f"Password set for 5 GHz SSID {modem_index}")
+                    _log("info", f"Password set for 5 GHz SSID {router_index}")
 
             # ── Save Changes ─────────────────────────────────────────────────────
             _emit_sync({"type": "state", "state": "RUNNING", "message": "Saving changes", "progress": 80})
-            _log("progress", "Clicking Save Changes — waiting for modem to apply")
+            _log("progress", "Clicking Save Changes — waiting for router to apply")
 
             save_btn = driver.find_element(
                 By.CSS_SELECTOR, "input.button.-primary[value='Save Changes']"
@@ -285,7 +285,7 @@ def _run_wifi_credentials_blocking(
             save_btn.click()
 
             wait_save = WebDriverWait(driver, 30)
-            # Wait for page to reload (save takes ~10s — modem rerenders the page when done)
+            # Wait for page to reload (save takes ~10s — router rerenders the page when done)
             wait_save.until(EC.staleness_of(save_btn))
             wait_save.until(EC.presence_of_element_located((By.ID, ID_24G_WIFI_NAME)))
             _log("success", "Changes saved successfully")
@@ -336,9 +336,9 @@ def _run_wifi_credentials_blocking(
 async def run_wifi_credentials_workflow(targets: list[dict]) -> None:
     import concurrent.futures
 
-    router_url = os.getenv("MODEM_URL")
-    username = os.getenv("MODEM_USERNAME")
-    password = os.getenv("MODEM_PASSWORD")
+    router_url = os.getenv("ROUTER_URL")
+    username = os.getenv("ROUTER_USERNAME")
+    password = os.getenv("ROUTER_PASSWORD")
 
     if not router_url or not username or not password:
         raise RuntimeError("Missing router credentials in .env")

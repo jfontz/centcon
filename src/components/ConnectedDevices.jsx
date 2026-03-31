@@ -4,11 +4,11 @@ import LANCard from "./cards/LANCard";
 import WiFi24Card from "./cards/WiFi24Card";
 import WiFi5Card from "./cards/WiFi5Card";
 import DeviceListModal from "./modals/DeviceListModal";
-import { useModem } from "../context/ModemContext";
+import { useRouter } from "../context/RouterContext";
 import { newTab } from "../assets/icons";
 
 const ConnectedDevices = () => {
-  const { data, loading } = useModem();
+  const { data, loading } = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
 
   const devices = data?.connectedDevices || {

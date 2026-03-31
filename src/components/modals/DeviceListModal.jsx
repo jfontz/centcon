@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 // Trusted devices are keyed by hostname|ip and persisted in localStorage.
-// Trust survives modem reboots since storage lives in the browser, not the modem.
+// Trust survives router reboots since storage lives in the browser, not the router.
 // Trust is only lost if a device's IP changes (e.g. DHCP lease expiry reassigning a different IP).
-// MAC address would be the ideal key but the modem API does not expose MAC addresses.
+// MAC address would be the ideal key but the router API does not expose MAC addresses.
 // Hostname-only keying would survive IP changes but risks merging two devices with the same hostname.
 const TRUSTED_KEY = "centcon:trusted_devices";
 

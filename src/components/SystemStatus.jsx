@@ -4,7 +4,7 @@ import RuntimeCard from "./cards/RuntimeCard";
 import TemperatureCard from "./cards/TemperatureCard";
 import CPUCard from "./cards/CPUCard";
 import MemoryCard from "./cards/MemoryCard";
-import { useModem } from "../context/ModemContext";
+import { useRouter } from "../context/RouterContext";
 import {
   formatUptime,
   getTemperatureStatus,
@@ -17,14 +17,14 @@ const formatUptimeSafely = (seconds) => {
 };
 
 const SystemStatus = () => {
-  const { data, loading } = useModem();
+  const { data, loading } = useRouter();
 
   const deviceInfo = data?.device;
   const opticalInfo = data?.optical;
 
   const [uptimeSeconds, setUptimeSeconds] = useState(deviceInfo?.uptime ?? null);
 
-  // Whenever a new uptime value comes from the modem, reset our local counter
+  // Whenever a new uptime value comes from the router, reset our local counter
   useEffect(() => {
     if (deviceInfo?.uptime == null) {
       setUptimeSeconds(null);

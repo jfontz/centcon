@@ -33,7 +33,7 @@ const REBOOT_STATE_MAP = {
   FAILED: { statusClass: "status-error", dot: "bg-red-500", label: "Failed" },
 };
 
-const MODEM_STATUS_MAP = {
+const ROUTER_STATUS_MAP = {
   online: {
     statusClass: "status-online",
     dot: "bg-green-500 animate-pulse",
@@ -58,7 +58,7 @@ const MODEM_STATUS_MAP = {
 
 const StatusBadge = ({ status, rebootState }) => {
   // Only show reboot status during active reboot states
-  // Once reboot completes (ONLINE/FAILED) or is idle, show actual modem status
+  // Once reboot completes (ONLINE/FAILED) or is idle, show actual router status
   const inRebootFlow =
     rebootState &&
     rebootState.command === "reboot" &&
@@ -78,8 +78,8 @@ const StatusBadge = ({ status, rebootState }) => {
     }
     current = { ...reboot, label };
   } else {
-    // Use actual modem status when not actively rebooting
-    current = MODEM_STATUS_MAP[status] || MODEM_STATUS_MAP.offline;
+    // Use actual router status when not actively rebooting
+    current = ROUTER_STATUS_MAP[status] || ROUTER_STATUS_MAP.offline;
   }
 
   return (

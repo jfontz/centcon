@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useModem } from "../context/ModemContext";
+import { useRouter } from "../context/RouterContext";
 import LogHeader from "./log/LogHeader";
 import LogContent from "./log/LogContent";
 import { getIcon } from "../utils/getIcon.jsx";
@@ -11,7 +11,7 @@ const LogPanel = () => {
   const logContainerRef = useRef(null);
   const hasShownStartup = useRef(false);
   const { data, loading, error, status, commandLogs, clearCommandLogs } =
-    useModem();
+    useRouter();
   const commandEntries = commandLogs.map((entry) => ({
     type: entry.level,
     text: entry.message,
@@ -24,7 +24,7 @@ const LogPanel = () => {
     (a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0),
   );
   const prevLosRef = useRef(null);
-  const prevModemReachable = useRef(null);
+  const prevRouterReachable = useRef(null);
   const prevInternetUp = useRef(null);
   const prevWanIpRef = useRef(null);
   const prevDevicesRef = useRef(null);
@@ -41,41 +41,41 @@ const LogPanel = () => {
     }
   }, [sortedLogs.length]);
 
-  // Add log entries based on modem data and error state
+  // Add log entries based on router data and error state
   useEffect(() => {
     const timestamp = new Date().toISOString();
     const newLogs = [];
 
-    // 1. Modem Reachability (check FIRST — data is null when unreachable)
-    const modemReachable = data !== null && !error;
+    // 1. Router Reachability (check FIRST — data is null when unreachable)
+    const routerReachable = data !== null && !error;
 
-    const isFirstCheck = prevModemReachable.current === null;
+    const isFirstCheck = prevRouterReachable.current === null;
 
     if (isFirstCheck) {
       // First check - set the ref but DON'T log
-      prevModemReachable.current = modemReachable;
-    } else if (prevModemReachable.current !== modemReachable) {
+      prevRouterReachable.current = routerReachable;
+    } else if (prevRouterReachable.current !== routerReachable) {
       if (hasShownStartup.current) {
         newLogs.push({
-          type: modemReachable
+          type: routerReachable
             ? prevLosRef.current === true
               ? "warning"
               : "success"
             : "error",
-          text: modemReachable
+          text: routerReachable
             ? prevLosRef.current === true
-              ? "Modem reachable — Dashboard is back, but fiber signal is still lost."
-              : "Modem connection restored — Dashboard is back online."
-            : "Modem unreachable — Make sure your device is connected to the local network.",
+              ? "Router reachable — Dashboard is back, but fiber signal is still lost."
+              : "Router connection restored — Dashboard is back online."
+            : "Router unreachable — Make sure your device is connected to the local network.",
           timestamp,
           id: crypto.randomUUID(),
         });
       }
-      prevModemReachable.current = modemReachable;
+      prevRouterReachable.current = routerReachable;
     }
 
-    // ONLY check LOS and Internet when modem is reachable (fresh data)
-    if (data && modemReachable) {
+    // ONLY check LOS and Internet when router is reachable (fresh data)
+    if (data && routerReachable) {
       // INITIAL STARTUP
       if (logs.length === 0) {
         newLogs.push({
@@ -86,7 +86,7 @@ const LogPanel = () => {
         });
         newLogs.push({
           type: "navigate",
-          text: `Connected to modem: ${data.device?.model || "Unknown"}`,
+          text: `Connected to router: ${data.device?.model || "Unknown"}`,
           timestamp,
           id: crypto.randomUUID(),
         });
@@ -104,7 +104,7 @@ const LogPanel = () => {
         if (hasLOS) {
           newLogs.push({
             type: "error",
-            text: "Fiber signal lost — Check the fiber cable on your modem. Try rebooting. If the problem persists, contact Globe at 211.",
+            text: "Fiber signal lost — Check the fiber cable on your router. Try rebooting. If the problem persists, contact Globe at 211.",
             timestamp,
             id: crypto.randomUUID(),
           });
@@ -113,7 +113,7 @@ const LogPanel = () => {
         newLogs.push({
           type: hasLOS ? "error" : "success",
           text: hasLOS
-            ? "Fiber signal lost — Check the fiber cable on your modem. Try rebooting. If the problem persists, contact Globe at 211."
+            ? "Fiber signal lost — Check the fiber cable on your router. Try rebooting. If the problem persists, contact Globe at 211."
             : "Fiber signal restored — Connection is back.",
           timestamp,
           id: crypto.randomUUID(),
@@ -132,7 +132,7 @@ const LogPanel = () => {
             type: internetUp ? "success" : "error",
             text: internetUp
               ? "Internet connection restored."
-              : "Internet connection lost — WAN disconnected. Try rebooting your modem. If the problem persists, contact Globe at 211.",
+              : "Internet connection lost — WAN disconnected. Try rebooting your router. If the problem persists, contact Globe at 211.",
             timestamp,
             id: crypto.randomUUID(),
           });
@@ -160,7 +160,7 @@ const LogPanel = () => {
       }
 
       // 5. Device Connected Detection
-      // Uses hostname|ip as a stable key since MAC is not exposed by this modem's API
+      // Uses hostname|ip as a stable key since MAC is not exposed by this router's API
       const currentDevices = data?.connectedDevices?.devices ?? [];
       const currentDeviceKeys = new Set(
         currentDevices.map((d) => `${d.hostname}|${d.ip}`),
@@ -224,7 +224,7 @@ const LogPanel = () => {
         if (cpuUsage > 80) {
           newLogs.push({
             type: "warning",
-            text: `High CPU usage (${cpuUsage}%) — Modem is under load. Consider rebooting if performance degrades.`,
+            text: `High CPU usage (${cpuUsage}%) — Router is under load. Consider rebooting if performance degrades.`,
             timestamp,
             id: crypto.randomUUID(),
           });
@@ -232,7 +232,7 @@ const LogPanel = () => {
         if (memoryUsage > 90) {
           newLogs.push({
             type: "warning",
-            text: `High memory usage (${memoryUsage}%) — Modem memory is critically low. A reboot is recommended.`,
+            text: `High memory usage (${memoryUsage}%) — Router memory is critically low. A reboot is recommended.`,
             timestamp,
             id: crypto.randomUUID(),
           });
@@ -245,7 +245,7 @@ const LogPanel = () => {
         if (temp > 70) {
           newLogs.push({
             type: "warning",
-            text: `High temperature (${temp}°C) — Ensure the modem has adequate ventilation and is not enclosed.`,
+            text: `High temperature (${temp}°C) — Ensure the router has adequate ventilation and is not enclosed.`,
             timestamp,
             id: crypto.randomUUID(),
           });
@@ -253,8 +253,8 @@ const LogPanel = () => {
       }
     }
 
-    // Reset all tracking refs when modem becomes unreachable
-    if (!modemReachable) {
+    // Reset all tracking refs when router becomes unreachable
+    if (!routerReachable) {
       prevWanIpRef.current = null;
       prevDevicesRef.current = null;
       prevDeviceCountRef.current = null;
@@ -262,7 +262,7 @@ const LogPanel = () => {
 
     // STATUS CHECK LOG — only when everything is OK
     const hasAnyIssues =
-      !modemReachable ||
+      !routerReachable ||
       (data &&
         ((Number(data?.optical?.txPower ?? 0) === 0 &&
           Number(data?.optical?.rxPower ?? 0) === 0) ||

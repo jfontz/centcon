@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { formatTimeAgo } from "../../utils/formatters";
 
 const MetaInfo = ({ className, lastUpdated }) => {
-  const modemIp = import.meta.env.VITE_MODEM_IP || "192.168.254.254";
+  const routerIp = import.meta.env.VITE_ROUTER_IP || "192.168.254.254";
   const [timeAgo, setTimeAgo] = useState(formatTimeAgo(lastUpdated));
 
   useEffect(() => {
@@ -19,7 +19,7 @@ const MetaInfo = ({ className, lastUpdated }) => {
 
   return (
     <div className={className}>
-      <span>{modemIp}</span>
+      <span>{routerIp}</span>
       <span>•</span>
       <span>Last updated: {timeAgo}</span>
     </div>

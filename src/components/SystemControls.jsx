@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import * as icons from "../assets/icons";
-import { useModem } from "../context/ModemContext";
+import { useRouter } from "../context/RouterContext";
 import SystemControlButton from "./buttons/SystemControlButton";
 import SectionContainer from "./ui/SectionContainer";
 import WiFiCredentialModal from "./modals/WifiCredentialModal";
@@ -13,7 +13,7 @@ const SystemControls = () => {
     triggerCommand,
     commandBackendOnline,
     commandBackendError,
-  } = useModem();
+  } = useRouter();
   const [pendingCommandIds, setPendingCommandIds] = useState([]);
   const [wifiModalOpen, setWifiModalOpen] = useState(false);
 

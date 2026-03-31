@@ -50,7 +50,7 @@ export const fetchCommands = async () => {
 };
 
 /**
- * Trigger a Selenium-backed modem command.
+ * Trigger a Selenium-backed router command.
  * @returns {Promise<{ ok: boolean, message?: string }>}
  */
 export const triggerCommand = async (commandId) => {
@@ -67,7 +67,7 @@ export const triggerCommand = async (commandId) => {
 
 /**
  * Trigger the Wi-Fi credentials Selenium workflow.
- * @param {Array<{ssid_index: number, freq: string, modem_index: string, new_name: string, new_pass: string}>} targets
+ * @param {Array<{ssid_index: number, freq: string, router_index: string, new_name: string, new_pass: string}>} targets
  * @returns {Promise<{ ok: boolean, message?: string }>}
  */
 export const triggerWifiCredentials = async (targets) => {

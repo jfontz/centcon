@@ -1,8 +1,8 @@
 /**
  * Setup/Configuration Page Component
- * Handles initial device configuration including modem connection settings and PIN setup.
+ * Handles initial device configuration including router connection settings and PIN setup.
  * Displayed only on first run when setup is required or when missing values are detected.
- * Collects modem IP, username, password, and PIN configuration from the user.
+ * Collects router IP, username, password, and PIN configuration from the user.
  */
 
 import { useState, useRef, useEffect } from "react";
@@ -55,18 +55,18 @@ const Setup = ({ setupData, onComplete }) => {
   const validate = () => {
     const newErrors = {};
 
-    if (allFields.includes("MODEM_IP")) {
-      if (!formData.MODEM_IP || !IP_REGEX.test(formData.MODEM_IP)) {
-        newErrors.MODEM_IP = ERR_INVALID_IP;
+    if (allFields.includes("ROUTER_IP")) {
+      if (!formData.ROUTER_IP || !IP_REGEX.test(formData.ROUTER_IP)) {
+        newErrors.ROUTER_IP = ERR_INVALID_IP;
       }
     }
 
-    if (allFields.includes("MODEM_USERNAME") && !formData.MODEM_USERNAME) {
-      newErrors.MODEM_USERNAME = ERR_USERNAME_REQUIRED;
+    if (allFields.includes("ROUTER_USERNAME") && !formData.ROUTER_USERNAME) {
+      newErrors.ROUTER_USERNAME = ERR_USERNAME_REQUIRED;
     }
 
-    if (allFields.includes("MODEM_PASSWORD") && !formData.MODEM_PASSWORD) {
-      newErrors.MODEM_PASSWORD = ERR_PASSWORD_REQUIRED;
+    if (allFields.includes("ROUTER_PASSWORD") && !formData.ROUTER_PASSWORD) {
+      newErrors.ROUTER_PASSWORD = ERR_PASSWORD_REQUIRED;
     }
 
     if (allFields.includes("CENTCON_PIN")) {
@@ -114,24 +114,24 @@ const Setup = ({ setupData, onComplete }) => {
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="rounded-xl border border-zinc-900 bg-zinc-950 overflow-hidden">
-            {/* Modem Connection */}
-            {(allFields.includes("MODEM_IP") ||
-              allFields.includes("MODEM_USERNAME") ||
-              allFields.includes("MODEM_PASSWORD")) && (
+            {/* Router Connection */}
+            {(allFields.includes("ROUTER_IP") ||
+              allFields.includes("ROUTER_USERNAME") ||
+              allFields.includes("ROUTER_PASSWORD")) && (
               <div className="p-6 flex flex-col gap-4">
                 <div>
-                  <p className={SECTION_LABEL_CLASS}>Modem Connection</p>
+                  <p className={SECTION_LABEL_CLASS}>Router Connection</p>
                   <p className="text-[13px] text-zinc-500 leading-relaxed -mt-2">
                     Enter the login details of your{" "}
-                    <span className="text-zinc-300">existing modem</span>.
-                    CENTCON uses these credentials to access your modem's admin
+                    <span className="text-zinc-300">existing router</span>.
+                    CENTCON uses these credentials to access your router's admin
                     panel on your behalf. These are never stored outside your
                     local machine. You can find these credentials on your
-                    modem&apos;s admin page or on the sticker on your modem.
+                    router&apos;s admin page or on the sticker on your router.
                   </p>
                 </div>
 
-                {allFields.includes("MODEM_IP") && (
+                {allFields.includes("ROUTER_IP") && (
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1.5">
                       <label className="text-sm font-medium text-zinc-400 tracking-wide">
@@ -142,11 +142,11 @@ const Setup = ({ setupData, onComplete }) => {
                         widthClass="w-64"
                         alignClass="-left-2"
                         arrowClass="ml-3"
-                        buttonAriaLabel="Get help finding your modem IP address"
-                        label="What is the modem IP address?"
+                        buttonAriaLabel="Get help finding your router IP address"
+                        label="What is the router IP address?"
                       >
                         <p className="text-xs text-zinc-500 leading-relaxed mb-2">
-                          This is the local address your modem uses on your home
+                          This is the local address your router uses on your home
                           network — separate from your public internet IP.
                         </p>
                         <p className="text-xs text-zinc-400 font-medium mb-1">
@@ -162,7 +162,7 @@ const Setup = ({ setupData, onComplete }) => {
                           </li>
                           <li>
                             • Or check the sticker on the back/underside of your
-                            modem
+                            router
                           </li>
                           <li>
                             • On Windows: run{" "}
@@ -179,11 +179,11 @@ const Setup = ({ setupData, onComplete }) => {
                     </div>
                     <input
                       type="text"
-                      value={formData.MODEM_IP}
-                      onChange={(e) => handleChange("MODEM_IP", e.target.value)}
+                      value={formData.ROUTER_IP}
+                      onChange={(e) => handleChange("ROUTER_IP", e.target.value)}
                       className={`w-full px-3 py-2.5 rounded-md bg-black text-white text-[15px] border transition-colors outline-none placeholder:text-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed
                         ${
-                          errors.MODEM_IP
+                          errors.ROUTER_IP
                             ? "border-red-900 focus:border-red-800 focus:ring-1 focus:ring-red-900/50"
                             : "border-zinc-800 focus:border-zinc-600"
                         }`}
@@ -191,19 +191,19 @@ const Setup = ({ setupData, onComplete }) => {
                       disabled={loading}
                       autoComplete="off"
                     />
-                    {errors.MODEM_IP && (
+                    {errors.ROUTER_IP && (
                       <p className="flex items-center gap-1.5 text-sm text-red-400 mt-0.5">
                         <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-red-900/60 text-red-400 font-bold text-[11px] flex-shrink-0">
                           !
                         </span>
-                        {errors.MODEM_IP}
+                        {errors.ROUTER_IP}
                       </p>
                     )}
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-3">
-                  {allFields.includes("MODEM_USERNAME") && (
+                  {allFields.includes("ROUTER_USERNAME") && (
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-1.5">
                         <label className="text-xs font-medium text-zinc-400 tracking-wide">
@@ -217,15 +217,15 @@ const Setup = ({ setupData, onComplete }) => {
                           buttonAriaLabel="Learn more about Username"
                         >
                           <p className="text-xs text-zinc-500 leading-relaxed">
-                            Your modem's admin username — found on the sticker
-                            on the back or underside of your modem.
+                            Your router's admin username — found on the sticker
+                            on the back or underside of your router.
                           </p>
                         </HelpTooltip>
                       </div>
                       <InputField
-                        field="MODEM_USERNAME"
+                        field="ROUTER_USERNAME"
                         label={null}
-                        placeholder={defaults?.MODEM_USERNAME || "admin"}
+                        placeholder={defaults?.ROUTER_USERNAME || "admin"}
                         formData={formData}
                         errors={errors}
                         loading={loading}
@@ -233,7 +233,7 @@ const Setup = ({ setupData, onComplete }) => {
                       />
                     </div>
                   )}
-                  {allFields.includes("MODEM_PASSWORD") && (
+                  {allFields.includes("ROUTER_PASSWORD") && (
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-1.5">
                         <label className="text-xs font-medium text-zinc-400 tracking-wide">
@@ -247,14 +247,14 @@ const Setup = ({ setupData, onComplete }) => {
                           buttonAriaLabel="Learn more about Password"
                         >
                           <p className="text-xs text-zinc-500 leading-relaxed">
-                            Your modem's admin password — found on the same
+                            Your router's admin password — found on the same
                             sticker as the username. This is not your Wi-Fi
                             password.
                           </p>
                         </HelpTooltip>
                       </div>
                       <InputField
-                        field="MODEM_PASSWORD"
+                        field="ROUTER_PASSWORD"
                         label={null}
                         type="password"
                         revealable
@@ -403,11 +403,11 @@ const Setup = ({ setupData, onComplete }) => {
                       placement="top"
                       widthClass="w-52"
                       alignClass="left-1/2 -translate-x-1/2"
-                      buttonAriaLabel="How to check your modem model"
-                      label="How to check your modem model"
+                      buttonAriaLabel="How to check your router model"
+                      label="How to check your router model"
                     >
                       <p className="text-xs text-zinc-500 leading-relaxed">
-                        Flip your modem over or check the back panel — the model
+                        Flip your router over or check the back panel — the model
                         number and software version are usually printed on a
                         sticker.
                       </p>

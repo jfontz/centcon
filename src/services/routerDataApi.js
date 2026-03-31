@@ -7,23 +7,23 @@ import {
   safelyParse,
   countDevicesByType,
   extractConnectionInfo,
-} from "../utils/modemHelpers.js";
+} from "../utils/routerHelpers.js";
 
 import { formatUptime } from "../utils/formatters.js";
 
-// API endpoint for fetching modem information
+// API endpoint for fetching router information
 const API_ENDPOINT = "/login_globe.cgi?info";
-const DEFAULT_MODEM_IP = "192.168.254.254";
+const DEFAULT_ROUTER_IP = "192.168.254.254";
 const USER_AGENT = "Mozilla/5.0";
 const LAN_INTERFACE = "Ethernet";
 const WIFI_24_INTERFACE = "802.11";
 const WIFI_5_INTERFACE = "802.11ac";
 
 /**
- * API client for interacting with the modem
- * Handles fetching, parsing, and transforming modem data
+ * API client for interacting with the router
+ * Handles fetching, parsing, and transforming router data
  */
-class ModemApiClient {
+class RouterApiClient {
   // Temperature is returned in 1/256 degrees, so divide by 256
   static TEMP_DIVISOR = 256;
 
@@ -32,17 +32,17 @@ class ModemApiClient {
   static WIFI_5_INDEX = 4; // 5GHz WiFi at index 4
 
   constructor() {
-    this.modemIp = import.meta.env.VITE_MODEM_IP || DEFAULT_MODEM_IP;
-    // Use Vite proxy in development, direct modem URL in production
-    this.baseUrl = import.meta.env.DEV ? "/api" : `http://${this.modemIp}`;
+    this.routerIp = import.meta.env.VITE_ROUTER_IP || DEFAULT_ROUTER_IP;
+    // Use Vite proxy in development, direct router URL in production
+    this.baseUrl = import.meta.env.DEV ? "/api" : `http://${this.routerIp}`;
   }
 
   /**
-   * Fetch raw modem data from the JSON API
-   * @returns {Promise<Object>} Raw modem data with wlan_info, onu_info, etc.
+   * Fetch raw router data from the JSON API
+   * @returns {Promise<Object>} Raw router data with wlan_info, onu_info, etc.
    * @throws {Error} If fetch fails or returns non-OK status
    */
-  async fetchModemData() {
+  async fetchRouterData() {
     const url = `${this.baseUrl}${API_ENDPOINT}`;
 
     // Set appropriate headers based on environment
@@ -50,7 +50,7 @@ class ModemApiClient {
       ? { "User-Agent": USER_AGENT }
       : {
           "User-Agent": USER_AGENT,
-          Referer: `http://${this.modemIp}/`,
+          Referer: `http://${this.routerIp}/`,
         };
 
     try {
@@ -62,19 +62,19 @@ class ModemApiClient {
 
       return await response.json();
     } catch (error) {
-      console.error("Failed to fetch modem data:", error);
+      console.error("Failed to fetch router data:", error);
       throw error;
     }
   }
 
   /**
-   * Parse and transform raw modem data into a usable format
+   * Parse and transform raw router data into a usable format
    * Uses safelyParse to handle null/undefined data gracefully
    *
-   * @param {Object} rawData - Raw data from modem API
-   * @returns {Object} Parsed modem data with wireless, device, optical, wan, connectedDevices
+   * @param {Object} rawData - Raw data from router API
+   * @returns {Object} Parsed router data with wireless, device, optical, wan, connectedDevices
    */
-  parseModemData(rawData) {
+  parseRouterData(rawData) {
     return {
       wireless: safelyParse(rawData.wlan_info, (d) => this.parseWireless(d)),
       device: safelyParse(rawData.onu_info, (d) => this.parseDevice(d)),
@@ -91,8 +91,8 @@ class ModemApiClient {
    */
   parseWireless(wlanInfo) {
     return {
-      ssid24: wlanInfo[ModemApiClient.WIFI_24_INDEX]?.SSID || "N/A",
-      ssid5: wlanInfo[ModemApiClient.WIFI_5_INDEX]?.SSID || "N/A",
+      ssid24: wlanInfo[RouterApiClient.WIFI_24_INDEX]?.SSID || "N/A",
+      ssid5: wlanInfo[RouterApiClient.WIFI_5_INDEX]?.SSID || "N/A",
     };
   }
 
@@ -126,7 +126,7 @@ class ModemApiClient {
   parseOptical(opticalInfo) {
     return {
       temperature: (
-        (opticalInfo.TransceiverTemperature || 0) / ModemApiClient.TEMP_DIVISOR
+        (opticalInfo.TransceiverTemperature || 0) / RouterApiClient.TEMP_DIVISOR
       ).toFixed(2),
       enable: opticalInfo.Enable ?? 0,
       txPower: opticalInfo.TXPower ?? 0,
@@ -210,17 +210,17 @@ class ModemApiClient {
 }
 
   /**
-   * Main method to get parsed modem data
+   * Main method to get parsed router data
    * Fetches raw data and transforms it into a clean, usable format
    *
-   * @returns {Promise<Object>} Fully parsed modem data
+   * @returns {Promise<Object>} Fully parsed router data
    * @throws {Error} If fetching or parsing fails
    */
   async getData() {
-    const rawData = await this.fetchModemData();
-    return this.parseModemData(rawData);
+    const rawData = await this.fetchRouterData();
+    return this.parseRouterData(rawData);
   }
 }
 
 // Export singleton instance for use throughout the application
-export const modemApi = new ModemApiClient();
+export const routerApi = new RouterApiClient();

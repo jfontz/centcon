@@ -1,5 +1,5 @@
 /**
- * Helper functions for parsing and transforming modem data
+ * Helper functions for parsing and transforming router data
  * These utilities provide reusable parsing logic to keep the API client clean
  */
 
@@ -26,7 +26,7 @@ export const safelyParse = (data, parser, defaultValue = null) => {
  * Count devices by their interface type and validate them
  * Provides a reusable pattern for filtering and counting devices
  *
- * @param {Array} devices - Array of device objects from modem API
+ * @param {Array} devices - Array of device objects from router API
  * @param {string} interfaceType - Type to filter by (e.g., "Ethernet", "802.11", "802.11ac")
  * @param {Function} validator - Function to validate each device
  * @returns {number} Count of valid devices matching the interface type
@@ -68,7 +68,7 @@ export const extractConnectionInfo = (conn, connectionType, currentState) => {
     return null;
   }
 
-  // Get the first connection from the list (modem typically has one active connection)
+  // Get the first connection from the list (router typically has one active connection)
   const connection = connList[0];
 
   return {

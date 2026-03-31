@@ -1,5 +1,5 @@
 /**
- * Validation utilities for modem data
+ * Validation utilities for router data
  * These functions provide consistent validation logic across the application
  */
 
@@ -7,7 +7,7 @@
  * Check if a device has the minimum required properties to be considered valid
  * A valid device must have both a hostname and IP address assigned
  *
- * @param {Object} device - Device object from modem API
+ * @param {Object} device - Device object from router API
  * @param {string} device.HostName - Device hostname
  * @param {string} device.IPAddress - Device IP address
  * @returns {boolean} True if device has both required properties

@@ -1,6 +1,6 @@
 # CENTCON
 
-Real-time modem/router dashboard with Selenium-powered automation for reboots, assisted admin login, and live Wi-Fi credential and broadcast management. Includes a live event log with passive network monitoring, device tracking, and grouped operation logs.
+Real-time router dashboard with Selenium-powered automation for reboots, assisted admin login, and live Wi-Fi credential and broadcast management. Includes a live event log with passive network monitoring, device tracking, and grouped operation logs.
 
 **Stack:** React (Vite) frontend · FastAPI backend · Selenium automation · Server-Sent Events
 
@@ -8,7 +8,7 @@ Real-time modem/router dashboard with Selenium-powered automation for reboots, a
 
 ## Compatibility
 
-> ⚠️ **The Selenium automation is built specifically for one modem model.** It uses custom navigation logic tailored to that device's admin interface and will not work correctly on other modems without modification.
+> ⚠️ **The Selenium automation is built specifically for one router model.** It uses custom navigation logic tailored to that device's admin interface and will not work correctly on other routers without modification.
 
 | Field | Value |
 |-------|-------|
@@ -16,7 +16,7 @@ Real-time modem/router dashboard with Selenium-powered automation for reboots, a
 | Device Model | G-1426G-A |
 | Software Version | 3TN00802HJLI90 |
 
-If you have a different modem model or firmware version, the Selenium automation sequences (reboot, login, and Wi-Fi credential changes) will likely fail or navigate incorrectly. You would need to update the Selenium logic in the backend to match your modem's admin interface.
+If you have a different router model or firmware version, the Selenium automation sequences (reboot, login, and Wi-Fi credential changes) will likely fail or navigate incorrectly. You would need to update the Selenium logic in the backend to match your router's admin interface.
 
 ---
 
@@ -122,9 +122,9 @@ The wizard will ask for:
 
 | Field | What it is |
 |-------|------------|
-| Modem IP Address | The local IP of your modem's admin page (default for Globe: `192.168.254.254`) |
-| Modem Username | Your modem's admin username — found on the sticker on your modem |
-| Modem Password | Your modem's admin password — same sticker |
+| Router IP Address | The local IP of your router's admin page (default for Globe: `192.168.254.254`) |
+| Router Username | Your router's admin username — found on the sticker on your router |
+| Router Password | Your router's admin password — same sticker |
 | CENTCON PIN | A 4-character PIN *you choose* to protect access to the dashboard |
 
 All values are saved to a `.env` file in the project root. If you ever need to change something after setup — or you forget your PIN — you can open that file directly and edit any value, then restart the app.
@@ -137,7 +137,7 @@ Once both servers are running and setup is complete:
 
 1. Open `http://localhost:5173` — you should see the login screen. Enter the `CENTCON_PIN` you set during setup.
 2. Open `http://localhost:8000/docs` — you should see the FastAPI interactive API docs.
-3. On the dashboard, click **"Reboot Modem"** to test the full automation sequence. This will log into your modem and trigger a real reboot — only do this if you're okay with a brief network interruption.
+3. On the dashboard, click **"Reboot Router"** to test the full automation sequence. This will log into your router and trigger a real reboot — only do this if you're okay with a brief network interruption.
 
 ---
 
@@ -153,14 +153,14 @@ The log panel runs passively in the background and records events as they are de
 | LOS cleared | Fiber signal restored |
 | Internet lost | WAN connection dropped while fiber is still up |
 | Internet restored | WAN connection re-established |
-| Modem unreachable | Dashboard cannot reach the modem API |
-| Modem restored | Modem API is reachable again |
-| Modem reachable (LOS active) | Modem API is back but fiber signal is still lost — surfaced after a connectivity gap |
+| Router unreachable | Dashboard cannot reach the router API |
+| Router restored | Router API is reachable again |
+| Router reachable (LOS active) | Router API is back but fiber signal is still lost — surfaced after a connectivity gap |
 | WAN IP changed | External IP address changed since last poll |
 | Device connected | A new device appeared on the network between polls |
 | High device count | Total connected devices hit an unusual threshold or spiked suddenly |
-| High CPU usage | Modem CPU exceeded 80% |
-| High memory usage | Modem memory usage exceeded 90% |
+| High CPU usage | Router CPU exceeded 80% |
+| High memory usage | Router memory usage exceeded 90% |
 | High temperature | Optical transceiver temperature exceeded 70°C |
 
 Automation events (reboot, Wi-Fi credential changes) are grouped together in the log under a labeled block so they're easy to scan separately from passive monitoring events.
@@ -171,7 +171,7 @@ Automation events (reboot, Wi-Fi credential changes) are grouped together in the
 
 The Connected Devices section shows a count of devices by interface type (LAN, 2.4GHz, 5GHz). Clicking **View all** opens a modal listing every connected device with its hostname, IP address, and band.
 
-Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is saved locally in the browser and persists across modem reboots. It is only lost if a device's IP address changes (e.g. after a DHCP lease expiry that assigns a different IP).
+Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is saved locally in the browser and persists across router reboots. It is only lost if a device's IP address changes (e.g. after a DHCP lease expiry that assigns a different IP).
 
 ---
 
@@ -183,7 +183,7 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
         ├── main.py                        # FastAPI app, routes, command scheduling
         ├── requirements.txt
         ├── run.py                         # Uvicorn entry point
-        ├── selenium_login.py              # Opens Chrome, logs into modem, leaves session open for manual use
+        ├── selenium_login.py              # Opens Chrome, logs into router, leaves session open for manual use
         ├── selenium_reboot.py             # Full reboot automation workflow
         ├── selenium_wifi_credentials.py   # Changes credentials and broadcast toggles across Basic and Advanced pages in one session
         ├── setup_utils.py                 # First-run setup helpers for validation, auto-detect, and .env writes
@@ -260,9 +260,9 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
             ├── SystemStatus.jsx
         └── 📁context
             ├── AuthContext.jsx
-            ├── ModemContext.jsx
+            ├── RouterContext.jsx
         └── 📁hooks
-            ├── useModemData.js
+            ├── useRouterData.js
         └── 📁pages
             ├── Login.jsx
             ├── Setup.jsx
@@ -270,12 +270,12 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
             ├── apiConfig.js               # Shared backend URL constant
             ├── authAPI.js
             ├── commandApi.js              # SSE connection, command triggers, and command metadata fetching
-            ├── modemDataApi.js            # Modem data fetching and parsing
+            ├── routerDataApi.js            # Router data fetching and parsing
             ├── setupAPI.js
         └── 📁utils
             ├── formatters.js
             ├── getIcon.jsx
-            ├── modemHelpers.js
+            ├── routerHelpers.js
             ├── validators.js
         ├── App.jsx
         ├── index.css

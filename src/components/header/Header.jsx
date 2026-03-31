@@ -2,7 +2,7 @@ import { refreshData, logout } from "../../assets/icons";
 import MetaInfo from "./MetaInfo";
 import HeaderButton from "./HeaderButton";
 import StatusBadge from "./StatusBadge";
-import { useModem } from "../../context/ModemContext";
+import { useRouter } from "../../context/RouterContext";
 import { useAuth } from "../../context/AuthContext";
 
 const REBOOT_BUSY_STATES = [
@@ -14,7 +14,7 @@ const REBOOT_BUSY_STATES = [
 ];
 
 const Header = () => {
-  const { status, refresh, refreshing, lastUpdated, rebootState } = useModem();
+  const { status, refresh, refreshing, lastUpdated, rebootState } = useRouter();
   const { logout: handleLogout, showLogin } = useAuth();
 
   const isRebooting =

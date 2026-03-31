@@ -1,18 +1,18 @@
 /**
- * Modem Context
- * Manages modem telemetry plus command state, logs, and available controls.
+ * Router Context
+ * Manages router telemetry plus command state, logs, and available controls.
  * Uses frontend command config and backend SSE updates for command status.
  */
 
 import { createContext, useContext, useState, useEffect } from "react";
-import { useModemData } from "../hooks/useModemData";
+import { useRouterData } from "../hooks/useRouterData";
 import {
   connectToCommandEvents,
   fetchCommands,
   triggerCommand as apiTriggerCommand,
 } from "../services/commandApi";
 
-const ModemContext = createContext(null);
+const RouterContext = createContext(null);
 
 const initialCommandState = {
   state: "IDLE",
@@ -33,14 +33,14 @@ const INITIAL_COMMAND_STATUS = {
 const BACKEND_OFFLINE_MESSAGE =
   "Backend not running. Start the backend service to enable controls.";
 
-export const ModemProvider = ({ children }) => {
+export const RouterProvider = ({ children }) => {
   const [commandState, setCommandState] = useState(initialCommandState);
   const [commandLogs, setCommandLogs] = useState([]);
   const [commandStatuses, setCommandStatuses] = useState({});
   const [commandBackendOnline, setCommandBackendOnline] = useState(true);
   const [commandBackendError, setCommandBackendError] = useState("");
   const [commands, setCommands] = useState([]);
-  const modemState = useModemData(commandState);
+  const routerState = useRouterData(commandState);
 
   const markBackendOnline = () => {
     setCommandBackendOnline(true);
@@ -144,10 +144,10 @@ export const ModemProvider = ({ children }) => {
   const clearCommandLogs = () => setCommandLogs([]);
 
   return (
-    <ModemContext.Provider
+    <RouterContext.Provider
       value={{
-        ...modemState,
-        refreshing: modemState.refreshing,
+        ...routerState,
+        refreshing: routerState.refreshing,
         commands,
         commandState,
         commandStatuses,
@@ -160,14 +160,14 @@ export const ModemProvider = ({ children }) => {
       }}
     >
       {children}
-    </ModemContext.Provider>
+    </RouterContext.Provider>
   );
 };
 
-export const useModem = () => {
-  const context = useContext(ModemContext);
+export const useRouter = () => {
+  const context = useContext(RouterContext);
   if (!context) {
-    throw new Error("useModem must be used within ModemProvider");
+    throw new Error("useRouter must be used within RouterProvider");
   }
   return context;
 };

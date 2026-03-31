@@ -5,7 +5,7 @@ import SystemStatus from "./components/SystemStatus";
 import DeviceInformation from "./components/DeviceInformation";
 import LogPanel from "./components/LogPanel";
 import ConnectedDevices from "./components/ConnectedDevices";
-import { ModemProvider } from "./context/ModemContext";
+import { RouterProvider } from "./context/RouterContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Setup from "./pages/Setup";
@@ -13,7 +13,7 @@ import { checkSetupNeeded } from "./services/setupAPI";
 
 function Dashboard() {
   return (
-    <ModemProvider>
+    <RouterProvider>
       <MainLayout>
         {/* The Main Grid 
          - On Mobile: 1 column
@@ -51,7 +51,7 @@ function Dashboard() {
           </div>
         </div>
       </MainLayout>
-    </ModemProvider>
+    </RouterProvider>
   );
 }
 

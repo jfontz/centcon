@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { useModem } from "../../context/ModemContext";
+import { useRouter } from "../../context/RouterContext";
 import { triggerWifiCredentials } from "../../services/commandApi";
-import { modemApi } from "../../services/modemDataApi";
+import { routerApi } from "../../services/routerDataApi";
 import {
   eye,
   eyeSlash,
@@ -51,7 +51,7 @@ const getLogIcon = (level) => {
 };
 
 const getFreqLabel = (index) => (index < 4 ? "2.4" : "5");
-const getModemIndex = (index) => index + 1;
+const getRouterIndex = (index) => index + 1;
 const is24 = (index) => index < 4;
 
 const Field = ({
@@ -148,7 +148,7 @@ const BandGrid = ({
             <span
               className={`text-xs font-bold ${isSelected ? "text-zinc-300" : "text-zinc-500"}`}
             >
-              SSID {getModemIndex(i)}
+              SSID {getRouterIndex(i)}
             </span>
             {loadState === "loaded" && ssid ? (
               <span
@@ -199,7 +199,7 @@ const BandGrid = ({
 );
 
 export default function WiFiCredentialModal({ open, onClose }) {
-  const { commandLogs, commandState } = useModem();
+  const { commandLogs, commandState } = useRouter();
 
   const [loadState, setLoadState] = useState("idle");
   const [wlanInfo, setWlanInfo] = useState(null);
@@ -224,8 +224,8 @@ export default function WiFiCredentialModal({ open, onClose }) {
   useEffect(() => {
     if (!open) return;
     setLoadState("loading");
-    modemApi
-      .fetchModemData()
+    routerApi
+      .fetchRouterData()
       .then((data) => {
         setWlanInfo(data?.wlan_info || null);
         setLoadState("loaded");
@@ -233,7 +233,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
       .catch(() => setLoadState("error"));
   }, [open]);
 
-  // Listen to SSE logs from ModemContext — only collect logs that arrived after save started
+  // Listen to SSE logs from RouterContext — only collect logs that arrived after save started
   useEffect(() => {
     if (saveState !== "saving") return;
     if (logStartIndexRef.current === null) return;
@@ -376,7 +376,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
     const targets = targetIndices.map((i) => ({
       ssid_index: i,
       freq: getFreqLabel(i),
-      modem_index: String(getModemIndex(i)),
+      router_index: String(getRouterIndex(i)),
       new_name: fields[i]?.newName || "",
       new_pass: fields[i]?.newPass || "",
       broadcast_intent: broadcastIntents[i] ?? null,
@@ -448,7 +448,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
               Wi-Fi Credentials
             </h2>
             <p className="text-xs text-zinc-500 mt-0.5">
-              {loadState === "loading" && "Loading SSIDs from modem..."}
+              {loadState === "loading" && "Loading SSIDs from router..."}
               {loadState === "loaded" &&
                 !isBusy &&
                 saveState === "idle" &&
@@ -572,13 +572,13 @@ export default function WiFiCredentialModal({ open, onClose }) {
                 </div>
                 {selected.map((i) => {
                   const freq = getFreqLabel(i);
-                  const modemIdx = getModemIndex(i);
+                  const routerIdx = getRouterIndex(i);
                   const ssid = wlanInfo?.[i]?.SSID;
                   return (
                     <div key={i} className="flex flex-col gap-2">
                       <div className="flex items-center gap-2">
                         <span className="text-xs px-2 py-0.5 rounded font-bold tracking-wider bg-zinc-800 text-zinc-300">
-                          {freq} GHz · SSID {modemIdx}
+                          {freq} GHz · SSID {routerIdx}
                         </span>
                         {ssid && (
                           <span className="text-xs text-zinc-600 font-mono">

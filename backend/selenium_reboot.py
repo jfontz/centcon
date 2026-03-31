@@ -5,7 +5,7 @@ Globe G-1426G-A specific flow:
 - Login via username/password form
 - Jump directly to the Reboot page using a stable URL
 - Trigger reboot, accept confirmation alert, then keep the driver alive
-  briefly so the modem receives the command before the connection drops.
+  briefly so the router receives the command before the connection drops.
 
 All progress and log updates are emitted via state_manager for SSE broadcast.
 """
@@ -116,7 +116,7 @@ def _emit_waiting_feedback(emit_state, emit_countdown, log_progress) -> None:
 
 
 def _start_delayed_driver_shutdown(driver: webdriver.Chrome) -> None:
-    """Delay browser shutdown so the modem has time to process the reboot request."""
+    """Delay browser shutdown so the router has time to process the reboot request."""
 
     def _quit_driver_delayed(drv):
         time.sleep(DRIVER_QUIT_DELAY_SECONDS)
@@ -202,9 +202,9 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
     """
 
     # Load env here
-    router_url = os.getenv("MODEM_URL")
-    username = os.getenv("MODEM_USERNAME")
-    password = os.getenv("MODEM_PASSWORD")
+    router_url = os.getenv("ROUTER_URL")
+    username = os.getenv("ROUTER_USERNAME")
+    password = os.getenv("ROUTER_PASSWORD")
 
     if not router_url or not username or not password:
         # Wizard can continue without crashing
@@ -284,7 +284,7 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
         # 9. Emit WAITING + single log immediately (give user feedback)
         _emit_waiting_feedback(_emit_state, _emit_countdown, _log)
 
-        # 10. Quit driver in a background thread so the modem has time to process
+        # 10. Quit driver in a background thread so the router has time to process
         #     the reboot command before the TCP connection is closed.
         _start_delayed_driver_shutdown(driver)
         driver = None  # Prevent double quit in finally

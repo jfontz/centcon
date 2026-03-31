@@ -1,10 +1,10 @@
 import SectionContainer from "./ui/SectionContainer";
 import DeviceModelCard from "./cards/DeviceModelCard";
 import DeviceSoftwareCard from "./cards/DeviceSoftwareCard";
-import { useModem } from "../context/ModemContext";
+import { useRouter } from "../context/RouterContext";
 
 const DeviceInformation = () => {
-  const { data, loading } = useModem();
+  const { data, loading } = useRouter();
 
   const deviceInfo = data?.device;
 
