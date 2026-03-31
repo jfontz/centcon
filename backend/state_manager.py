@@ -10,7 +10,6 @@ from typing import AsyncIterator
 INITIAL_STATE = {
     "state": "IDLE",      # High-level command state (IDLE, LOGGING_IN, NAVIGATING, REBOOTING, WAITING, CHECKING_CONNECTION, ONLINE, FAILED, SUCCEEDED)
     "message": "",        # Human-readable status for the UI
-    "progress": 0,        # 0–100 approximate progress for StatusBadge
     "countdown": None,    # Remaining seconds in reboot countdown (or None when idle)
     "command": None,      # Active command id for the current Selenium workflow
 }
@@ -66,7 +65,7 @@ async def emit(event: dict) -> None:
     Emit an event to all subscribed clients and update shared state if applicable.
 
     Supported event types:
-    - 'state': {state, message, progress, countdown?}
+    - 'state': {state, message, countdown?}
     - 'log': {level, message, timestamp}
     - 'countdown': {countdown}
     - 'heartbeat': {}
@@ -75,7 +74,6 @@ async def emit(event: dict) -> None:
         update_state({
             "state": event.get("state", _state["state"]),
             "message": event.get("message", _state["message"]),
-            "progress": event.get("progress", _state["progress"]),
             "command": event.get("command", _state["command"]),
         })
     if event.get("type") == "countdown":

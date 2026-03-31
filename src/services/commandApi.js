@@ -7,7 +7,7 @@ const COMMAND_API_BASE = BACKEND_URL;
  * Connect to reboot SSE stream. Call onEvent for each event; returns EventSource (call .close() on unmount).
  *
  * Event types:
- * - 'state': { type, state, message, progress, countdown? }
+ * - 'state': { type, state, message, countdown? }
  * - 'log': { type, level, message, timestamp }
  * - 'countdown': { type, countdown }
  * - 'heartbeat': { type }

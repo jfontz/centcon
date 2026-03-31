@@ -7,7 +7,7 @@ Globe G-1426G-A specific flow:
 - Trigger reboot, accept confirmation alert, then keep the driver alive
   briefly so the router receives the command before the connection drops.
 
-All progress and log updates are emitted via state_manager for SSE broadcast.
+All status and log updates are emitted via state_manager for SSE broadcast.
 """
 
 import asyncio
@@ -41,12 +41,6 @@ WAIT_TIME_SECONDS = 10
 ALERT_WAIT_SECONDS = 5
 DRIVER_QUIT_DELAY_SECONDS = 10
 HTTP_REQUEST_TIMEOUT = 10
-WAITING_PROGRESS_START = 80
-WAITING_PROGRESS_END = 95
-LOGIN_SUCCESS_PROGRESS = 10
-NAVIGATION_PROGRESS = 60
-REBOOT_CLICK_PROGRESS = 70
-REBOOT_SENT_PROGRESS = 75
 RECONNECT_LOG_EVERY_N_ATTEMPTS = 3
 USERNAME_FIELD_ID = "username"
 PASSWORD_FIELD_ID = "password"
@@ -111,7 +105,7 @@ def _emit_waiting_feedback(emit_state, emit_countdown, log_progress) -> None:
     """Emit the initial WAITING state once the reboot command is considered sent."""
     waiting_message = _build_waiting_message(COUNTDOWN_SECONDS)
     log_progress("progress", waiting_message)
-    emit_state("WAITING", waiting_message, WAITING_PROGRESS_START)
+    emit_state("WAITING", waiting_message)
     emit_countdown(COUNTDOWN_SECONDS)
 
 
@@ -133,14 +127,13 @@ async def _emit_command_event(event: dict) -> None:
     await emit({**event, "command": COMMAND_ID})
 
 
-async def _emit_command_state(state: str, message: str, progress: int, **extra) -> None:
+async def _emit_command_state(state: str, message: str, **extra) -> None:
     """Emit a state update for the reboot workflow."""
     await _emit_command_event(
         {
             "type": "state",
             "state": state,
             "message": message,
-            "progress": progress,
             **extra,
         }
     )
@@ -214,13 +207,12 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
         payload = {**ev, "command": COMMAND_ID}
         asyncio.run_coroutine_threadsafe(emit(payload), main_loop).result()
 
-    def _emit_state(state: str, message: str, progress: int, **extra):
+    def _emit_state(state: str, message: str, **extra):
         _emit_sync(
             {
                 "type": "state",
                 "state": state,
                 "message": message,
-                "progress": progress,
                 **extra,
             }
         )
@@ -256,7 +248,7 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
                 EC.presence_of_element_located((By.CLASS_NAME, LOGOUT_BUTTON_CLASS))
             )
             _log("success", "Login successful")
-            _emit_state("LOGGING_IN", "Login successful", LOGIN_SUCCESS_PROGRESS)
+            _emit_state("LOGGING_IN", "Login successful")
         except TimeoutException:
             _log("error", "Login failed")
             _emit_state("FAILED", "Login failed", 0)
@@ -266,20 +258,20 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
         # 6. Navigate directly to the Reboot page
         driver.get(router_url + REBOOT_PAGE_PATH)
         _log("navigate", "Navigated to Reboot tab")
-        _emit_state("NAVIGATING", "Navigated to Reboot tab", NAVIGATION_PROGRESS)
+        _emit_state("NAVIGATING", "Navigated to Reboot tab")
 
         # 7. Click reboot button
         WebDriverWait(driver, WAIT_TIME_SECONDS).until(
             EC.element_to_be_clickable((By.ID, REBOOT_BUTTON_ID))
         ).click()
-        _emit_state("REBOOTING", "Reboot button clicked", REBOOT_CLICK_PROGRESS)
+        _emit_state("REBOOTING", "Reboot button clicked")
 
         # 8. Accept reboot confirmation alert
         WebDriverWait(driver, ALERT_WAIT_SECONDS).until(EC.alert_is_present())
         alert = driver.switch_to.alert
         # alert.accept()
         _log("action", "Reboot command sent")
-        _emit_state("REBOOTING", "Reboot command sent", REBOOT_SENT_PROGRESS)
+        _emit_state("REBOOTING", "Reboot command sent")
 
         # 9. Emit WAITING + single log immediately (give user feedback)
         _emit_waiting_feedback(_emit_state, _emit_countdown, _log)
@@ -327,15 +319,9 @@ async def run_reboot_workflow() -> None:
     # Countdown: every second emit state + countdown only (NO log per second)
     for remaining in range(COUNTDOWN_SECONDS - 1, -1, -1):
         await asyncio.sleep(1)
-        progress = WAITING_PROGRESS_START + int(
-            (WAITING_PROGRESS_END - WAITING_PROGRESS_START)
-            * (COUNTDOWN_SECONDS - remaining)
-            / COUNTDOWN_SECONDS
-        )
         await _emit_command_state(
             "WAITING",
             f"Device rebooting... {remaining}s remaining",
-            min(progress, WAITING_PROGRESS_END),
         )
         await _emit_command_countdown(remaining)
 
@@ -343,7 +329,6 @@ async def run_reboot_workflow() -> None:
     await _emit_command_state(
         "CHECKING_CONNECTION",
         CHECKING_CONNECTION_MESSAGE,
-        WAITING_PROGRESS_END,
     )
     await _emit_command_log("checking", CHECKING_CONNECTION_MESSAGE)
 
@@ -352,7 +337,6 @@ async def run_reboot_workflow() -> None:
         await _emit_command_state(
             "ONLINE",
             "ONLINE",
-            100,
             countdown=None,
         )
         await _emit_command_log("success", "Device is back online!")
@@ -361,6 +345,5 @@ async def run_reboot_workflow() -> None:
     await _emit_command_state(
         "FAILED",
         "Failed to reconnect after 2 minutes",
-        0,
     )
     await _emit_command_log("error", "Failed to reconnect after 2 minutes")

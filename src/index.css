@@ -279,17 +279,6 @@
     color: #28a745;
   }
 
-  /* Progress Bar */
-  .progress-bar {
-    @apply h-2 rounded-full overflow-hidden;
-    background-color: #6c757d33;
-  }
-
-  .progress-fill {
-    @apply h-full transition-all duration-300;
-    background-color: #28a745;
-  }
-
   /* Dark scrollbar for log panel */
   .log-scrollbar::-webkit-scrollbar {
     width: 8px;

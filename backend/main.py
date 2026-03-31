@@ -364,7 +364,6 @@ async def start_wifi_credentials(request: WifiCredentialsRequest):
                 "type": "state",
                 "state": "FAILED",
                 "message": "Workflow timed out — Selenium took too long on a step.",
-                "progress": 0,
                 "command": "wifi-credentials",
             })
         finally:
@@ -442,7 +441,7 @@ async def events():
     Server-Sent Events endpoint for realtime dashboard updates.
 
     Event payload types:
-    - state:     {type, state, message, progress, countdown?}
+    - state:     {type, state, message, countdown?}
                  Workflow state machine updates. Also used to pause/resume
                  frontend auto-refresh during reboot.
     - log:       {type, level, message, timestamp}

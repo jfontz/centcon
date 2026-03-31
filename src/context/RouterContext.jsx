@@ -17,7 +17,6 @@ const RouterContext = createContext(null);
 const initialCommandState = {
   state: "IDLE",
   message: "",
-  progress: 0,
   countdown: null,
   command: null,
 };
@@ -26,7 +25,6 @@ const TERMINAL_COMMAND_STATES = ["FAILED", "ONLINE", "SUCCEEDED"];
 const INITIAL_COMMAND_STATUS = {
   state: "IDLE",
   message: "",
-  progress: 0,
   countdown: null,
   active: false,
 };
@@ -94,7 +92,6 @@ export const RouterProvider = ({ children }) => {
             mergeCommandStatus(event.command, {
               state: event.state,
               message: event.message || "",
-              progress: event.progress ?? 0,
               countdown: event.countdown ?? undefined,
               active: !TERMINAL_COMMAND_STATES.includes(event.state),
             });

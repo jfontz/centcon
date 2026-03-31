@@ -26,10 +26,6 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT_DIR / ".env")
 COMMAND_ID = "login"
 WAIT_TIME_SECONDS = 10
-OPEN_BROWSER_PROGRESS = 5
-LOGGING_IN_PROGRESS = 30
-LOGIN_COMPLETE_PROGRESS = 100
-LOGIN_FAILED_PROGRESS = 0
 USERNAME_FIELD_ID = "username"
 PASSWORD_FIELD_ID = "password"
 LOGIN_BUTTON_ID = "login"
@@ -81,13 +77,12 @@ def _run_login_blocking(
         payload = {**ev, "command": COMMAND_ID}
         asyncio.run_coroutine_threadsafe(emit(payload), main_loop).result()
 
-    def _emit_state(state: str, message: str, progress: int):
+    def _emit_state(state: str, message: str):
         _emit_sync(
             {
                 "type": "state",
                 "state": state,
                 "message": message,
-                "progress": progress,
             }
         )
 
@@ -107,11 +102,11 @@ def _run_login_blocking(
         driver = _build_driver()
 
         _log("header", "Login process started")
-        _emit_state("RUNNING", "Opening browser", OPEN_BROWSER_PROGRESS)
+        _emit_state("RUNNING", "Opening browser")
 
         # Navigate to router login page
         driver.get(router_url)
-        _emit_state("LOGGING_IN", "Logging into router", LOGGING_IN_PROGRESS)
+        _emit_state("LOGGING_IN", "Logging into router")
 
         # Wait for and fill username field
         WebDriverWait(driver, WAIT_TIME_SECONDS).until(
@@ -140,11 +135,10 @@ def _run_login_blocking(
             _emit_state(
                 "SUCCEEDED",
                 "Browser opened and logged in",
-                LOGIN_COMPLETE_PROGRESS,
             )
             _log("success", "Login successful - Browser left open for manual control")
         except TimeoutException:
-            _emit_state("FAILED", "Login failed", LOGIN_FAILED_PROGRESS)
+            _emit_state("FAILED", "Login failed")
             _log("error", "Login failed - Invalid credentials or timeout")
             _safe_quit(driver)
             return
@@ -157,11 +151,11 @@ def _run_login_blocking(
         error_msg = str(e).lower()
 
         if any(indicator in error_msg for indicator in BROWSER_CLOSED_INDICATORS):
-            _emit_state("FAILED", "Browser was closed by user", LOGIN_FAILED_PROGRESS)
+            _emit_state("FAILED", "Browser was closed by user")
             _log("warning", "Login cancelled - Browser was closed by user")
         else:
             clean_msg = str(e).split("Stacktrace:")[0].strip()
-            _emit_state("FAILED", clean_msg, LOGIN_FAILED_PROGRESS)
+            _emit_state("FAILED", clean_msg)
             _log("error", f"Browser error: {clean_msg}")
 
         _safe_quit(driver)
@@ -169,7 +163,7 @@ def _run_login_blocking(
     except Exception as e:
         # Handle other errors with cleaner message
         error_msg = str(e).split("Stacktrace:")[0].strip()
-        _emit_state("FAILED", error_msg, LOGIN_FAILED_PROGRESS)
+        _emit_state("FAILED", error_msg)
         _log("error", f"Login failed: {error_msg}")
         _safe_quit(driver)
 
