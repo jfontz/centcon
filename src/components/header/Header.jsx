@@ -50,7 +50,7 @@ const Header = () => {
             icon={refreshData}
             label="Refresh"
             rotate={refreshing}
-            buttonClass="btn-header btn-refresh"
+            variant="refresh"
             onClick={refresh}
             disabled={isRebooting || refreshing}
             title={isRebooting ? "Cannot refresh while rebooting" : "Refresh status"}
@@ -61,7 +61,7 @@ const Header = () => {
             <HeaderButton
               icon={logout}
               label="Logout"
-              buttonClass="btn-header btn-logout"
+              variant="logout"
               onClick={handleLogout}
             />
           )}

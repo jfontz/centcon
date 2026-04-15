@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 @layer utilities {
-
   /* Card */
   .border-card-black {
     border-color: #222222;
@@ -12,18 +11,6 @@
   }
 
   /* Text colors */
-  .text-status-online {
-    color: #28a745;
-  }
-
-  .text-status-offline {
-    color: #6c757d;
-  }
-
-  .text-status-error {
-    color: #dc3545;
-  }
-
   .text-gray {
     color: #858585;
   }
@@ -31,44 +18,9 @@
   .text-green {
     color: #28a745;
   }
-
-  .reboot-text {
-    color: #f87171;
-  }
-
-  /* Borders */
-  .border-bg-green {
-    border-color: #28a7454d;
-  }
-
-  .border-status-online {
-    border-color: #28a7454d;
-  }
-
-  .border-status-offline {
-    border-color: #6c757d4d;
-  }
-
-  .border-status-error {
-    border-color: #dc35454d;
-  }
-
-  .border-refresh {
-    border-color: #28a7454d;
-  }
-
-  .reboot-border {
-    border-color: #7f1d1d4d;
-  }
-
-  /* Backgrounds */
-  .reboot-bg {
-    background-color: #7f1d1d1a;
-  }
 }
 
 @layer components {
-
   /* Status Pills */
   .status-online {
     color: #28a745;
@@ -104,14 +56,18 @@
     @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm;
   }
 
-  /* Reboot Card */
-  .reboot-card {
-    color: #f87171;
-    background-color: #7f1d1d1a;
-    border: 1px solid #7f1d1d4d;
+  /* System Control Buttons */
+  .control-btn {
+    @apply flex items-center justify-center gap-3 w-full px-6 py-4 rounded-md text-sm font-medium transition-all cursor-pointer;
+    background-color: transparent;
+    border: 1px solid #222222;
   }
 
-  /* Button Variants */
+  .control-btn:hover {
+    background-color: #2f2f2f33;
+  }
+
+  /* Reboot Button */
   .btn-reboot {
     @apply flex items-center justify-center gap-2 w-full px-6 py-3 rounded-md text-sm font-medium transition-all cursor-pointer;
     color: #f87171;
@@ -120,81 +76,6 @@
   }
 
   .btn-reboot:hover {
-    background-color: #7f1d1d33;
-  }
-
-  .btn-refresh {
-    @apply flex items-center justify-center gap-2 px-6 py-3 rounded-md text-sm font-medium transition-all cursor-pointer;
-    color: #28a745;
-    background-color: transparent;
-    border: 1px solid #28a7454d;
-  }
-
-  .btn-refresh:hover {
-    background-color: #26894033;
-  }
-
-  .btn-logout {
-    @apply flex items-center justify-center gap-2 px-6 py-3 rounded-md text-sm font-medium transition-all cursor-pointer;
-    color: #858585;
-    background-color: transparent;
-    border: 1px solid #222222;
-  }
-
-  .btn-logout:hover {
-    background-color: #2f2f2f33;
-  }
-
-  /* Reboot confirmation modal */
-  .modal-backdrop {
-    @apply fixed inset-0 z-[100] flex items-center justify-center p-4;
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    animation: modal-fade-in 0.25s ease-out;
-  }
-
-  .modal-content {
-    @apply w-full max-w-md rounded-xl p-6 flex flex-col items-center text-center shadow-xl;
-    background-color: #0a0a0a;
-    border: 1px solid #222222;
-    animation: modal-slide-in 0.25s ease-out;
-  }
-
-  .modal-icon {
-    @apply mb-4 flex items-center justify-center text-amber-500;
-  }
-
-  .modal-title {
-    @apply text-lg font-semibold text-white tracking-wide mb-2;
-  }
-
-  .modal-message {
-    @apply text-sm text-gray-400 mb-6 leading-relaxed;
-  }
-
-  .modal-actions {
-    @apply flex gap-3 w-full sm:w-auto;
-  }
-
-  .btn-modal-cancel {
-    @apply flex-1 sm:flex-none px-5 py-2.5 rounded-md text-sm font-medium transition-all cursor-pointer;
-    color: #858585;
-    background-color: transparent;
-    border: 1px solid #222222;
-  }
-
-  .btn-modal-cancel:hover {
-    background-color: #2f2f2f33;
-  }
-
-  .btn-modal-confirm {
-    @apply flex-1 sm:flex-none px-5 py-2.5 rounded-md text-sm font-medium transition-all cursor-pointer;
-    color: #f87171;
-    background-color: #7f1d1d1a;
-    border: 1px solid #7f1d1d4d;
-  }
-
-  .btn-modal-confirm:hover {
     background-color: #7f1d1d33;
   }
 
@@ -218,67 +99,6 @@
     }
   }
 
-  .btn-header {
-    @apply flex items-center gap-2 px-3 py-1.5 rounded text-xs font-medium transition-all;
-  }
-
-  /* Cards */
-  .card-dark {
-    @apply rounded-lg p-6;
-    background-color: #050505;
-    border: 1px solid #222222;
-  }
-
-  .card-stat {
-    @apply rounded-lg p-4;
-    background-color: #050505;
-    border: 1px solid #222222;
-  }
-
-  /* Log Entry Styles */
-  .log-entry {
-    @apply flex items-start gap-3 text-sm;
-    color: #858585;
-  }
-
-  .log-icon {
-    @apply mt-0.5 flex-shrink-0;
-  }
-
-  /* Device Connection Cards */
-  .device-card {
-    @apply rounded-lg p-4;
-    background-color: #050505;
-    border: 1px solid #222222;
-  }
-
-  .device-card:hover {
-    border-color: #28a7454d;
-  }
-
-  /* System Control Buttons */
-  .control-btn {
-    @apply flex items-center justify-center gap-3 w-full px-6 py-4 rounded-md text-sm font-medium transition-all cursor-pointer;
-    background-color: transparent;
-    border: 1px solid #222222;
-  }
-
-  .control-btn:hover {
-    background-color: #2f2f2f33;
-  }
-
-  /* Header/Title Sections */
-  .section-header {
-    @apply text-xs font-medium tracking-[0.2em] uppercase;
-    color: #858585;
-  }
-
-  /* Temperature Badge */
-  .temp-normal {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs;
-    color: #28a745;
-  }
-
   /* Dark scrollbar for log panel */
   .log-scrollbar::-webkit-scrollbar {
     width: 8px;
@@ -297,5 +117,4 @@
   .log-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: #3a3a3a;
   }
-
 }

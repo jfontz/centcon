@@ -6,7 +6,7 @@ const MetricCard = ({
   subValueColor = "text-green",
 }) => {
   return (
-    <div className="card-stat group flex flex-col justify-between h-full w-full hover:bg-white/2 hover:border-white/20 transition-all duration-300 ease-out">
+    <div className="rounded-lg p-4 bg-card-black border border-card-black group flex flex-col justify-between h-full w-full hover:bg-white/2 hover:border-white/20 transition-all duration-300 ease-out">
       {/* Header: Icon + Label */}
       <div className="flex items-center gap-3 mb-3">
         {/* Render the icon wrapper */}
@@ -29,7 +29,7 @@ const MetricCard = ({
           <span
             className={
               subValue === "Normal"
-                ? "temp-normal"
+                ? "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs text-green"
                 : `text-[10px] font-normal uppercase tracking-wider mb-1 ${subValueColor}`
             }
           >

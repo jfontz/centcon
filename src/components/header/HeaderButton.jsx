@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 const HeaderButton = ({
   icon,
   label,
-  buttonClass,
+  variant = "refresh",
+  className = "",
   rotate = false,
   onClick,
   disabled = false,
@@ -46,16 +47,18 @@ const HeaderButton = ({
     };
   }, [rotate]);
 
-  const getButtonClass = () => {
-    if (buttonClass) return buttonClass;
-    if (label === "Refresh") return "btn-refresh";
-    if (label === "Logout") return "btn-logout";
-    return "";
+  const baseClasses =
+    "group flex items-center justify-center gap-2 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
+  const variantClasses = {
+    refresh:
+      "text-green bg-transparent border border-[#28a7454d] hover:bg-[#26894033]",
+    logout:
+      "text-gray bg-transparent border border-card-black hover:bg-[#2f2f2f33]",
   };
 
   return (
     <button
-      className={`group ${getButtonClass()} disabled:opacity-50 disabled:cursor-not-allowed`}
+      className={`${baseClasses} ${variantClasses[variant] || ""} ${className}`}
       onClick={onClick}
       disabled={disabled}
       type="button"
