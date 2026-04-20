@@ -2,9 +2,22 @@
  * Router Context
  * Manages router telemetry plus command state, logs, and available controls.
  * Uses frontend command config and backend SSE updates for command status.
+ *
+ * Fix: transient SSE disconnect false-offline race condition
+ * -----------------------------------------------------------
+ * When Selenium closes Chrome, the SSE connection drops briefly (1–3s) and
+ * onError fires immediately. Without debouncing, this marks the backend as
+ * offline before the SSE reconnects, blocking valid commands and showing a
+ * misleading error message.
+ *
+ * Fix: instead of marking offline instantly on onError, we start a 4-second
+ * timer. If onOpen fires before the timer expires the blip was transient and
+ * we cancel the timer. Only if the error persists past 4 seconds do we mark
+ * the backend as truly offline. 4s sits comfortably above the 1–3s reconnect
+ * window so legitimate outages are still caught promptly.
  */
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useRouterData } from "../hooks/useRouterData";
 import {
   connectToCommandEvents,
@@ -31,6 +44,10 @@ const INITIAL_COMMAND_STATUS = {
 const BACKEND_OFFLINE_MESSAGE =
   "Backend not running. Start the backend service to enable controls.";
 
+// Grace period before a transient SSE error is treated as a real outage.
+// Must be longer than the typical SSE reconnect window (1–3s).
+const OFFLINE_DEBOUNCE_MS = 4000;
+
 export const RouterProvider = ({ children }) => {
   const [commandState, setCommandState] = useState(initialCommandState);
   const [commandLogs, setCommandLogs] = useState([]);
@@ -38,17 +55,40 @@ export const RouterProvider = ({ children }) => {
   const [commandBackendOnline, setCommandBackendOnline] = useState(true);
   const [commandBackendError, setCommandBackendError] = useState("");
   const [commands, setCommands] = useState([]);
+
+  // Timer ref for debounced offline detection, cancelled if SSE reconnects
+  // before the grace period expires.
+  const offlineTimerRef = useRef(null);
+
   const routerState = useRouterData(commandState);
 
   const markBackendOnline = () => {
+    // Cancel any pending offline timer, this was a transient blip
+    if (offlineTimerRef.current) {
+      clearTimeout(offlineTimerRef.current);
+      offlineTimerRef.current = null;
+    }
     setCommandBackendOnline(true);
     setCommandBackendError("");
   };
 
-  const markBackendOffline = () => {
-    setCommandBackendOnline(false);
-    setCommandBackendError(BACKEND_OFFLINE_MESSAGE);
+  const scheduleMarkBackendOffline = () => {
+    // Already have a timer running, don't stack another.
+    if (offlineTimerRef.current) return;
+
+    offlineTimerRef.current = setTimeout(() => {
+      offlineTimerRef.current = null;
+      setCommandBackendOnline(false);
+      setCommandBackendError(BACKEND_OFFLINE_MESSAGE);
+    }, OFFLINE_DEBOUNCE_MS);
   };
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (offlineTimerRef.current) clearTimeout(offlineTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -87,8 +127,6 @@ export const RouterProvider = ({ children }) => {
         if (event.type === "state") {
           setCommandState((prev) => ({ ...prev, ...event }));
           if (event.command) {
-            // Keep a per-command status map so button-disable rules do not depend
-            // on whichever command most recently updated the shared SSE state.
             mergeCommandStatus(event.command, {
               state: event.state,
               message: event.message || "",
@@ -111,8 +149,6 @@ export const RouterProvider = ({ children }) => {
         if (event.type === "countdown") {
           setCommandState((prev) => ({ ...prev, countdown: event.countdown }));
           if (event.command) {
-            // Countdown events arrive separately from state events, so merge them
-            // into the cached command status without resetting the rest of the entry.
             mergeCommandStatus(event.command, {
               countdown: event.countdown,
             });
@@ -121,7 +157,7 @@ export const RouterProvider = ({ children }) => {
       },
       {
         onOpen: markBackendOnline,
-        onError: markBackendOffline,
+        onError: scheduleMarkBackendOffline, // debounced, not immediate
       },
     );
     return () => eventSource.close();
@@ -133,7 +169,7 @@ export const RouterProvider = ({ children }) => {
       markBackendOnline();
       return res;
     } catch (error) {
-      markBackendOffline();
+      scheduleMarkBackendOffline();
       throw error;
     }
   };
