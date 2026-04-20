@@ -297,7 +297,7 @@ const Setup = ({ setupData, onComplete }) => {
                       <p className="text-xs text-zinc-500 leading-relaxed mb-2">
                         4 alphanumeric characters (letters and numbers). This
                         protects the CENTCON dashboard from casual access by
-                        others on the same machine."
+                        others on the same machine.
                       </p>
                       <p className="text-xs text-zinc-500 leading-relaxed">
                         Forgot it? Open the{" "}
