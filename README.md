@@ -1,6 +1,6 @@
 # CENTCON
 
-Real-time router dashboard with Selenium-powered automation for reboots, assisted admin login, and live Wi-Fi credential and broadcast management. Includes a live event log with passive network monitoring, device tracking, and grouped operation logs.
+Real-time router dashboard with Selenium-powered automation for reboots, assisted admin login, and live Wi-Fi credential and broadcast management. Includes a live event log with passive network monitoring, device tracking, grouped operation logs, and persistent event history.
 
 **Stack:** React (Vite) frontend · FastAPI backend · Selenium automation · Server-Sent Events
 
@@ -112,6 +112,8 @@ Runs at `http://localhost:8000`
 
 To stop either server, press `Ctrl+C` in its terminal.
 
+> **Windows shortcut:** Just double-click `LAUNCH_CENTCON.bat` in the project root. It'll start both the backend and frontend in separate windows, then automatically open the dashboard in your browser.
+
 ---
 
 ## First-Run Setup
@@ -141,6 +143,30 @@ Once both servers are running and setup is complete:
 
 ---
 
+## Router Visual
+
+The Device section displays a CSS-rendered silhouette of the Globe G-1426G-A with five LED indicators that reflect live router state:
+
+| LED | What it represents |
+|-----|--------------------|
+| PWR | Power — on when the router is reachable |
+| FIBER | Fiber signal — off or pulsing red during LOS |
+| INTERNET | WAN connection status |
+| 2.4G | 2.4GHz band — green if devices connected, amber if band is up but empty |
+| 5G | 5GHz band — same as above |
+
+**LED states by condition:**
+
+| Condition | PWR | FIBER | INTERNET | 2.4G / 5G |
+|-----------|-----|-------|----------|-----------|
+| All systems online | 🟢 | 🟢 | 🟢 | 🟢 / 🟡 |
+| LOS active | 🟢 | 🔴 pulse | ⚫ | ⚫ |
+| No WAN (fiber ok) | 🟢 | 🟢 | 🔴 | 🟢 / 🟡 |
+| Rebooting | 🟡 pulse | ⚫ | ⚫ | ⚫ |
+| Router unreachable | ⚫ | ⚫ | ⚫ | ⚫ |
+
+---
+
 ## Event Log
 
 The log panel runs passively in the background and records events as they are detected on each data refresh. It does not require any interaction.
@@ -167,6 +193,22 @@ Automation events (reboot, Wi-Fi credential changes) are grouped together in the
 
 ---
 
+## Event History
+
+The log panel includes a **History** tab that persists significant events across sessions using localStorage. Unlike the live log which resets on page reload, history is retained for up to 60 days, unless cleared.
+
+**Recorded event types:** LOS, internet lost/restored, router unreachable/restored, reboots, and device/health warnings.
+
+**History features:**
+- Bar chart showing event severity over time
+- 24H, 7D, and 60D time range toggles
+- Resolution control (24 or 48 buckets for 24H, 7 or 14 for 7D)
+- Click any bar to inspect the timestamped events in that window
+- Summary line showing clean percentage and total event count
+- Clear history button with confirmation modal
+
+---
+
 ## Connected Devices
 
 The Connected Devices section shows a count of devices by interface type (LAN, 2.4GHz, 5GHz). Clicking **View all** opens a modal listing every connected device with its hostname, IP address, and band.
@@ -185,7 +227,7 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
         ├── run.py                         # Uvicorn entry point
         ├── selenium_login.py              # Opens Chrome, logs into router, leaves session open for manual use
         ├── selenium_reboot.py             # Full reboot automation workflow
-        ├── selenium_wifi_credentials.py   # Changes credentials and broadcast toggles across Basic and Advanced pages in one session
+        ├── selenium_wifi_credentials.py   # Changes credentials and broadcast toggles in one session
         ├── setup_utils.py                 # First-run setup helpers for validation, auto-detect, and .env writes
         ├── state_manager.py               # SSE state broadcasting and subscriptions
     └── 📁public
@@ -193,33 +235,8 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
     └── 📁src
         └── 📁assets
             └── 📁icons
-                ├── action.svg
-                ├── check.svg
-                ├── clear.svg
-                ├── cpu.svg
-                ├── device.svg
-                ├── error.svg
-                ├── eye.svg
-                ├── eye-slash.svg
-                ├── hourglass.svg
+                ├── (SVG icon assets)
                 ├── index.js
-                ├── info.svg
-                ├── lan.svg
-                ├── load.svg
-                ├── log.svg
-                ├── login.svg
-                ├── logout.svg
-                ├── memory.svg
-                ├── navigate.svg
-                ├── new-tab.svg
-                ├── process.svg
-                ├── reboot.svg
-                ├── refresh-data.svg
-                ├── runtime.svg
-                ├── software.svg
-                ├── temperature.svg
-                ├── warning.svg
-                ├── wifi.svg
         └── 📁components
             └── 📁buttons
                 ├── SystemControlButton.jsx
@@ -239,10 +256,12 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
                 ├── MetaInfo.jsx
                 ├── StatusBadge.jsx
             └── 📁log
+                ├── HistoryView.jsx            # Persistent event history with bar chart
                 ├── LogContent.jsx
                 ├── LogEntry.jsx
-                ├── LogHeader.jsx
+                ├── LogHeader.jsx              # LOG / HISTORY tab switcher
             └── 📁modals
+                ├── ClearHistoryModal.jsx      # Confirmation modal for history clear
                 ├── DeviceListModal.jsx
                 ├── RebootConfirmModal.jsx
                 ├── WifiCredentialModal.jsx
@@ -254,12 +273,13 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
                 ├── MetricCard.jsx
                 ├── SectionContainer.jsx
             ├── ConnectedDevices.jsx
-            ├── DeviceInformation.jsx
+            ├── DeviceInformation.jsx          # Wraps RouterVisual
             ├── LogPanel.jsx
+            ├── RouterVisual.jsx               # CSS router silhouette with live LED indicators
             ├── SystemControls.jsx
             ├── SystemStatus.jsx
         └── 📁context
-            ├── AuthContext.jsx
+            ├── AuthContext.jsx                # Session-based auth with 8-hour expiry
             ├── RouterContext.jsx
         └── 📁hooks
             ├── useRouterData.js
@@ -267,14 +287,16 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
             ├── Login.jsx
             ├── Setup.jsx
         └── 📁services
-            ├── apiConfig.js               # Shared backend URL constant
+            ├── apiConfig.js                   # Shared backend URL constant
             ├── authAPI.js
-            ├── commandApi.js              # SSE connection, command triggers, and command metadata fetching
-            ├── routerDataApi.js            # Router data fetching and parsing
+            ├── commandApi.js                  # SSE connection, command triggers, and command metadata fetching
+            ├── routerDataApi.js               # Router data fetching and parsing
             ├── setupAPI.js
         └── 📁utils
             ├── formatters.js
             ├── getIcon.jsx
+            ├── getLedStates.js                # Maps router state to LED configs for RouterVisual
+            ├── historyStorage.js              # localStorage history: read, write, prune, bucket
             ├── routerHelpers.js
             ├── validators.js
         ├── App.jsx
@@ -285,6 +307,7 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
     ├── .gitignore
     ├── eslint.config.js
     ├── index.html
+    ├── LAUNCH_CENTCON.bat                     # Starts both backend & frontend in venv
     ├── LICENSE
     ├── package-lock.json
     ├── package.json
@@ -346,7 +369,7 @@ pip install -r backend/requirements.txt
 The backend may not have restarted after the `.env` file was written. Stop and restart the backend server.
 
 **Login page asks for a PIN but I forgot it**
-Open the `.env` file in the project root — your `CENTCON_PIN` is stored there in plain text. You can also change it there and restart the app.
+Open the `.env` file in the project root — your `CENTCON_PIN` is stored there. You can also change it there and restart the app.
 
 ---
 

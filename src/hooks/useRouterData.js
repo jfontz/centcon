@@ -3,7 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { routerApi } from "../services/routerDataApi";
 
-export const useRouterData = (commandState = { state: "IDLE", command: null }) => {
+export const useRouterData = (
+  commandState = { state: "IDLE", command: null },
+) => {
   const autoRefreshInterval =
     Number(import.meta.env.VITE_AUTO_REFRESH_INTERVAL) || 60000;
   const [data, setData] = useState(null);
@@ -16,6 +18,7 @@ export const useRouterData = (commandState = { state: "IDLE", command: null }) =
 
   const isInitialLoad = useRef(true);
   const intervalRef = useRef(null);
+  const isRebootingRef = useRef(false);
 
   const isRebooting =
     commandState?.command === "reboot" &&
@@ -27,10 +30,13 @@ export const useRouterData = (commandState = { state: "IDLE", command: null }) =
       "CHECKING_CONNECTION",
     ].includes(commandState?.state);
 
+  // Keep ref in sync so fetchData can read it without being recreated
+  isRebootingRef.current = isRebooting;
+
   const fetchData = useCallback(async () => {
     // Pause telemetry refresh while reboot workflow is in progress to avoid
     // spamming "offline" readings while the router is intentionally unreachable.
-    if (isRebooting) {
+    if (isRebootingRef.current) {
       console.log("Auto-refresh paused during reboot");
       return;
     }
@@ -97,39 +103,32 @@ export const useRouterData = (commandState = { state: "IDLE", command: null }) =
       setLoading(false);
       setRefreshing(false);
     }
-  }, [isRebooting]);
+  }, []); // stable — reads isRebooting via ref
 
-  // Initial fetch
+  // Initial fetch — only on mount
   useEffect(() => {
-    if (!isRebooting) {
+    if (!isRebootingRef.current) {
       fetchData();
     }
-  }, [fetchData, isRebooting]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-refresh with pause during reboot
+  // Auto-refresh — restarts only when reboot state or interval changes
   useEffect(() => {
     if (!autoRefreshInterval) return;
 
-    // Clear any existing interval
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
+    if (intervalRef.current) clearInterval(intervalRef.current);
 
-    // Don't start interval if rebooting
     if (isRebooting) {
       console.log("Auto-refresh paused during reboot");
       return;
     }
 
-    // Start interval when not rebooting
     intervalRef.current = setInterval(fetchData, autoRefreshInterval);
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [autoRefreshInterval, fetchData, isRebooting]);
+  }, [autoRefreshInterval, isRebooting]); // fetchData is stable, safe to omit
 
   return {
     data,

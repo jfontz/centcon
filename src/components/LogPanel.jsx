@@ -2,39 +2,70 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "../context/RouterContext";
 import LogHeader from "./log/LogHeader";
 import LogContent from "./log/LogContent";
+import HistoryView from "./log/HistoryView";
 import { getIcon } from "../utils/getIcon.jsx";
+import { appendHistory, HISTORY_TYPES } from "../utils/historyStorage";
 
 const MAX_LOG_ENTRIES = 50;
 
 const LogPanel = () => {
   const [logs, setLogs] = useState([]);
+  const [activeTab, setActiveTab] = useState("log");
+  const [historyTick, setHistoryTick] = useState(0);
   const logContainerRef = useRef(null);
   const hasShownStartup = useRef(false);
   const { data, loading, error, status, commandLogs, clearCommandLogs } =
     useRouter();
+
   const commandEntries = commandLogs.map((entry) => ({
     type: entry.level,
     text: entry.message,
     timestamp: entry.timestamp,
     id: entry.id,
-    command: entry.command, // used by LogContent for operation grouping
+    command: entry.command,
   }));
   const merged = [...logs, ...commandEntries];
   const sortedLogs = [...merged].sort(
     (a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0),
   );
+
   const prevLosRef = useRef(null);
   const prevRouterReachable = useRef(null);
   const prevInternetUp = useRef(null);
   const prevWanIpRef = useRef(null);
   const prevDevicesRef = useRef(null);
   const prevDeviceCountRef = useRef(null);
+  const rebootPersistedRef = useRef(false);
 
   // Thresholds for device detection
   const DEVICE_COUNT_THRESHOLD = 20;
   const DEVICE_SPIKE_THRESHOLD = 3;
 
-  // Auto-scroll to bottom (newest log) when logs change
+  const persistHistory = (event) => {
+    appendHistory(event);
+    setHistoryTick((t) => t + 1);
+  };
+
+  // Track reboot commands from commandLogs
+  useEffect(() => {
+    const hasRebootHeader = commandLogs.some(
+      (e) => e.command === "reboot" && e.level === "header",
+    );
+
+    if (hasRebootHeader && !rebootPersistedRef.current) {
+      rebootPersistedRef.current = true;
+      persistHistory({
+        type: HISTORY_TYPES.REBOOT,
+        text: "Router reboot triggered via CENTCON",
+      });
+    }
+
+    // Reset when logs are cleared so the next reboot can be recorded
+    if (!hasRebootHeader) {
+      rebootPersistedRef.current = false;
+    }
+  }, [commandLogs]);
+
   useEffect(() => {
     if (sortedLogs.length > 0 && logContainerRef.current) {
       logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
@@ -48,7 +79,6 @@ const LogPanel = () => {
 
     // 1. Router Reachability (check FIRST — data is null when unreachable)
     const routerReachable = data !== null && !error;
-
     const isFirstCheck = prevRouterReachable.current === null;
 
     if (isFirstCheck) {
@@ -69,6 +99,12 @@ const LogPanel = () => {
             : "Router unreachable — Make sure your device is connected to the local network.",
           timestamp,
           id: crypto.randomUUID(),
+        });
+        persistHistory({
+          type: HISTORY_TYPES.UNREACHABLE,
+          text: routerReachable
+            ? "Router connection restored"
+            : "Router became unreachable",
         });
       }
       prevRouterReachable.current = routerReachable;
@@ -108,6 +144,10 @@ const LogPanel = () => {
             timestamp,
             id: crypto.randomUUID(),
           });
+          persistHistory({
+            type: HISTORY_TYPES.LOS,
+            text: "Fiber signal lost (detected on startup)",
+          });
         }
       } else if (prevLosRef.current !== hasLOS) {
         newLogs.push({
@@ -117,6 +157,10 @@ const LogPanel = () => {
             : "Fiber signal restored — Connection is back.",
           timestamp,
           id: crypto.randomUUID(),
+        });
+        persistHistory({
+          type: HISTORY_TYPES.LOS,
+          text: hasLOS ? "Fiber signal lost" : "Fiber signal restored",
         });
         prevLosRef.current = hasLOS;
       }
@@ -136,6 +180,10 @@ const LogPanel = () => {
             timestamp,
             id: crypto.randomUUID(),
           });
+          persistHistory({
+            type: HISTORY_TYPES.INTERNET,
+            text: internetUp ? "Internet restored" : "Internet connection lost",
+          });
         }
         prevInternetUp.current = internetUp;
       }
@@ -153,6 +201,10 @@ const LogPanel = () => {
           text: "WAN IP changed — If you're hosting anything locally, your external IP has updated.",
           timestamp,
           id: crypto.randomUUID(),
+        });
+        persistHistory({
+          type: HISTORY_TYPES.WARNING,
+          text: `WAN IP changed to ${currentIp}`,
         });
       }
       if (currentIp && currentIp !== "Empty") {
@@ -193,13 +245,11 @@ const LogPanel = () => {
       // 6. High Device Count Detection
       const currentTotal = data?.connectedDevices?.total ?? 0;
       const prevTotal = prevDeviceCountRef.current;
-
       if (prevTotal !== null) {
         const spike = currentTotal - prevTotal >= DEVICE_SPIKE_THRESHOLD;
         const overThreshold =
           currentTotal >= DEVICE_COUNT_THRESHOLD &&
           (prevTotal < DEVICE_COUNT_THRESHOLD || spike);
-
         if (spike && !overThreshold) {
           newLogs.push({
             type: "warning",
@@ -207,12 +257,20 @@ const LogPanel = () => {
             timestamp,
             id: crypto.randomUUID(),
           });
+          persistHistory({
+            type: HISTORY_TYPES.WARNING,
+            text: `Device count spiked to ${currentTotal}`,
+          });
         } else if (overThreshold) {
           newLogs.push({
             type: "warning",
             text: `High device count (${currentTotal}) — Consider checking for unknown or unauthorized devices.`,
             timestamp,
             id: crypto.randomUUID(),
+          });
+          persistHistory({
+            type: HISTORY_TYPES.WARNING,
+            text: `High device count: ${currentTotal}`,
           });
         }
       }
@@ -228,6 +286,10 @@ const LogPanel = () => {
             timestamp,
             id: crypto.randomUUID(),
           });
+          persistHistory({
+            type: HISTORY_TYPES.WARNING,
+            text: `High CPU usage: ${cpuUsage}%`,
+          });
         }
         if (memoryUsage > 90) {
           newLogs.push({
@@ -235,6 +297,10 @@ const LogPanel = () => {
             text: `High memory usage (${memoryUsage}%) — Router memory is critically low. A reboot is recommended.`,
             timestamp,
             id: crypto.randomUUID(),
+          });
+          persistHistory({
+            type: HISTORY_TYPES.WARNING,
+            text: `High memory usage: ${memoryUsage}%`,
           });
         }
       }
@@ -248,6 +314,10 @@ const LogPanel = () => {
             text: `High temperature (${temp}°C) — Ensure the router has adequate ventilation and is not enclosed.`,
             timestamp,
             id: crypto.randomUUID(),
+          });
+          persistHistory({
+            type: HISTORY_TYPES.WARNING,
+            text: `High temperature: ${temp}°C`,
           });
         }
       }
@@ -294,13 +364,26 @@ const LogPanel = () => {
 
   return (
     <div className="h-full max-h-[40vh] sm:max-h-[45vh] lg:max-h-[calc(100vh-10rem)] flex flex-col lg:sticky lg:top-28 bg-black text-gray-300 font-mono text-sm overflow-hidden rounded-lg">
-      <LogHeader onClearLogs={clearLogs} />
-      <LogContent
-        logs={sortedLogs}
-        logContainerRef={logContainerRef}
-        loading={loading}
-        getIcon={getIcon}
+      <LogHeader
+        onClearLogs={clearLogs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
+      {activeTab === "log" ? (
+        <LogContent
+          logs={sortedLogs}
+          logContainerRef={logContainerRef}
+          loading={loading}
+          getIcon={getIcon}
+        />
+      ) : (
+        <div
+          className="flex-1 overflow-y-auto log-scrollbar border-l border-r border-b border-card-black rounded-lg rounded-t-none"
+          style={{ scrollbarGutter: "stable" }}
+        >
+          <HistoryView refreshTick={historyTick} />
+        </div>
+      )}
     </div>
   );
 };
