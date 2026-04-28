@@ -109,7 +109,7 @@ const HistoryView = ({ refreshTick }) => {
         </span>
         <button
           onClick={() => setShowClearModal(true)}
-          className="text-xs text-zinc-700 hover:text-zinc-400 transition-colors uppercase tracking-widest"
+          className="text-xs text-zinc-700 hover:text-zinc-400 transition-colors uppercase tracking-widest cursor-pointer"
         >
           Clear
         </button>
@@ -126,7 +126,7 @@ const HistoryView = ({ refreshTick }) => {
                 setBucketIdx(0);
                 setSelectedBucket(null);
               }}
-              className={`px-2 py-0.5 rounded text-xs uppercase tracking-widest transition-colors ${
+              className={`px-2 py-0.5 rounded text-xs uppercase tracking-widest transition-colors cursor-pointer ${
                 rangeIdx === i
                   ? "bg-zinc-700 text-zinc-200"
                   : "text-zinc-600 hover:text-zinc-400"
@@ -187,8 +187,12 @@ const HistoryView = ({ refreshTick }) => {
 
       {/* X-axis labels — derived from actual bucket boundaries */}
       <div className="flex justify-between text-xs text-zinc-700 -mt-2">
-        <span>{fmt(buckets[0]?.start ?? Date.now() - range.ms, range.label)}</span>
-        <span>{fmt(buckets[buckets.length - 1]?.end ?? Date.now(), range.label)}</span>
+        <span>
+          {fmt(buckets[0]?.start ?? Date.now() - range.ms, range.label)}
+        </span>
+        <span>
+          {fmt(buckets[buckets.length - 1]?.end ?? Date.now(), range.label)}
+        </span>
       </div>
 
       {/* Legend */}
