@@ -84,6 +84,13 @@ const HistoryView = ({ refreshTick }) => {
   const safeBucketIdx = bucketIdx < range.buckets.length ? bucketIdx : 0;
   const bucketCount = range.buckets[safeBucketIdx];
   const buckets = bucketEvents(events, range.ms, bucketCount);
+  const splitIntoTwoRows = range.label === "60D" && bucketCount === 60;
+  const bucketRows = splitIntoTwoRows
+    ? [
+        { items: buckets.slice(0, 30), offset: 0 },
+        { items: buckets.slice(30, 60), offset: 30 },
+      ]
+    : [{ items: buckets, offset: 0 }];
 
   const activeBucket = selectedBucket ?? hoveredBucket;
 
@@ -161,39 +168,63 @@ const HistoryView = ({ refreshTick }) => {
 
       {/* Bar chart */}
       <div
-        className="flex items-end gap-px w-full"
-        style={{ height: "40px" }}
+        className="flex flex-col gap-2"
         onMouseLeave={() => setHoveredBucket(null)}
       >
-        {buckets.map((bucket, i) => {
-          const color = SEVERITY_COLORS[bucket.worstSeverity]?.bar ?? "#1f1f1f";
-          const isActive = activeBucket === i;
-          return (
+        {bucketRows.map(({ items, offset }) => (
+          <div key={offset} className="flex flex-col gap-1">
             <div
-              key={i}
-              className="flex-1 rounded-sm cursor-pointer transition-opacity"
-              style={{
-                height: bucket.worstSeverity === 0 ? "60%" : "100%",
-                backgroundColor: color,
-                opacity: activeBucket !== null && !isActive ? 0.4 : 1,
-                minWidth: "2px",
-              }}
-              onMouseEnter={() => setHoveredBucket(i)}
-              onClick={() => setSelectedBucket(selectedBucket === i ? null : i)}
-            />
-          );
-        })}
+              className="flex items-end gap-px w-full"
+              style={{ height: "40px" }}
+            >
+              {items.map((bucket, i) => {
+                const bucketIndex = offset + i;
+                const color =
+                  SEVERITY_COLORS[bucket.worstSeverity]?.bar ?? "#1f1f1f";
+                const isActive = activeBucket === bucketIndex;
+
+                return (
+                  <div
+                    key={bucket.start}
+                    className="flex-1 rounded-sm cursor-pointer transition-opacity"
+                    style={{
+                      height: bucket.worstSeverity === 0 ? "60%" : "100%",
+                      backgroundColor: color,
+                      opacity: activeBucket !== null && !isActive ? 0.4 : 1,
+                      minWidth: "2px",
+                    }}
+                    onMouseEnter={() => setHoveredBucket(bucketIndex)}
+                    onClick={() =>
+                      setSelectedBucket(
+                        selectedBucket === bucketIndex ? null : bucketIndex,
+                      )
+                    }
+                  />
+                );
+              })}
+            </div>
+
+            {splitIntoTwoRows && (
+              <div className="flex justify-between text-xs text-zinc-700">
+                <span>{fmt(items[0].start, range.label)}</span>
+                <span>{fmt(items[items.length - 1].end, range.label)}</span>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* X-axis labels — derived from actual bucket boundaries */}
-      <div className="flex justify-between text-xs text-zinc-700 -mt-2">
-        <span>
-          {fmt(buckets[0]?.start ?? Date.now() - range.ms, range.label)}
-        </span>
-        <span>
-          {fmt(buckets[buckets.length - 1]?.end ?? Date.now(), range.label)}
-        </span>
-      </div>
+      {!splitIntoTwoRows && (
+        <div className="flex justify-between text-xs text-zinc-700 -mt-2">
+          <span>
+            {fmt(buckets[0]?.start ?? Date.now() - range.ms, range.label)}
+          </span>
+          <span>
+            {fmt(buckets[buckets.length - 1]?.end ?? Date.now(), range.label)}
+          </span>
+        </div>
+      )}
 
       {/* Legend */}
       <div className="flex gap-4 flex-wrap">
