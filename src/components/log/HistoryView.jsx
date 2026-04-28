@@ -185,10 +185,10 @@ const HistoryView = ({ refreshTick }) => {
         })}
       </div>
 
-      {/* X-axis labels */}
+      {/* X-axis labels — derived from actual bucket boundaries */}
       <div className="flex justify-between text-xs text-zinc-700 -mt-2">
-        <span>{fmt(Date.now() - range.ms, range.label)}</span>
-        <span>Now</span>
+        <span>{fmt(buckets[0]?.start ?? Date.now() - range.ms, range.label)}</span>
+        <span>{fmt(buckets[buckets.length - 1]?.end ?? Date.now(), range.label)}</span>
       </div>
 
       {/* Legend */}
