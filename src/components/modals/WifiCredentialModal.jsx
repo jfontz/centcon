@@ -45,7 +45,7 @@ const getLogIcon = (level) => {
   const icon = LOG_LEVEL_ICON[level];
   if (!icon)
     return (
-      <span className="text-xs text-zinc-500 flex-shrink-0 mt-0.5">·</span>
+      <span className="text-xs text-zinc-500 shrink-0 mt-0.5">·</span>
     );
   return <img src={icon} className={LOG_ICON_CLASSES} alt={level} />;
 };
@@ -673,7 +673,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                       >
                         {entry.message}
                       </span>
-                      <span className="text-[11px] text-zinc-700 font-mono ml-auto flex-shrink-0 mt-0.5">
+                      <span className="text-[11px] text-zinc-700 font-mono ml-auto shrink-0 mt-0.5">
                         {entry.timestamp
                           ? new Date(entry.timestamp).toLocaleTimeString(
                               "en-US",
