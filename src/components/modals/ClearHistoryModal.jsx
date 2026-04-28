@@ -20,7 +20,7 @@ const ClearHistoryModal = ({ isOpen, onClose, onConfirm }) => {
 
   return (
     <div
-      className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[modal-fade-in_0.25s_ease-out]"
+      className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[modal-fade-in_0.25s_ease-out] font-sans"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
