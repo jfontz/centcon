@@ -76,7 +76,7 @@ const LogContent = ({ logs, logContainerRef, loading, getIcon }) => {
           return (
             <div
               key={`group-${idx}`}
-              className="border-l-2 border-zinc-700 bg-white/[0.02] rounded-r-md pl-3 py-2 flex flex-col gap-2"
+              className="border-l-2 border-zinc-700 bg-white/2 rounded-r-md pl-3 py-2 flex flex-col gap-2"
             >
               <span className="text-[10px] uppercase tracking-[0.15em] text-zinc-600 font-semibold">
                 {label}
