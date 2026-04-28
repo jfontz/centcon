@@ -3,6 +3,7 @@ import {
   readHistory,
   bucketEvents,
   clearHistory,
+  SEVERITY,
 } from "../../utils/historyStorage";
 import ClearHistoryModal from "../modals/ClearHistoryModal";
 
@@ -13,11 +14,43 @@ const RANGES = [
 ];
 
 const SEVERITY_COLORS = {
-  0: { bar: "#1f1f1f", label: "Clean" },
-  1: { bar: "#2563eb", label: "Reboot" },
-  2: { bar: "#d97706", label: "Warning" },
-  3: { bar: "#dc2626", label: "Outage" },
-  4: { bar: "#dc2626", label: "Fiber Lost" },
+  0: { bar: "#1f1f1f", label: "Clean", text: "text-zinc-500" },
+  1: { bar: "#2563eb", label: "Reboot", text: "text-blue-400" },
+  2: { bar: "#d97706", label: "Warning", text: "text-yellow-400" },
+  3: { bar: "#dc2626", label: "Outage", text: "text-red-400" },
+  4: { bar: "#dc2626", label: "Fiber Lost", text: "text-red-400" },
+};
+
+/**
+ * Color per event row — uses text content to distinguish
+ * "lost" vs "restored" within the same type, since the type
+ * field alone doesn't encode direction.
+ */
+const getEventColor = (type, text = "") => {
+  const t = text.toLowerCase();
+  const isRestored =
+    t.includes("restored") ||
+    t.includes("back online") ||
+    t.includes("connection restored");
+  const isLost =
+    t.includes("lost") ||
+    t.includes("unreachable") ||
+    t.includes("connection lost");
+
+  switch (type) {
+    case "los":
+    case "internet":
+    case "unreachable":
+      if (isRestored) return "text-green-400";
+      if (isLost) return "text-red-400";
+      return "text-zinc-400"; // fallback for ambiguous text
+    case "reboot":
+      return "text-blue-400";
+    case "warning":
+      return "text-yellow-400";
+    default:
+      return "text-zinc-400";
+  }
 };
 
 const fmt = (ts, rangeLabel) => {
@@ -67,16 +100,16 @@ const HistoryView = ({ refreshTick }) => {
     : 100;
 
   return (
-    <div className="flex flex-col gap-4 p-4 font-mono text-xs">
+    <div className="flex flex-col gap-4 p-4 font-mono">
       {/* Summary row */}
-      <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-zinc-600">
-        <span>
+      <div className="flex items-center justify-between">
+        <span className="text-xs uppercase tracking-widest text-zinc-600">
           {cleanPct}% clean · {totalOutages} event
           {totalOutages !== 1 ? "s" : ""} recorded
         </span>
         <button
           onClick={() => setShowClearModal(true)}
-          className="text-zinc-700 hover:text-zinc-400 transition-colors"
+          className="text-xs text-zinc-700 hover:text-zinc-400 transition-colors uppercase tracking-widest"
         >
           Clear
         </button>
@@ -93,7 +126,7 @@ const HistoryView = ({ refreshTick }) => {
                 setBucketIdx(0);
                 setSelectedBucket(null);
               }}
-              className={`px-2 py-0.5 rounded text-[10px] uppercase tracking-widest transition-colors ${
+              className={`px-2 py-0.5 rounded text-xs uppercase tracking-widest transition-colors ${
                 rangeIdx === i
                   ? "bg-zinc-700 text-zinc-200"
                   : "text-zinc-600 hover:text-zinc-400"
@@ -113,7 +146,7 @@ const HistoryView = ({ refreshTick }) => {
                   setBucketIdx(i);
                   setSelectedBucket(null);
                 }}
-                className={`px-2 py-0.5 rounded text-[10px] tracking-widest transition-colors ${
+                className={`px-2 py-0.5 rounded text-xs tracking-widest transition-colors ${
                   safeBucketIdx === i
                     ? "bg-zinc-700 text-zinc-200"
                     : "text-zinc-600 hover:text-zinc-400"
@@ -153,49 +186,56 @@ const HistoryView = ({ refreshTick }) => {
       </div>
 
       {/* X-axis labels */}
-      <div className="flex justify-between text-[9px] text-zinc-700 -mt-2">
+      <div className="flex justify-between text-xs text-zinc-700 -mt-2">
         <span>{fmt(Date.now() - range.ms, range.label)}</span>
         <span>Now</span>
       </div>
 
       {/* Legend */}
-      <div className="flex gap-3 flex-wrap">
+      <div className="flex gap-4 flex-wrap">
         {Object.entries(SEVERITY_COLORS)
           .filter(([k]) => k !== "4")
-          .map(([severity, { bar, label }]) => (
-            <div key={severity} className="flex items-center gap-1">
+          .map(([severity, { bar, label, text }]) => (
+            <div key={severity} className="flex items-center gap-1.5">
               <div
-                className="w-2 h-2 rounded-sm"
+                className="w-2 h-2 rounded-sm shrink-0"
                 style={{ backgroundColor: bar }}
               />
-              <span className="text-[9px] text-zinc-600 uppercase tracking-wider">
+              <span className={`text-xs uppercase tracking-wider ${text}`}>
                 {label}
               </span>
             </div>
           ))}
+        {/* Restored is a direction, not a severity — show separately */}
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-sm shrink-0 bg-green-500" />
+          <span className="text-xs uppercase tracking-wider text-green-400">
+            Restored
+          </span>
+        </div>
       </div>
 
       {/* Selected/hovered bucket detail */}
       {activeBucket !== null && (
         <div className="border border-zinc-800 rounded-md p-3 flex flex-col gap-2 bg-zinc-950">
-          <span className="text-[9px] uppercase tracking-widest text-zinc-600">
+          <span className="text-xs uppercase tracking-widest text-zinc-600">
             {fmt(buckets[activeBucket].start, range.label)} —{" "}
             {fmt(buckets[activeBucket].end, range.label)}
           </span>
           {buckets[activeBucket].events.length === 0 ? (
-            <span className="text-zinc-700 text-[10px]">
-              No events — all clear
-            </span>
+            <span className="text-xs text-zinc-600">No events — all clear</span>
           ) : (
             buckets[activeBucket].events.map((e) => (
               <div key={e.id} className="flex gap-2 items-start">
-                <span className="text-zinc-600 shrink-0">
+                <span className="text-xs text-zinc-600 shrink-0">
                   {new Date(e.ts).toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
                 </span>
-                <span className="text-zinc-300">{e.text}</span>
+                <span className={`text-xs ${getEventColor(e.type, e.text)}`}>
+                  {e.text}
+                </span>
               </div>
             ))
           )}
