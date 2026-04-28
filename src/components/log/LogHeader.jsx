@@ -1,4 +1,4 @@
-import { log, clear } from "../../assets/icons";
+import { log, clear, history } from "../../assets/icons";
 
 const LogHeader = ({ onClearLogs, activeTab, onTabChange }) => {
   return (
@@ -23,13 +23,19 @@ const LogHeader = ({ onClearLogs, activeTab, onTabChange }) => {
         </button>
         <button
           onClick={() => onTabChange("history")}
-          className={`px-3 py-1 rounded-md text-sm transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-sm transition-all cursor-pointer ${
             activeTab === "history"
               ? "bg-zinc-800 text-gray-200"
               : "text-zinc-600 hover:text-zinc-400 hover:bg-zinc-900"
           }`}
         >
-          HISTORY
+          <img
+            src={history}
+            alt=""
+            className="w-4 h-4 pointer-events-none select-none"
+            style={{ opacity: activeTab === "history" ? 1 : 0.4 }}
+          />
+          <span>HISTORY</span>
         </button>
       </div>
 

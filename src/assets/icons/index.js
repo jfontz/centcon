@@ -24,6 +24,7 @@ import eye from "./eye.svg";
 import eyeSlash from "./eye-slash.svg";
 import info from "./info.svg";
 import action from "./action.svg";
+import history from "./history.svg";
 
 export {
   check,
@@ -52,4 +53,5 @@ export {
   eyeSlash,
   info,
   action,
+  history,
 };
