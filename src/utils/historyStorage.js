@@ -84,12 +84,18 @@ export const clearHistory = () => {
 
 /**
  * Buckets events into N slots covering the given time range.
+ * Snaps to clean clock boundaries so buckets align to e.g. 1:00–2:00 PM
+ * instead of rolling offsets like 1:37–2:37 PM.
  * Returns array of { start, end, events[], worstSeverity }
  */
 export const bucketEvents = (events, rangeMs, bucketCount) => {
   const now = Date.now();
-  const start = now - rangeMs;
   const bucketMs = rangeMs / bucketCount;
+
+  // Snap to clean clock boundary so buckets align to e.g. 1:00–2:00 PM
+  // instead of rolling from the current minute offset.
+  const alignedNow = Math.ceil(now / bucketMs) * bucketMs;
+  const start = alignedNow - rangeMs;
 
   return Array.from({ length: bucketCount }, (_, i) => {
     const bStart = start + i * bucketMs;
