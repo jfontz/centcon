@@ -116,7 +116,9 @@ def _run_wifi_credentials_blocking(
         field.clear()
         field.send_keys(value)
 
-    def _reconcile_broadcast_toggle(driver, router_index: str, intent: str):
+    def _reconcile_broadcast_toggle(
+        driver, router_index: str, intent: str
+    ) -> bool:
         """
         Check current broadcast toggle state and click only if it doesn't match intent.
         router_index: "1"–"8"
@@ -130,12 +132,15 @@ def _run_wifi_credentials_blocking(
         if intent == "enable" and not is_active:
             toggle.click()
             _log("info", f"Broadcast enabled for SSID {router_index}")
+            return True
         elif intent == "disable" and is_active:
             toggle.click()
             _log("info", f"Broadcast disabled for SSID {router_index}")
+            return True
         else:
             state = "on" if is_active else "off"
             _log("info", f"SSID {router_index} broadcast already {state} — skipped")
+            return False
 
     def _handle_advanced_broadcast(
         driver, wait, router_url: str, targets_with_intent: list[dict]
@@ -151,8 +156,8 @@ def _run_wifi_credentials_blocking(
             if not intent:
                 continue
             router_index = str(t["router_index"])
-            _reconcile_broadcast_toggle(driver, router_index, intent)
-            any_changed = True
+            if _reconcile_broadcast_toggle(driver, router_index, intent):
+                any_changed = True
 
         if any_changed:
             confirm_btn = driver.find_element(
@@ -172,6 +177,11 @@ def _run_wifi_credentials_blocking(
                     "success",
                     "Broadcast changes applied (page reload timed out — this is normal)",
                 )
+        else:
+            _log(
+                "info",
+                "No broadcast changes needed — finishing without confirmation",
+            )
 
     driver = None
     wait_time = 15
