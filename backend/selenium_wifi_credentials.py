@@ -240,8 +240,8 @@ def _run_wifi_credentials_blocking(
             _log("navigate", "Opened Wi-Fi Settings → Basic")
 
             # ── Separate targets by band ─────────────────────────────────────────
-            target_24g = next((t for t in targets if t["freq"] == "2.4"), None)
-            target_5g = next((t for t in targets if t["freq"] == "5"), None)
+            target_24g = next((t for t in targets if t["freq"] == "2.4" and (t.get("new_name") or t.get("new_pass"))), None)
+            target_5g = next((t for t in targets if t["freq"] == "5" and (t.get("new_name") or t.get("new_pass"))), None)
 
             # ── Handle 2.4 GHz ──────────────────────────────────────────────────
             if target_24g:
