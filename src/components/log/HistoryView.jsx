@@ -153,7 +153,7 @@ const HistoryView = ({ refreshTick }) => {
                   setBucketIdx(i);
                   setSelectedBucket(null);
                 }}
-                className={`px-2 py-0.5 rounded text-xs tracking-widest transition-colors ${
+                className={`px-2 py-0.5 rounded text-xs tracking-widest transition-colors cursor-pointer ${
                   safeBucketIdx === i
                     ? "bg-zinc-700 text-zinc-200"
                     : "text-zinc-600 hover:text-zinc-400"
