@@ -127,7 +127,7 @@ class RouterApiClient {
     return {
       temperature: (
         (opticalInfo.TransceiverTemperature || 0) / RouterApiClient.TEMP_DIVISOR
-      ).toFixed(2),
+      ).toFixed(1),
       enable: opticalInfo.Enable ?? 0,
       txPower: opticalInfo.TXPower ?? 0,
       rxPower: opticalInfo.RXPower ?? 0,
