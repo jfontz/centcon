@@ -87,7 +87,7 @@ def _run_wifi_credentials_blocking(
                     import time
                     time.sleep(0.5)
                 break
-        _log("info", f"Advanced Settings expanded for {band_label}")
+        # _log("info", f"Advanced Settings expanded for {band_label}")
 
     def _select_ssid_via_selectize(
         driver, wait, select_id: str, value: str, name_field_id: str
@@ -247,9 +247,7 @@ def _run_wifi_credentials_blocking(
             if target_24g:
                 router_index = str(target_24g["router_index"])
                 if router_index != DEFAULT_SSID_24G:
-                    _log("action", f"Expanding Advanced Settings for 2.4 GHz")
                     _expand_advanced_settings(driver, wait, "2.4 GHz")
-                    _log("action", f"Selecting SSID {router_index} on 2.4 GHz")
                     _emit_sync({"type": "state", "state": "RUNNING", "message": f"Selecting 2.4 GHz SSID {router_index}"})
                     _select_ssid_via_selectize(driver, wait, ID_24G_SSID_NUM, router_index, ID_24G_WIFI_NAME)
                     _log("info", f"2.4 GHz SSID {router_index} selected")
@@ -268,9 +266,7 @@ def _run_wifi_credentials_blocking(
             if target_5g:
                 router_index = str(target_5g["router_index"])
                 if router_index != DEFAULT_SSID_5G:
-                    _log("action", f"Expanding Advanced Settings for 5 GHz")
                     _expand_advanced_settings(driver, wait, "5 GHz")
-                    _log("action", f"Selecting SSID {router_index} on 5 GHz")
                     _emit_sync({"type": "state", "state": "RUNNING", "message": f"Selecting 5 GHz SSID {router_index}"})
                     _select_ssid_via_selectize(driver, wait, ID_5G_SSID_NUM, router_index, ID_5G_WIFI_NAME)
                     _log("info", f"5 GHz SSID {router_index} selected")
