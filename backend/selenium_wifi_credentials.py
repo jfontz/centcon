@@ -256,11 +256,11 @@ def _run_wifi_credentials_blocking(
 
                 if target_24g.get("new_name"):
                     _fill_field(driver, ID_24G_WIFI_NAME, target_24g["new_name"])
-                    _log("info", f"Wi-Fi name set for 2.4 GHz SSID {router_index}")
+                    _log("info", f"2.4 GHz SSID {router_index} — name updated to '{target_24g['new_name']}'")
 
                 if target_24g.get("new_pass"):
                     _fill_field(driver, ID_24G_WIFI_PASS, target_24g["new_pass"])
-                    _log("info", f"Password set for 2.4 GHz SSID {router_index}")
+                    _log("info", f"2.4 GHz SSID {router_index} — password updated")
 
             # ── Handle 5 GHz ────────────────────────────────────────────────────
             if target_5g:
@@ -275,11 +275,11 @@ def _run_wifi_credentials_blocking(
 
                 if target_5g.get("new_name"):
                     _fill_field(driver, ID_5G_WIFI_NAME, target_5g["new_name"])
-                    _log("info", f"Wi-Fi name set for 5 GHz SSID {router_index}")
+                    _log("info", f"5 GHz SSID {router_index} — name updated to '{target_5g['new_name']}'")
 
                 if target_5g.get("new_pass"):
                     _fill_field(driver, ID_5G_WIFI_PASS, target_5g["new_pass"])
-                    _log("info", f"Password set for 5 GHz SSID {router_index}")
+                    _log("info", f"5 GHz SSID {router_index} — password updated")
 
             # ── Save Changes ─────────────────────────────────────────────────────
             _emit_sync({"type": "state", "state": "RUNNING", "message": "Saving changes"})
