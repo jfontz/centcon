@@ -54,7 +54,7 @@ First launch may take longer while dependencies initialize. Subsequent runs will
 
 #### Manual launch on Windows
 
-If you prefer to start CENTCON manually instead of using `LAUNCH_CENTCON.bat`:
+If you prefer not to use `LAUNCH_CENTCON.bat`:
 
 1. Install frontend dependencies:
 
@@ -73,11 +73,11 @@ pip install -r backend/requirements.txt
 3. Run both servers in separate terminals:
 
 ```bash
-:: Terminal 1 - backend
+# Terminal 1 — backend (with venv active)
 .venv/Scripts/activate
 python backend/run.py
 
-:: Terminal 2 - frontend
+# Terminal 2 — frontend
 npm run dev
 ```
 
@@ -264,7 +264,7 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
                 ├── HistoryView.jsx            # Persistent event history with bar chart
                 ├── LogContent.jsx
                 ├── LogEntry.jsx
-                ├── LogHeader.jsx              # LOG / HISTORY tab switcher
+                ├── LogHeader.jsx              # LOG / HISTORY tab switcher with clear-log control
             └── 📁modals
                 ├── ClearHistoryModal.jsx      # Confirmation modal for history clear
                 ├── DeviceListModal.jsx
@@ -277,17 +277,17 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
                 ├── MainLayout.jsx
                 ├── MetricCard.jsx
                 ├── SectionContainer.jsx
-            ├── ConnectedDevices.jsx
+            ├── ConnectedDevices.jsx           # Device count by band with expandable device list
             ├── DeviceInformation.jsx          # Wraps RouterVisual
             ├── LogPanel.jsx
             ├── RouterVisual.jsx               # CSS router silhouette with live LED indicators
-            ├── SystemControls.jsx
-            ├── SystemStatus.jsx
+            ├── SystemControls.jsx             # Reboot, login, and Wi-Fi credential action buttons
+            ├── SystemStatus.jsx               # Uptime, temperature, CPU, and memory status cards
         └── 📁context
-            ├── AuthContext.jsx                # Session-based auth with 8-hour expiry
-            ├── RouterContext.jsx
+            ├── AuthContext.jsx                # Session auth context with 8-hour expiry and backend-driven login config
+            ├── RouterContext.jsx              # Router telemetry plus command, log, and SSE state context
         └── 📁hooks
-            ├── useRouterData.js
+            ├── useRouterData.js               # Router API polling, status derivation, and reboot-aware refresh control
         └── 📁pages
             ├── Login.jsx
             ├── Setup.jsx
@@ -307,7 +307,6 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
         ├── App.jsx
         ├── index.css
         ├── main.jsx
-    ├── .env
     ├── .env.example
     ├── .gitignore
     ├── eslint.config.js
