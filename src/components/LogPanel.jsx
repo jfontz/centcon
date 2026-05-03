@@ -11,7 +11,6 @@ const MAX_LOG_ENTRIES = 50;
 const LogPanel = () => {
   const [logs, setLogs] = useState([]);
   const [activeTab, setActiveTab] = useState("log");
-  const [historyTick, setHistoryTick] = useState(0);
   const logContainerRef = useRef(null);
   const hasShownStartup = useRef(false);
   const { data, loading, error, status, commandLogs, clearCommandLogs } =
@@ -41,10 +40,7 @@ const LogPanel = () => {
   const DEVICE_COUNT_THRESHOLD = 20;
   const DEVICE_SPIKE_THRESHOLD = 3;
 
-  const persistHistory = (event) => {
-    appendHistory(event);
-    setHistoryTick((t) => t + 1);
-  };
+  const persistHistory = (event) => appendHistory(event);
 
   // Track reboot commands from commandLogs
   useEffect(() => {
@@ -111,12 +107,12 @@ const LogPanel = () => {
     }
 
     // ONLY check LOS and Internet when router is reachable (fresh data)
-    if (data && routerReachable) {
-      // INITIAL STARTUP
-      if (logs.length === 0) {
-        newLogs.push({
-          type: "header",
-          text: "CENTCON Monitoring Started",
+      if (data && routerReachable) {
+        // INITIAL STARTUP
+        if (!hasShownStartup.current) {
+          newLogs.push({
+            type: "header",
+            text: "CENTCON Monitoring Started",
           timestamp,
           id: crypto.randomUUID(),
         });
@@ -381,7 +377,7 @@ const LogPanel = () => {
           className="flex-1 overflow-y-auto log-scrollbar border-l border-r border-b border-card-black rounded-lg rounded-t-none"
           style={{ scrollbarGutter: "stable" }}
         >
-          <HistoryView refreshTick={historyTick} />
+          <HistoryView refreshTick={sortedLogs.length} />
         </div>
       )}
     </div>

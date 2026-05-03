@@ -152,7 +152,7 @@ class RouterApiClient {
 
     wanInfo.forEach((conn) => {
       // Try IPoE connection first
-      const ipoeInfo = extractConnectionInfo(conn, "IPoE", state);
+      const ipoeInfo = extractConnectionInfo(conn, "IPoE");
       if (
         ipoeInfo &&
         isValidInternetConnection(ipoeInfo.connection, state.v4Addr)
@@ -164,7 +164,7 @@ class RouterApiClient {
       }
 
       // Fall back to PPPoE if IPoE not found
-      const pppoeInfo = extractConnectionInfo(conn, "PPPoE", state);
+      const pppoeInfo = extractConnectionInfo(conn, "PPPoE");
       if (
         pppoeInfo &&
         isValidInternetConnection(pppoeInfo.connection, state.v4Addr)

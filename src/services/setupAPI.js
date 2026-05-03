@@ -31,7 +31,7 @@ export const submitSetup = async (data) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-  } catch (networkError) {
+  } catch {
     throw new Error("Cannot connect to the backend. Is the server running?");
   }
 

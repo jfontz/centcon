@@ -110,7 +110,7 @@ export const useRouterData = (
     if (!isRebootingRef.current) {
       fetchData();
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fetchData]);
 
   // Auto-refresh — restarts only when reboot state or interval changes
   useEffect(() => {
@@ -128,7 +128,7 @@ export const useRouterData = (
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [autoRefreshInterval, isRebooting]); // fetchData is stable, safe to omit
+  }, [autoRefreshInterval, fetchData, isRebooting]);
 
   return {
     data,
