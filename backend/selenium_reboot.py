@@ -269,7 +269,7 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
         # 8. Accept reboot confirmation alert
         WebDriverWait(driver, ALERT_WAIT_SECONDS).until(EC.alert_is_present())
         alert = driver.switch_to.alert
-        # alert.accept()
+        alert.accept()
         _log("action", "Reboot command sent")
         _emit_state("REBOOTING", "Reboot command sent")
 
