@@ -35,84 +35,56 @@ Before you begin, install the following software:
 
 ---
 
-## Installation
+## Installation & Running
 
-### 1. Clone the Repository
+### Windows
+
+1. Clone the repository:
 
 ```bash
 git clone https://github.com/jfontz/centcon
 cd centcon
 ```
 
-### 2. Install Frontend Dependencies
+2. Double-click `LAUNCH_CENTCON.bat` in the project root.
+
+On first run it will automatically create the Python virtual environment, install all backend and frontend dependencies, then start both servers and open the dashboard. On subsequent runs it skips setup and launches directly.
+
+### macOS / Linux
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/jfontz/centcon
+cd centcon
+```
+
+2. Install frontend dependencies:
 
 ```bash
 npm install
 ```
 
-### 3. Set Up the Python Backend
-
-From the project root, create a virtual environment:
+3. Create the virtual environment and install backend dependencies:
 
 ```bash
 python -m venv .venv
-```
-
-Activate the virtual environment:
-
-```bash
-# Windows (Command Prompt)
-.venv\Scripts\activate
-
-# Windows (PowerShell)
-.venv\Scripts\Activate.ps1
-
-# macOS/Linux
 source .venv/bin/activate
-```
-
-You should see `(.venv)` appear in your terminal prompt. Then install dependencies:
-
-```bash
 pip install -r backend/requirements.txt
 ```
 
-This installs FastAPI, Selenium, and uvicorn. ChromeDriver is managed automatically by Selenium's built-in driver manager.
-
----
-
-## Running the App
-
-The frontend and backend must be running at the same time — use two separate terminal windows.
-
-**Terminal 1 — Frontend** (from project root):
+4. Run both servers in separate terminals:
 
 ```bash
+# Terminal 1 — backend (with venv active)
+source .venv/bin/activate
+python backend/run.py
+
+# Terminal 2 — frontend
 npm run dev
 ```
 
-Runs at `http://localhost:5173`
-
-**Terminal 2 — Backend** (from project root, with venv active):
-
-```bash
-# Windows (Command Prompt)
-.venv\Scripts\activate
-
-# Windows (PowerShell)
-.venv\Scripts\Activate.ps1
-
-# macOS/Linux
-source .venv/bin/activate
-
-python backend/run.py
-```
-
-Runs at `http://localhost:8000`
-
-To stop either server, press `Ctrl+C` in its terminal.
-
-> **Windows shortcut:** Just double-click `LAUNCH_CENTCON.bat` in the project root. It'll start both the backend and frontend in separate windows, then automatically open the dashboard in your browser.
+Then open `http://localhost:5173`.
 
 ---
 
@@ -186,7 +158,7 @@ The log panel runs passively in the background and records events as they are de
 | Device connected | A new device appeared on the network between polls |
 | High device count | Total connected devices hit an unusual threshold or spiked suddenly |
 | High CPU usage | Router CPU exceeded 80% |
-| High memory usage | Router memory usage exceeded 90% |
+| High memory usage | Router memory exceeded 90% |
 | High temperature | Optical transceiver temperature exceeded 70°C |
 
 Automation events (reboot, Wi-Fi credential changes) are grouped together in the log under a labeled block so they're easy to scan separately from passive monitoring events.
@@ -307,7 +279,7 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
     ├── .gitignore
     ├── eslint.config.js
     ├── index.html
-    ├── LAUNCH_CENTCON.bat                     # Starts both backend & frontend in venv
+    ├── LAUNCH_CENTCON.bat                     # One-click setup and launcher for Windows
     ├── LICENSE
     ├── package-lock.json
     ├── package.json
