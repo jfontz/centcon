@@ -50,6 +50,39 @@ cd centcon
 
 On first run it will automatically create the Python virtual environment, install all backend and frontend dependencies, then start both servers and open the dashboard. On subsequent runs it skips setup and launches directly.
 
+First launch may take longer while dependencies initialize. Subsequent runs will be much faster.
+
+#### Manual launch on Windows
+
+If you prefer to start CENTCON manually instead of using `LAUNCH_CENTCON.bat`:
+
+1. Install frontend dependencies:
+
+```bash
+npm install
+```
+
+2. Create the virtual environment and install backend dependencies:
+
+```bash
+python -m venv .venv
+.venv/Scripts/activate
+pip install -r backend/requirements.txt
+```
+
+3. Run both servers in separate terminals:
+
+```bash
+:: Terminal 1 - backend
+.venv/Scripts/activate
+python backend/run.py
+
+:: Terminal 2 - frontend
+npm run dev
+```
+
+Then open `http://localhost:5173`.
+
 ### macOS / Linux
 
 1. Clone the repository:
