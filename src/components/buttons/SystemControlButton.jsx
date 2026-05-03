@@ -58,7 +58,6 @@ const SystemControlButton = ({
 }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  const isReboot = command.id === "reboot";
   const status = commandStatuses?.[command.id];
   const isActiveCommand =
     commandState?.command === command.id &&

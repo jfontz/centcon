@@ -49,7 +49,6 @@ export const countDevicesByType = (devices, interfaceType, validator) => {
  *
  * @param {Object} conn - Connection object from WAN info
  * @param {string} connectionType - Either "IPoE" or "PPPoE"
- * @param {Object} currentState - Current WAN state with v4Addr and wanType
  * @returns {Object|null} Object with connection and type, or null if no valid connection
  *
  * @example
@@ -58,7 +57,7 @@ export const countDevicesByType = (devices, interfaceType, validator) => {
  *   // Use the connection info
  * }
  */
-export const extractConnectionInfo = (conn, connectionType, currentState) => {
+export const extractConnectionInfo = (conn, connectionType) => {
   // Determine which connection list to check based on type
   // IPoE uses ipConns, PPPoE uses pppConns
   const connList = connectionType === "IPoE" ? conn.ipConns : conn.pppConns;

@@ -11,15 +11,12 @@ const HeaderButton = ({
   title,
 }) => {
   const [angle, setAngle] = useState(0);
-  const [isSpinning, setIsSpinning] = useState(false);
   const rafRef = useRef(null);
   const lastTimeRef = useRef(null);
   const angleRef = useRef(0);
 
   useEffect(() => {
     if (rotate) {
-      setIsSpinning(true);
-
       const spin = (timestamp) => {
         if (!lastTimeRef.current) lastTimeRef.current = timestamp;
         const delta = timestamp - lastTimeRef.current;
@@ -39,7 +36,6 @@ const HeaderButton = ({
       const nearest360 = Math.ceil(angleRef.current / 360) * 360;
       angleRef.current = nearest360;
       setAngle(nearest360);
-      setIsSpinning(false);
     }
 
     return () => {
@@ -71,7 +67,7 @@ const HeaderButton = ({
         className="w-4 h-4 sm:w-5 sm:h-5 min-w-4 min-h-4 pointer-events-none select-none"
         style={{
           transform: `rotate(${angle}deg)`,
-          transition: isSpinning
+          transition: rotate
             ? "none"
             : "transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
         }}

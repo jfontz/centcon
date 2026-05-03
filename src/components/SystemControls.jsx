@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import * as icons from "../assets/icons";
 import { useRouter } from "../context/RouterContext";
 import SystemControlButton from "./buttons/SystemControlButton";
@@ -17,14 +17,10 @@ const SystemControls = () => {
   const [pendingCommandIds, setPendingCommandIds] = useState([]);
   const [wifiModalOpen, setWifiModalOpen] = useState(false);
 
-  useEffect(() => {
-    setPendingCommandIds((prev) =>
-      prev.filter((commandId) => {
-        const status = commandStatuses[commandId];
-        return !status || status.active;
-      }),
-    );
-  }, [commandStatuses]);
+  const effectivePendingCommandIds = pendingCommandIds.filter((commandId) => {
+    const status = commandStatuses[commandId];
+    return !status || status.active;
+  });
 
   const handleTrigger = (commandId) => {
     if (commandId === "wifi-credentials") {
@@ -54,7 +50,7 @@ const SystemControls = () => {
               commands={commands}
               backendOnline={commandBackendOnline}
               backendError={commandBackendError}
-              pendingCommandIds={pendingCommandIds}
+              pendingCommandIds={effectivePendingCommandIds}
               setPendingCommandIds={setPendingCommandIds}
               onTrigger={handleTrigger}
             />

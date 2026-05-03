@@ -27,6 +27,8 @@ const LOG_LEVEL_STYLES = {
   navigate: "text-blue-400",
 };
 
+const MotionDiv = motion.div;
+
 const LOG_LEVEL_ICON = {
   header: process,
   progress: hourglass,
@@ -113,8 +115,6 @@ const BandGrid = ({
   selected,
   onToggle,
   loadState,
-  accentClass,
-  borderClass,
   disabled,
   broadcastIntents,
   onBroadcastIntent,
@@ -506,8 +506,6 @@ export default function WiFiCredentialModal({ open, onClose }) {
                 selected={selected}
                 onToggle={handleToggle}
                 loadState={loadState}
-                accentClass=""
-                borderClass=""
                 disabled={isBusy}
                 broadcastIntents={broadcastIntents}
                 onBroadcastIntent={handleBroadcastIntent}
@@ -531,8 +529,6 @@ export default function WiFiCredentialModal({ open, onClose }) {
                 selected={selected}
                 onToggle={handleToggle}
                 loadState={loadState}
-                accentClass=""
-                borderClass=""
                 disabled={isBusy}
                 broadcastIntents={broadcastIntents}
                 onBroadcastIntent={handleBroadcastIntent}
@@ -660,7 +656,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                 </div>
                 <div className="rounded-lg bg-black border border-zinc-900 p-3 max-h-40 overflow-y-auto log-scrollbar flex flex-col gap-1.5">
                   {logs.map((entry) => (
-                    <motion.div
+                    <MotionDiv
                       key={entry.id}
                       className="flex items-start gap-2"
                       initial={{ opacity: 0, y: 8 }}
@@ -681,7 +677,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                             )
                           : ""}
                       </span>
-                    </motion.div>
+                    </MotionDiv>
                   ))}
                   <div ref={logEndRef} />
                 </div>

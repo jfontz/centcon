@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
+
+const MotionDiv = motion.div;
 
 // Trusted devices are keyed by hostname|ip and persisted in localStorage.
 // Trust survives router reboots since storage lives in the browser, not the router.
@@ -34,12 +36,7 @@ const saveTrusted = (trusted) => {
 };
 
 export default function DeviceListModal({ open, onClose, devices = [] }) {
-  const [trusted, setTrusted] = useState({});
-
-  // Load trusted devices from localStorage on open
-  useEffect(() => {
-    if (open) setTrusted(loadTrusted());
-  }, [open]);
+  const [trusted, setTrusted] = useState(() => loadTrusted());
 
   const toggleTrusted = (key) => {
     setTrusted((prev) => {
@@ -126,7 +123,7 @@ export default function DeviceListModal({ open, onClose, devices = [] }) {
                   const key = `${device.hostname}|${device.ip}`;
                   const isTrusted = Boolean(trusted[key]);
                   return (
-                    <motion.div
+                    <MotionDiv
                       key={key}
                       layout
                       className={`flex items-center justify-between px-3 py-2.5 rounded-md border transition-colors ${
@@ -157,7 +154,7 @@ export default function DeviceListModal({ open, onClose, devices = [] }) {
                       >
                         {isTrusted ? "TRUSTED" : "UNKNOWN"}
                       </button>
-                    </motion.div>
+                    </MotionDiv>
                   );
                 })}
               </div>

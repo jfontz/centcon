@@ -74,7 +74,9 @@ export const appendHistory = (event) => {
 
       half.push({ ...event, id: crypto.randomUUID(), ts: now });
       localStorage.setItem(STORAGE_KEY, JSON.stringify(half));
-    } catch {}
+    } catch {
+      return;
+    }
   }
 };
 

@@ -8,7 +8,7 @@ export const getAuthConfig = async () => {
   let response;
   try {
     response = await fetch(`${BACKEND_URL}/auth-config`);
-  } catch (networkError) {
+  } catch {
     throw new Error("Cannot connect to the backend. Is the server running?");
   }
 
@@ -32,7 +32,7 @@ export const verifyPin = async (pin) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ pin }),
     });
-  } catch (networkError) {
+  } catch {
     throw new Error("Cannot connect to the backend. Is the server running?");
   }
 
