@@ -4,6 +4,8 @@ Real-time router dashboard with Selenium-powered automation for reboots, assiste
 
 **Stack:** React (Vite) frontend · FastAPI backend · Selenium automation · Server-Sent Events
 
+![CENTCON Dashboard](./docs/preview.png)
+
 ---
 
 ## Compatibility
