@@ -244,6 +244,9 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
             └── 📁icons
                 ├── (SVG icon assets)
                 ├── index.js
+            └── 📁fonts
+                └── 📁geist
+                └── 📁geist-mono
         └── 📁components
             └── 📁buttons
                 ├── SystemControlButton.jsx
