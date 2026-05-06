@@ -152,7 +152,7 @@ const BandGrid = ({
             </span>
             {loadState === "loaded" && ssid ? (
               <span
-                className={`text-[11px] truncate w-full text-center font-mono leading-tight ${isSelected ? "text-zinc-300" : ""}`}
+                className={`text-[11px] truncate w-full text-center leading-tight ${isSelected ? "text-zinc-300" : ""}`}
               >
                 {ssid}
               </span>
@@ -495,7 +495,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                   2.4 GHz
                 </span>
                 {selected24 !== undefined && (
-                  <span className="text-[11px] text-zinc-400 font-mono">
+                  <span className="text-[11px] text-zinc-400">
                     {wlanInfo?.[selected24]?.SSID}
                   </span>
                 )}
@@ -518,7 +518,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                   5 GHz
                 </span>
                 {selected5 !== undefined && (
-                  <span className="text-[11px] text-zinc-400 font-mono">
+                  <span className="text-[11px] text-zinc-400">
                     {wlanInfo?.[selected5]?.SSID}
                   </span>
                 )}
@@ -577,7 +577,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                           {freq} GHz · SSID {routerIdx}
                         </span>
                         {ssid && (
-                          <span className="text-xs text-zinc-600 font-mono">
+                          <span className="text-xs text-zinc-600">
                             {ssid}
                           </span>
                         )}
@@ -669,7 +669,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                       >
                         {entry.message}
                       </span>
-                      <span className="text-[11px] text-zinc-700 font-mono ml-auto shrink-0 mt-0.5">
+                      <span className="text-[11px] text-zinc-700 ml-auto shrink-0 mt-0.5">
                         {entry.timestamp
                           ? new Date(entry.timestamp).toLocaleTimeString(
                               "en-US",

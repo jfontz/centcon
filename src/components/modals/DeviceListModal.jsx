@@ -134,13 +134,13 @@ export default function DeviceListModal({ open, onClose, devices = [] }) {
                     >
                       <div className="flex flex-col gap-0.5 min-w-0">
                         <span
-                          className={`text-sm font-mono truncate ${
+                          className={`text-sm truncate ${
                             isTrusted ? "text-zinc-300" : "text-white"
                           }`}
                         >
                           {device.hostname}
                         </span>
-                        <span className="text-[11px] text-zinc-600 font-mono">
+                        <span className="text-[11px] text-zinc-600">
                           {device.ip}
                         </span>
                       </div>

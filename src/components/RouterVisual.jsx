@@ -95,7 +95,7 @@ const RouterBody = ({ leds, dimmed, model, software }) => (
             >
               <Led color={led.color} animate={led.animate} />
               <span
-                className="uppercase font-mono leading-none whitespace-nowrap text-center"
+                className="uppercase leading-none whitespace-nowrap text-center"
                 style={{
                   fontSize: "3cqw",
                   letterSpacing: "0.04em",

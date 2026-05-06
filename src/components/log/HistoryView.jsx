@@ -107,7 +107,7 @@ const HistoryView = ({ refreshTick }) => {
     : 100;
 
   return (
-    <div className="flex flex-col gap-4 p-4 font-mono">
+    <div className="flex flex-col gap-4 p-4">
       {/* Summary row */}
       <div className="flex items-center justify-between">
         <span className="text-xs uppercase tracking-widest text-zinc-600">

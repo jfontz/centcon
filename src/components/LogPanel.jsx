@@ -359,7 +359,7 @@ const LogPanel = () => {
   };
 
   return (
-    <div className="h-full max-h-[40vh] sm:max-h-[45vh] lg:max-h-[calc(100vh-10rem)] flex flex-col lg:sticky lg:top-28 bg-black text-gray-300 font-mono text-sm overflow-hidden rounded-lg">
+    <div className="h-full max-h-[40vh] sm:max-h-[45vh] lg:max-h-[calc(100vh-10rem)] flex flex-col lg:sticky lg:top-28 bg-black text-gray-300 text-sm overflow-hidden rounded-lg">
       <LogHeader
         onClearLogs={clearLogs}
         activeTab={activeTab}
