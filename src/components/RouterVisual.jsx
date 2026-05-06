@@ -115,7 +115,7 @@ const RouterBody = ({ leds, dimmed, model, software }) => (
         >
           {model && (
             <p
-              className="font-mono font-semibold tracking-widest uppercase text-center leading-tight"
+              className="font-mono-geist font-semibold tracking-widest uppercase text-center leading-tight"
               style={{ fontSize: "4.5cqw", color: "#888" }}
             >
               {model}
@@ -123,7 +123,7 @@ const RouterBody = ({ leds, dimmed, model, software }) => (
           )}
           {software && (
             <p
-              className="font-mono tracking-wider text-center leading-tight truncate w-full"
+              className="font-mono-geist tracking-wider text-center leading-tight truncate w-full"
               style={{ fontSize: "3.2cqw", color: "#555" }}
             >
               {software}

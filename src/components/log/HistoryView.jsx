@@ -264,7 +264,7 @@ const HistoryView = ({ refreshTick }) => {
                     minute: "2-digit",
                   })}
                 </span>
-                <span className={`text-xs ${getEventColor(e.type, e.text)}`}>
+                <span className={`font-log text-xs ${getEventColor(e.type, e.text)}`}>
                   {e.text}
                 </span>
               </div>
