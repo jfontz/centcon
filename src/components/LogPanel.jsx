@@ -107,12 +107,12 @@ const LogPanel = () => {
     }
 
     // ONLY check LOS and Internet when router is reachable (fresh data)
-      if (data && routerReachable) {
-        // INITIAL STARTUP
-        if (!hasShownStartup.current) {
-          newLogs.push({
-            type: "header",
-            text: "CENTCON Monitoring Started",
+    if (data && routerReachable) {
+      // INITIAL STARTUP
+      if (!hasShownStartup.current) {
+        newLogs.push({
+          type: "header",
+          text: "CENTCON Monitoring Started",
           timestamp,
           id: crypto.randomUUID(),
         });
