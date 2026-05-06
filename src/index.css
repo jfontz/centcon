@@ -1,27 +1,86 @@
 @import "tailwindcss";
 
-@layer utilities {
-  /* Card */
-  .border-card-black {
-    border-color: #222222;
+@layer base {
+
+  /* ── GEIST SANS (UI) ─────────────────────────────── */
+  @font-face {
+    font-family: "Geist Sans";
+    src: url("assets/fonts/geist/Geist-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-display: swap;
   }
 
-  .bg-card-black {
-    background-color: #050505;
+  @font-face {
+    font-family: "Geist Sans";
+    src: url("assets/fonts/geist/Geist-Medium.woff2") format("woff2");
+    font-weight: 500;
+    font-display: swap;
   }
 
-  /* Text colors */
-  .text-gray {
-    color: #858585;
+  @font-face {
+    font-family: "Geist Sans";
+    src: url("assets/fonts/geist/Geist-SemiBold.woff2") format("woff2");
+    font-weight: 600;
+    font-display: swap;
   }
 
-  .text-green {
-    color: #28a745;
+  @font-face {
+    font-family: "Geist Sans";
+    src: url("assets/fonts/geist/Geist-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-display: swap;
+  }
+
+  /* ── GEIST MONO (LOG) ────────────────────────────── */
+  @font-face {
+    font-family: "Geist Mono";
+    src: url("assets/fonts/geist-mono/GeistMono-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Geist Mono";
+    src: url("assets/fonts/geist-mono/GeistMono-SemiBold.woff2") format("woff2");
+    font-weight: 600;
+    font-display: swap;
+  }
+
+  /* ── GLOBAL DEFAULT ──────────────────────────────── */
+  * {
+    font-family: "Geist Sans", system-ui, sans-serif;
   }
 }
 
+@layer utilities {
+
+  /* ── FONTS ───────────────────────────────────────── */
+  .font-mono-geist,
+  .font-log,
+  .log-entries,
+  .log-entries * {
+    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  .font-log {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  /* ── COLORS ──────────────────────────────────────── */
+  .border-card-black { border-color: #222222; }
+  .bg-card-black     { background-color: #050505; }
+  .text-gray         { color: #858585; }
+  .text-green        { color: #28a745; }
+}
+
 @layer components {
-  /* Status Pills */
+
+  /* ── STATUS PILLS ────────────────────────────────── */
+  .status-pill {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm;
+  }
+
   .status-online {
     color: #28a745;
     border: 1px solid #28a7454d;
@@ -52,11 +111,7 @@
     background-color: transparent;
   }
 
-  .status-pill {
-    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm;
-  }
-
-  /* System Control Buttons */
+  /* ── BUTTONS ─────────────────────────────────────── */
   .control-btn {
     @apply flex items-center justify-center gap-3 w-full px-6 py-4 rounded-md text-sm font-medium transition-all cursor-pointer;
     background-color: transparent;
@@ -67,7 +122,6 @@
     background-color: #2f2f2f33;
   }
 
-  /* Reboot Button */
   .btn-reboot {
     @apply flex items-center justify-center gap-2 w-full px-6 py-3 rounded-md text-sm font-medium transition-all cursor-pointer;
     color: #f87171;
@@ -79,34 +133,20 @@
     background-color: #7f1d1d33;
   }
 
+  /* ── ANIMATIONS ──────────────────────────────────── */
   @keyframes modal-fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+    from { opacity: 0; }
+    to   { opacity: 1; }
   }
 
   @keyframes modal-slide-in {
-    from {
-      opacity: 0;
-      transform: scale(0.96) translateY(-8px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
+    from { opacity: 0; transform: scale(0.96) translateY(-8px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0);    }
   }
 
-  /* Dark scrollbar for log panel */
-  .log-scrollbar::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .log-scrollbar::-webkit-scrollbar-track {
-    background: #0b0b0b;
-  }
+  /* ── SCROLLBAR ───────────────────────────────────── */
+  .log-scrollbar::-webkit-scrollbar       { width: 8px; }
+  .log-scrollbar::-webkit-scrollbar-track { background: #0b0b0b; }
 
   .log-scrollbar::-webkit-scrollbar-thumb {
     background-color: #2a2a2a;
