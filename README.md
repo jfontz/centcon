@@ -252,8 +252,6 @@ Devices can be marked as **Trusted** or left as **Unknown**. Trusted status is s
                 ├── SystemControlButton.jsx
             └── 📁cards
                 ├── CPUCard.jsx
-                ├── DeviceModelCard.jsx
-                ├── DeviceSoftwareCard.jsx
                 ├── LANCard.jsx
                 ├── MemoryCard.jsx
                 ├── RuntimeCard.jsx

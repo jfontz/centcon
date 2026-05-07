@@ -1,7 +1,6 @@
 import check from "./check.svg";
 import cpu from "./cpu.svg";
 import clear from "./clear.svg";
-import device from "./device.svg";
 import hourglass from "./hourglass.svg";
 import lan from "./lan.svg";
 import load from "./load.svg";
@@ -14,7 +13,6 @@ import process from "./process.svg";
 import reboot from "./reboot.svg";
 import refreshData from "./refresh-data.svg";
 import runtime from "./runtime.svg";
-import software from "./software.svg";
 import temperature from "./temperature.svg";
 import wifi from "./wifi.svg";
 import warning from "./warning.svg";
@@ -30,7 +28,6 @@ export {
   check,
   cpu,
   clear,
-  device,
   hourglass,
   lan,
   load,
@@ -43,7 +40,6 @@ export {
   reboot,
   refreshData,
   runtime,
-  software,
   temperature,
   wifi,
   warning,
