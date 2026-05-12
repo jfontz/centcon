@@ -66,7 +66,7 @@ export const useRouterData = (
       } else if (routerData?.wan?.connected) {
         setStatus("online");
       } else {
-        setStatus("offline");
+         setStatus("wan_error");
       }
 
       setLastUpdated(new Date());

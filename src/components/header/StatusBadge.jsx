@@ -44,6 +44,11 @@ const ROUTER_STATUS_MAP = {
     dot: "bg-red-500 animate-pulse",
     label: "LOS - No Signal",
   },
+  wan_error: {
+    statusClass: "status-error",
+    dot: "bg-red-500 animate-pulse",
+    label: "Error - No Internet",
+  },
   error: {
     statusClass: "status-error",
     dot: "bg-red-500",
