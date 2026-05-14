@@ -23,6 +23,8 @@ import eyeSlash from "./eye-slash.svg";
 import info from "./info.svg";
 import action from "./action.svg";
 import history from "./history.svg";
+import lightMode from "./light-mode.svg";
+import darkMode from "./dark-mode.svg";
 
 export {
   check,
@@ -50,4 +52,6 @@ export {
   info,
   action,
   history,
+  lightMode,
+  darkMode,
 };
