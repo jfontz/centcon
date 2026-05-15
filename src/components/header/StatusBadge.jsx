@@ -1,62 +1,84 @@
+const STATUS_CLASSES = {
+  online:
+    "text-[#218c4f] border border-[rgba(33,140,79,0.24)] bg-transparent dark:text-[#28a745] dark:border-[#28a7454d] dark:bg-transparent",
+  offline:
+    "text-[#7b7b74] border border-[rgba(123,123,116,0.24)] bg-transparent dark:text-[#6c757d] dark:border-[#6c757d4d] dark:bg-transparent",
+  error:
+    "text-[#c44955] border border-[rgba(196,73,85,0.24)] bg-transparent dark:text-[#dc3545] dark:border-[#dc35454d] dark:bg-transparent",
+  progress:
+    "text-[#326dcf] border border-[rgba(50,109,207,0.22)] bg-transparent dark:text-[#3b82f6] dark:border-[#3b82f64d] dark:bg-transparent",
+  waiting:
+    "text-[#b7791f] border border-[rgba(183,121,31,0.24)] bg-transparent dark:text-[#f59e0b] dark:border-[#f59e0b4d] dark:bg-transparent",
+};
+
+const DOT_CLASSES = {
+  online: "bg-[#218c4f] dark:bg-green-500 animate-pulse",
+  offline: "bg-[#7b7b74] dark:bg-gray-500",
+  error: "bg-[#c44955] dark:bg-red-500",
+  errorPulse: "bg-[#c44955] dark:bg-red-500 animate-pulse",
+  progress: "bg-[#326dcf] dark:bg-blue-500",
+  waiting: "bg-[#b7791f] dark:bg-amber-500",
+};
+
 const REBOOT_STATE_MAP = {
-  IDLE: { statusClass: "status-offline", dot: "bg-gray-500", label: "" },
+  IDLE: { statusClass: STATUS_CLASSES.offline, dot: DOT_CLASSES.offline, label: "" },
   LOGGING_IN: {
-    statusClass: "status-reboot-progress",
-    dot: "bg-blue-500",
-    label: "Logging in…",
+    statusClass: STATUS_CLASSES.progress,
+    dot: DOT_CLASSES.progress,
+    label: "Logging in\u2026",
   },
   NAVIGATING: {
-    statusClass: "status-reboot-progress",
-    dot: "bg-blue-500",
-    label: "Navigating…",
+    statusClass: STATUS_CLASSES.progress,
+    dot: DOT_CLASSES.progress,
+    label: "Navigating\u2026",
   },
   REBOOTING: {
-    statusClass: "status-reboot-waiting",
-    dot: "bg-amber-500",
-    label: "Rebooting…",
+    statusClass: STATUS_CLASSES.waiting,
+    dot: DOT_CLASSES.waiting,
+    label: "Rebooting\u2026",
   },
   WAITING: {
-    statusClass: "status-reboot-waiting",
-    dot: "bg-amber-500",
-    label: "Rebooting…",
+    statusClass: STATUS_CLASSES.waiting,
+    dot: DOT_CLASSES.waiting,
+    label: "Rebooting\u2026",
   },
   CHECKING_CONNECTION: {
-    statusClass: "status-reboot-progress",
-    dot: "bg-blue-500",
-    label: "Checking connection…",
+    statusClass: STATUS_CLASSES.progress,
+    dot: DOT_CLASSES.progress,
+    label: "Checking connection\u2026",
   },
   ONLINE: {
-    statusClass: "status-online",
-    dot: "bg-green-500 animate-pulse",
+    statusClass: STATUS_CLASSES.online,
+    dot: DOT_CLASSES.online,
     label: "Online",
   },
-  FAILED: { statusClass: "status-error", dot: "bg-red-500", label: "Failed" },
+  FAILED: { statusClass: STATUS_CLASSES.error, dot: DOT_CLASSES.error, label: "Failed" },
 };
 
 const ROUTER_STATUS_MAP = {
   online: {
-    statusClass: "status-online",
-    dot: "bg-green-500 animate-pulse",
+    statusClass: STATUS_CLASSES.online,
+    dot: DOT_CLASSES.online,
     label: "Online",
   },
   los: {
-    statusClass: "status-error",
-    dot: "bg-red-500 animate-pulse",
+    statusClass: STATUS_CLASSES.error,
+    dot: DOT_CLASSES.errorPulse,
     label: "LOS - No Signal",
   },
   wan_error: {
-    statusClass: "status-error",
-    dot: "bg-red-500 animate-pulse",
+    statusClass: STATUS_CLASSES.error,
+    dot: DOT_CLASSES.errorPulse,
     label: "Error - No Internet",
   },
   error: {
-    statusClass: "status-error",
-    dot: "bg-red-500",
+    statusClass: STATUS_CLASSES.error,
+    dot: DOT_CLASSES.error,
     label: "Error",
   },
   offline: {
-    statusClass: "status-offline",
-    dot: "bg-gray-500",
+    statusClass: STATUS_CLASSES.offline,
+    dot: DOT_CLASSES.offline,
     label: "Offline",
   },
 };

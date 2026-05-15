@@ -26,7 +26,7 @@ const InputField = ({
       {(label || tooltip) && (
         <div className="flex items-center gap-1.5">
           {label && (
-            <label className="text-xs font-medium text-zinc-400 tracking-wide">
+            <label className="text-xs font-medium text-[#4f4f49] dark:text-zinc-400 tracking-wide">
               {label}
             </label>
           )}
@@ -38,7 +38,7 @@ const InputField = ({
               arrowClass="ml-3"
               buttonAriaLabel={`Learn more about ${label}`}
             >
-              <p className="text-xs text-zinc-500 leading-relaxed">{tooltip}</p>
+              <p className="text-xs text-[#666660] dark:text-zinc-500 leading-relaxed">{tooltip}</p>
             </HelpTooltip>
           )}
         </div>
@@ -51,12 +51,12 @@ const InputField = ({
             const val = transform ? transform(e.target.value) : e.target.value;
             onChange(field, val);
           }}
-          className={`w-full px-3 py-2.5 rounded-md bg-black text-white text-sm border transition-colors outline-none placeholder:text-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed
+          className={`w-full px-3 py-2.5 rounded-md bg-[#f6f3ed] text-[#24241f] dark:bg-black dark:text-white text-sm border transition-colors outline-none placeholder:text-[#8a8a83] dark:placeholder:text-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed
             ${showToggle ? "pr-9" : ""}
             ${
               errors[field]
-                ? "border-red-900 focus:border-red-800 focus:ring-1 focus:ring-red-900/50"
-                : "border-zinc-800 focus:border-zinc-600"
+                ? "border-[#c44955] focus:border-[#c44955] focus:ring-1 focus:ring-[rgba(196,73,85,0.24)] dark:border-red-900 dark:focus:border-red-800 dark:focus:ring-red-900/50"
+                : "border-[#cec8bc] focus:border-[#a8a191] dark:border-zinc-800 dark:focus:border-zinc-600"
             }`}
           placeholder={placeholder}
           maxLength={maxLength}
@@ -67,7 +67,7 @@ const InputField = ({
           <button
             type="button"
             onClick={() => setRevealed((prev) => !prev)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:text-zinc-700"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666660] hover:text-[#24241f] dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:text-[#a0a099] dark:disabled:text-zinc-700"
             aria-label={revealed ? "Hide password" : "Show password"}
             title={revealed ? "Hide password" : "Show password"}
             disabled={loading}
@@ -81,8 +81,8 @@ const InputField = ({
         )}
       </div>
       {errors[field] && (
-        <p className="flex items-center gap-1.5 text-xs text-red-400 mt-0.5">
-          <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-red-900/60 text-red-400 font-bold text-[9px] flex-shrink-0">
+        <p className="flex items-center gap-1.5 text-xs text-[#c44955] dark:text-red-400 mt-0.5">
+          <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-[rgba(196,73,85,0.1)] text-[#c44955] dark:bg-red-900/60 dark:text-red-400 font-bold text-[9px] flex-shrink-0">
             !
           </span>
           {errors[field]}

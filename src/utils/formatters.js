@@ -51,13 +51,13 @@ export const getTemperatureStatus = (temp) => {
  * @returns {string} Tailwind text color class (blue/green/yellow/red/gray)
  */
 export const getTemperatureColor = (temp) => {
-  if (!temp) return "text-gray-400";
+  if (!temp) return "text-[#8a8a83] dark:text-gray-400";
   const temperature = parseFloat(temp);
 
-  if (temperature < 40) return "text-blue-400";
-  if (temperature < 55) return "text-green-400";
-  if (temperature < 70) return "text-yellow-400";
-  return "text-red-400";
+  if (temperature < 40) return "text-[#326dcf] dark:text-blue-400";
+  if (temperature < 55) return "text-[#218c4f] dark:text-green-400";
+  if (temperature < 70) return "text-[#b7791f] dark:text-yellow-400";
+  return "text-[#c44955] dark:text-red-400";
 };
 
 /**

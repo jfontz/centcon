@@ -47,9 +47,9 @@ const HeaderButton = ({
     "group flex items-center justify-center gap-2 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
   const variantClasses = {
     refresh:
-      "text-green bg-transparent border border-[#28a7454d] hover:bg-[#26894033]",
+      "text-[#218c4f] bg-transparent border border-[rgba(33,140,79,0.24)] hover:bg-[rgba(33,140,79,0.12)] dark:text-[#28a745] dark:bg-transparent dark:border-[#28a7454d] dark:hover:bg-[#26894033]",
     logout:
-      "text-gray bg-transparent border border-card-black hover:bg-[#2f2f2f33]",
+      "text-[#666660] bg-transparent border border-[#cec8bc] hover:bg-[#d3cec4] dark:text-[#858585] dark:bg-transparent dark:border-[#222222] dark:hover:bg-[#2f2f2f33]",
   };
 
   return (

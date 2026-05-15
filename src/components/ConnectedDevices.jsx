@@ -27,7 +27,7 @@ const ConnectedDevices = () => {
         action={
           <button
             onClick={() => setModalOpen(true)}
-            className="flex items-center gap-1.5 text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 text-[11px] text-[#666660] hover:text-[#24241f] dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer"
             title="View all connected devices"
           >
             <span className="text-xs">View all</span>

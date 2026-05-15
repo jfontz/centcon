@@ -31,11 +31,11 @@ const SystemControls = () => {
   };
 
   return (
-    <div className="bg-black text-white text-sm">
+    <div className="bg-[#e9e6df] text-[#24241f] dark:bg-black dark:text-white text-sm">
       <SectionContainer title="System Controls" className="flex">
         <div className="flex flex-col gap-4">
           {!commandBackendOnline && (
-            <p className="text-[11px] text-amber-400">
+            <p className="text-[11px] text-[#b7791f] dark:text-amber-400">
               {commandBackendError ||
                 "Backend not running. Start the backend service to enable controls."}
             </p>

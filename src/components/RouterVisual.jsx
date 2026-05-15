@@ -7,15 +7,21 @@ import { getLedStates } from "../utils/getLedStates";
 
 const LED_COLORS = {
   green: {
-    bg: "bg-green-500",
-    shadow: "shadow-[0_0_6px_2px_rgba(34,197,94,0.5)]",
+    bg: "bg-[#218c4f] dark:bg-green-500",
+    shadow:
+      "shadow-[0_0_6px_2px_rgba(33,140,79,0.45)] dark:shadow-[0_0_6px_2px_rgba(34,197,94,0.5)]",
   },
   amber: {
-    bg: "bg-amber-400",
-    shadow: "shadow-[0_0_6px_2px_rgba(251,191,36,0.5)]",
+    bg: "bg-[#b7791f] dark:bg-amber-400",
+    shadow:
+      "shadow-[0_0_6px_2px_rgba(183,121,31,0.45)] dark:shadow-[0_0_6px_2px_rgba(251,191,36,0.5)]",
   },
-  red: { bg: "bg-red-500", shadow: "shadow-[0_0_6px_2px_rgba(239,68,68,0.5)]" },
-  off: { bg: "bg-[#2a2a2a]", shadow: "" },
+  red: {
+    bg: "bg-[#c44955] dark:bg-red-500",
+    shadow:
+      "shadow-[0_0_6px_2px_rgba(196,73,85,0.45)] dark:shadow-[0_0_6px_2px_rgba(239,68,68,0.5)]",
+  },
+  off: { bg: "bg-[#b7b3aa] dark:bg-[#2a2a2a]", shadow: "" },
 };
 
 const ANIMATE_CLASSES = {
@@ -53,7 +59,7 @@ const RouterBody = ({ leds, dimmed, model, software }) => (
         style={{ position: "relative", zIndex: 0 }}
       >
         <div
-          className="bg-[#1c1c1c] border border-[#383838] rounded-t-full"
+          className="bg-[#f4f1eb] border border-[#c8c1b4] dark:bg-[#1c1c1c] dark:border-[#383838] rounded-t-full"
           style={{
             width: "5cqw",
             height: "40cqw",
@@ -62,7 +68,7 @@ const RouterBody = ({ leds, dimmed, model, software }) => (
           }}
         />
         <div
-          className="bg-[#1c1c1c] border border-[#383838] rounded-t-full"
+          className="bg-[#f4f1eb] border border-[#c8c1b4] dark:bg-[#1c1c1c] dark:border-[#383838] rounded-t-full"
           style={{
             width: "5cqw",
             height: "40cqw",
@@ -74,7 +80,7 @@ const RouterBody = ({ leds, dimmed, model, software }) => (
 
       {/* ── MAIN BODY — overlaps antenna by 15cqw (half their 30cqw height) ── */}
       <div
-        className="w-full bg-[#111] border border-[#2e2e2e] rounded-2xl flex flex-col"
+        className="w-full bg-[#f7f4ee] border border-[#cdc6b9] dark:bg-[#111] dark:border-[#2e2e2e] rounded-2xl flex flex-col"
         style={{
           minHeight: "55cqw",
           position: "relative",
@@ -95,11 +101,10 @@ const RouterBody = ({ leds, dimmed, model, software }) => (
             >
               <Led color={led.color} animate={led.animate} />
               <span
-                className="uppercase leading-none whitespace-nowrap text-center"
+                className="uppercase leading-none whitespace-nowrap text-center text-[#7f7f78] dark:text-[#666]"
                 style={{
                   fontSize: "3cqw",
                   letterSpacing: "0.04em",
-                  color: "#666",
                 }}
               >
                 {led.label}
@@ -115,16 +120,16 @@ const RouterBody = ({ leds, dimmed, model, software }) => (
         >
           {model && (
             <p
-              className="font-mono-geist font-semibold tracking-widest uppercase text-center leading-tight"
-              style={{ fontSize: "4.5cqw", color: "#888" }}
+              className="font-mono-geist font-semibold tracking-widest uppercase text-center leading-tight text-[#5f5f58] dark:text-[#888]"
+              style={{ fontSize: "4.5cqw" }}
             >
               {model}
             </p>
           )}
           {software && (
             <p
-              className="font-mono-geist tracking-wider text-center leading-tight truncate w-full"
-              style={{ fontSize: "3.2cqw", color: "#555" }}
+              className="font-mono-geist tracking-wider text-center leading-tight truncate w-full text-[#7f7f78] dark:text-[#555]"
+              style={{ fontSize: "3.2cqw" }}
             >
               {software}
             </p>
@@ -138,7 +143,7 @@ const RouterBody = ({ leds, dimmed, model, software }) => (
         style={{ position: "relative", zIndex: 1 }}
       >
         <div
-          className="bg-[#1a1a1a] border border-[#2e2e2e]"
+          className="bg-[#e6e0d4] border border-[#cdc6b9] dark:bg-[#1a1a1a] dark:border-[#2e2e2e]"
           style={{
             width: "68cqw",
             height: "5cqw",

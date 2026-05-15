@@ -87,8 +87,8 @@ function AppContent() {
   // Show loading while checking setup and config
   if (!setupChecked || !configLoaded) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-lg">Loading...</div>
+      <div className="min-h-screen bg-[#e9e6df] dark:bg-black flex items-center justify-center">
+        <div className="text-[#24241f] dark:text-white text-lg">Loading...</div>
       </div>
     );
   }

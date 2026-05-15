@@ -17,14 +17,14 @@ import {
 } from "../../assets/icons";
 
 const LOG_LEVEL_STYLES = {
-  header: "text-zinc-300 font-semibold",
-  progress: "text-zinc-500",
-  action: "text-zinc-400",
-  info: "text-zinc-300",
-  success: "text-emerald-400",
-  error: "text-red-400",
-  warning: "text-amber-400",
-  navigate: "text-blue-400",
+  header: "text-[#24241f] dark:text-zinc-300 font-semibold",
+  progress: "text-[#666660] dark:text-zinc-500",
+  action: "text-[#4f4f49] dark:text-zinc-400",
+  info: "text-[#24241f] dark:text-zinc-300",
+  success: "text-[#218c4f] dark:text-emerald-400",
+  error: "text-[#c44955] dark:text-red-400",
+  warning: "text-[#b7791f] dark:text-amber-400",
+  navigate: "text-[#326dcf] dark:text-blue-400",
 };
 
 const MotionDiv = motion.div;
@@ -47,7 +47,7 @@ const getLogIcon = (level) => {
   const icon = LOG_LEVEL_ICON[level];
   if (!icon)
     return (
-      <span className="text-xs text-zinc-500 shrink-0 mt-0.5">·</span>
+      <span className="text-xs text-[#666660] dark:text-zinc-500 shrink-0 mt-0.5">·</span>
     );
   return <img src={icon} className={LOG_ICON_CLASSES} alt={level} />;
 };
@@ -71,7 +71,7 @@ const Field = ({
 
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-semibold tracking-[0.15em] uppercase text-zinc-500">
+      <label className="text-xs font-semibold tracking-[0.15em] uppercase text-[#666660] dark:text-zinc-500">
         {label}
       </label>
       <div className="relative">
@@ -80,19 +80,19 @@ const Field = ({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className={`w-full px-3 py-2 rounded-md text-[15px] border outline-none transition-colors bg-black text-white placeholder:text-zinc-700
+          className={`w-full px-3 py-2 rounded-md text-[15px] border outline-none transition-colors bg-[#f6f3ed] text-[#24241f] placeholder:text-[#8a8a83] dark:bg-black dark:text-white dark:placeholder:text-zinc-700
             ${showToggle ? "pr-9" : ""}
             ${
               error
-                ? "border-red-700 focus:border-red-500"
-                : "border-zinc-800 focus:border-zinc-500"
+                ? "border-[#c44955] focus:border-[#c44955] dark:border-red-700 dark:focus:border-red-500"
+                : "border-[#cec8bc] focus:border-[#a8a191] dark:border-zinc-800 dark:focus:border-zinc-500"
             }`}
         />
         {showToggle && (
           <button
             type="button"
             onClick={() => setRevealed((prev) => !prev)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666660] hover:text-[#24241f] dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer"
             aria-label={revealed ? "Hide password" : "Show password"}
             title={revealed ? "Hide password" : "Show password"}
           >
@@ -104,7 +104,7 @@ const Field = ({
           </button>
         )}
       </div>
-      {error && <p className="text-xs text-red-400 leading-snug">{error}</p>}
+      {error && <p className="text-xs text-[#c44955] dark:text-red-400 leading-snug">{error}</p>}
     </div>
   );
 };
@@ -127,10 +127,10 @@ const BandGrid = ({
         disabled || (!isSelected && bandSelected !== undefined);
       const ssid = wlanInfo?.[i]?.SSID;
       const cardClass = isSelected
-        ? "bg-zinc-900 border border-zinc-600 text-white cursor-pointer"
+        ? "bg-[#e4ddd0] border border-[#b4aa96] text-[#24241f] dark:bg-zinc-900 dark:border-zinc-600 dark:text-white cursor-pointer"
         : isDisabled
-          ? "bg-zinc-900/40 border border-zinc-900 text-zinc-700 cursor-not-allowed"
-          : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white cursor-pointer";
+          ? "bg-[#f0ede6] border border-[#cec8bc] text-[#8a8a83] dark:bg-zinc-900/40 dark:border-zinc-900 dark:text-zinc-700 cursor-not-allowed"
+          : "bg-[#f5f3ed] border border-[#cec8bc] text-[#4f4f49] hover:border-[#bfb8ab] hover:text-[#24241f] dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-white cursor-pointer";
       return (
         <div
           key={i}
@@ -146,18 +146,18 @@ const BandGrid = ({
             className="w-full flex flex-col items-center gap-1 focus:outline-none cursor-pointer disabled:cursor-not-allowed"
           >
             <span
-              className={`text-xs font-bold ${isSelected ? "text-zinc-300" : "text-zinc-500"}`}
+              className={`text-xs font-bold ${isSelected ? "text-[#24241f] dark:text-zinc-300" : "text-[#666660] dark:text-zinc-500"}`}
             >
               SSID {getRouterIndex(i)}
             </span>
             {loadState === "loaded" && ssid ? (
               <span
-                className={`text-[11px] truncate w-full text-center leading-tight ${isSelected ? "text-zinc-300" : ""}`}
+                className={`text-[11px] truncate w-full text-center leading-tight ${isSelected ? "text-[#24241f] dark:text-zinc-300" : ""}`}
               >
                 {ssid}
               </span>
             ) : (
-              <span className="text-[11px] text-zinc-700">—</span>
+              <span className="text-[11px] text-[#8a8a83] dark:text-zinc-700">—</span>
             )}
           </button>
           <div className="flex gap-1 mt-1">
@@ -170,8 +170,8 @@ const BandGrid = ({
               className={`text-[10px] px-1.5 py-0.5 rounded font-bold transition-all cursor-pointer disabled:cursor-not-allowed
                 ${
                   broadcastIntents?.[i] === "enable"
-                    ? "bg-zinc-800 text-white border border-zinc-600"
-                    : "bg-zinc-800 text-zinc-600 border border-zinc-700 hover:text-zinc-400"
+                    ? "bg-[#ddd9d0] text-[#24241f] border border-[#bfb8ab] dark:bg-zinc-800 dark:text-white dark:border-zinc-600"
+                    : "bg-[#f0ede6] text-[#8a8a83] border border-[#cec8bc] hover:text-[#666660] dark:bg-zinc-800 dark:text-zinc-600 dark:border-zinc-700 dark:hover:text-zinc-400"
                 }`}
             >
               ON
@@ -185,8 +185,8 @@ const BandGrid = ({
               className={`text-[10px] px-1.5 py-0.5 rounded font-bold transition-all cursor-pointer disabled:cursor-not-allowed
                 ${
                   broadcastIntents?.[i] === "disable"
-                    ? "bg-zinc-800 text-white border border-zinc-600"
-                    : "bg-zinc-800 text-zinc-600 border border-zinc-700 hover:text-zinc-400"
+                    ? "bg-[#ddd9d0] text-[#24241f] border border-[#bfb8ab] dark:bg-zinc-800 dark:text-white dark:border-zinc-600"
+                    : "bg-[#f0ede6] text-[#8a8a83] border border-[#cec8bc] hover:text-[#666660] dark:bg-zinc-800 dark:text-zinc-600 dark:border-zinc-700 dark:hover:text-zinc-400"
                 }`}
             >
               OFF
@@ -433,21 +433,21 @@ export default function WiFiCredentialModal({ open, onClose }) {
 
   return (
     <div
-      className={`fixed inset-0 bg-black/80 backdrop-blur-sm z-40 flex items-center justify-center p-4 ${isBusy ? "cursor-not-allowed" : ""}`}
+      className={`fixed inset-0 bg-black/35 dark:bg-black/80 backdrop-blur-sm z-40 flex items-center justify-center p-4 ${isBusy ? "cursor-not-allowed" : ""}`}
       onClick={handleClose}
     >
       <div
-        className="relative w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden z-50 shadow-2xl flex flex-col"
+        className="relative w-full max-w-lg bg-[#f7f4ee] border border-[#cec8bc] dark:bg-zinc-950 dark:border-zinc-800 rounded-xl overflow-hidden z-50 shadow-2xl flex flex-col"
         style={{ maxHeight: "calc(100dvh - 20rem)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-900 sticky top-0 bg-zinc-950 z-10">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#cec8bc] dark:border-zinc-900 sticky top-0 bg-[#f7f4ee] dark:bg-zinc-950 z-10">
           <div>
-            <h2 className="text-sm font-semibold text-white tracking-wide">
+            <h2 className="text-sm font-semibold text-[#1a1a1a] dark:text-white tracking-wide">
               Wi-Fi Credentials
             </h2>
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <p className="text-xs text-[#666660] dark:text-zinc-500 mt-0.5">
               {loadState === "loading" && "Loading SSIDs from router..."}
               {loadState === "loaded" &&
                 !isBusy &&
@@ -467,7 +467,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
               isBusy ? "Cannot close while changes are being applied" : "Close"
             }
             className={`transition-colors text-lg leading-none
-              ${isBusy ? "text-zinc-800 cursor-not-allowed" : "text-zinc-600 hover:text-zinc-300 cursor-pointer"}`}
+              ${isBusy ? "text-[#a0a099] dark:text-zinc-800 cursor-not-allowed" : "text-[#666660] hover:text-[#24241f] dark:text-zinc-600 dark:hover:text-zinc-300 cursor-pointer"}`}
           >
             ✕
           </button>
@@ -479,10 +479,10 @@ export default function WiFiCredentialModal({ open, onClose }) {
             className={`flex flex-col gap-3 ${isBusy ? "opacity-40 pointer-events-none" : ""}`}
           >
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold tracking-[0.15em] uppercase text-zinc-500">
+              <label className="text-xs font-semibold tracking-[0.15em] uppercase text-[#666660] dark:text-zinc-500">
                 Select SSID
               </label>
-              <span className="text-xs text-zinc-600">
+              <span className="text-xs text-[#666660] dark:text-zinc-600">
                 {selected.length === 0 && "None selected"}
                 {selected.length === 1 && "1 band selected"}
                 {selected.length === 2 && "Both bands selected"}
@@ -491,11 +491,11 @@ export default function WiFiCredentialModal({ open, onClose }) {
 
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold tracking-widest text-zinc-400 uppercase">
+                <span className="text-[11px] font-bold tracking-widest text-[#4f4f49] dark:text-zinc-400 uppercase">
                   2.4 GHz
                 </span>
                 {selected24 !== undefined && (
-                  <span className="text-[11px] text-zinc-400">
+                  <span className="text-[11px] text-[#4f4f49] dark:text-zinc-400">
                     {wlanInfo?.[selected24]?.SSID}
                   </span>
                 )}
@@ -514,11 +514,11 @@ export default function WiFiCredentialModal({ open, onClose }) {
 
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold tracking-widest text-zinc-400 uppercase">
+                <span className="text-[11px] font-bold tracking-widest text-[#4f4f49] dark:text-zinc-400 uppercase">
                   5 GHz
                 </span>
                 {selected5 !== undefined && (
-                  <span className="text-[11px] text-zinc-400">
+                  <span className="text-[11px] text-[#4f4f49] dark:text-zinc-400">
                     {wlanInfo?.[selected5]?.SSID}
                   </span>
                 )}
@@ -541,12 +541,12 @@ export default function WiFiCredentialModal({ open, onClose }) {
                   {[0, 1, 2].map((i) => (
                     <div
                       key={i}
-                      className="w-1 h-1 bg-zinc-600 rounded-full animate-bounce"
+                      className="w-1 h-1 bg-[#8a8a83] dark:bg-zinc-600 rounded-full animate-bounce"
                       style={{ animationDelay: `${i * 150}ms` }}
                     />
                   ))}
                 </div>
-                <span className="text-xs text-zinc-600">Loading SSIDs...</span>
+                <span className="text-xs text-[#666660] dark:text-zinc-600">Loading SSIDs...</span>
               </div>
             )}
           </div>
@@ -554,15 +554,15 @@ export default function WiFiCredentialModal({ open, onClose }) {
           {/* Credential fields */}
           {(selected.length > 0 || hasBroadcastIntents) && (
             <>
-              <div className="border-t border-zinc-900" />
+              <div className="border-t border-[#cec8bc] dark:border-zinc-900" />
               <div
                 className={`flex flex-col gap-4 ${isBusy ? "opacity-40 pointer-events-none" : ""}`}
               >
                 <div>
-                  <span className="text-xs font-semibold tracking-[0.15em] uppercase text-zinc-500">
+                  <span className="text-xs font-semibold tracking-[0.15em] uppercase text-[#666660] dark:text-zinc-500">
                     New Credentials
                   </span>
-                  <p className="text-xs text-zinc-600 mt-1">
+                  <p className="text-xs text-[#666660] dark:text-zinc-600 mt-1">
                     Leave a field blank to keep the current value unchanged.
                   </p>
                 </div>
@@ -573,11 +573,11 @@ export default function WiFiCredentialModal({ open, onClose }) {
                   return (
                     <div key={i} className="flex flex-col gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs px-2 py-0.5 rounded font-bold tracking-wider bg-zinc-800 text-zinc-300">
+                        <span className="text-xs px-2 py-0.5 rounded font-bold tracking-wider bg-[#ddd9d0] text-[#24241f] dark:bg-zinc-800 dark:text-zinc-300">
                           {freq} GHz · SSID {routerIdx}
                         </span>
                         {ssid && (
-                          <span className="text-xs text-zinc-600">
+                          <span className="text-xs text-[#666660] dark:text-zinc-600">
                             {ssid}
                           </span>
                         )}
@@ -614,8 +614,8 @@ export default function WiFiCredentialModal({ open, onClose }) {
           {selected.length === 0 &&
             loadState === "loaded" &&
             !hasBroadcastIntents && (
-              <div className="rounded-lg bg-zinc-900/40 border border-zinc-900 px-4 py-4 text-center">
-                <p className="text-[13px] text-zinc-600">
+              <div className="rounded-lg bg-[#f0ede6] border border-[#cec8bc] dark:bg-zinc-900/40 dark:border-zinc-900 px-4 py-4 text-center">
+                <p className="text-[13px] text-[#666660] dark:text-zinc-600">
                   Select an SSID above to edit its credentials.
                 </p>
               </div>
@@ -624,10 +624,10 @@ export default function WiFiCredentialModal({ open, onClose }) {
           {/* Inline log */}
           {logs.length > 0 && (
             <>
-              <div className="border-t border-zinc-900" />
+              <div className="border-t border-[#cec8bc] dark:border-zinc-900" />
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold tracking-[0.15em] uppercase text-zinc-500">
+                  <span className="text-xs font-semibold tracking-[0.15em] uppercase text-[#666660] dark:text-zinc-500">
                     Log
                   </span>
                   {isBusy && (
@@ -636,25 +636,25 @@ export default function WiFiCredentialModal({ open, onClose }) {
                         {[0, 1, 2].map((i) => (
                           <div
                             key={i}
-                            className="w-1 h-1 bg-zinc-600 rounded-full animate-bounce"
+                            className="w-1 h-1 bg-[#8a8a83] dark:bg-zinc-600 rounded-full animate-bounce"
                             style={{ animationDelay: `${i * 150}ms` }}
                           />
                         ))}
                       </div>
-                      <span className="text-xs text-zinc-600">Running</span>
+                      <span className="text-xs text-[#666660] dark:text-zinc-600">Running</span>
                     </div>
                   )}
                   {saveState === "saved" && (
-                    <span className="text-xs text-emerald-500 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />{" "}
+                    <span className="text-xs text-[#218c4f] dark:text-emerald-500 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#218c4f] dark:bg-emerald-500 inline-block" />{" "}
                       Complete
                     </span>
                   )}
                   {saveState === "error" && (
-                    <span className="text-xs text-red-500">Failed</span>
+                    <span className="text-xs text-[#c44955] dark:text-red-500">Failed</span>
                   )}
                 </div>
-                <div className="rounded-lg bg-black border border-zinc-900 p-3 max-h-40 overflow-y-auto log-scrollbar flex flex-col gap-1.5">
+                <div className="rounded-lg bg-[#f0ede6] border border-[#cec8bc] dark:bg-black dark:border-zinc-900 p-3 max-h-40 overflow-y-auto log-scrollbar flex flex-col gap-1.5">
                   {logs.map((entry) => (
                     <MotionDiv
                       key={entry.id}
@@ -665,11 +665,11 @@ export default function WiFiCredentialModal({ open, onClose }) {
                     >
                       {getLogIcon(entry.level)}
                       <span
-                        className={`text-[13px] leading-relaxed ${LOG_LEVEL_STYLES[entry.level] || "text-zinc-500"}`}
+                        className={`text-[13px] leading-relaxed ${LOG_LEVEL_STYLES[entry.level] || "text-[#666660] dark:text-zinc-500"}`}
                       >
                         {entry.message}
                       </span>
-                      <span className="text-[11px] text-zinc-700 ml-auto shrink-0 mt-0.5">
+                      <span className="text-[11px] text-[#8a8a83] dark:text-zinc-700 ml-auto shrink-0 mt-0.5">
                         {entry.timestamp
                           ? new Date(entry.timestamp).toLocaleTimeString(
                               "en-US",
@@ -684,7 +684,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                 {currentStatusText && (
                   <p
                     className={`text-xs px-1
-                    ${saveState === "saved" ? "text-emerald-500" : saveState === "error" ? "text-red-400" : "text-zinc-500"}`}
+                    ${saveState === "saved" ? "text-[#218c4f] dark:text-emerald-500" : saveState === "error" ? "text-[#c44955] dark:text-red-400" : "text-[#666660] dark:text-zinc-500"}`}
                   >
                     {currentStatusText}
                   </p>
@@ -696,7 +696,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
           {/* Save */}
           {(selected.length > 0 || hasBroadcastIntents) && (
             <>
-              <div className="border-t border-zinc-900" />
+              <div className="border-t border-[#cec8bc] dark:border-zinc-900" />
               <div className="flex flex-col gap-3">
                 <button
                   onClick={handleSave}
@@ -706,7 +706,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                     isBusy ||
                     saveState === "saved"
                   }
-                  className="w-full py-2.5 rounded-md bg-white text-black text-sm font-bold tracking-[0.2em] uppercase hover:bg-zinc-200 active:scale-[0.99] cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  className="w-full py-2.5 rounded-md bg-[#24241f] text-[#f7f4ee] text-sm font-bold tracking-[0.2em] uppercase hover:bg-[#4f4f49] dark:bg-white dark:text-black dark:hover:bg-zinc-200 active:scale-[0.99] cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                 >
                   {isBusy
                     ? "Applying..."
@@ -719,12 +719,12 @@ export default function WiFiCredentialModal({ open, onClose }) {
                           : `Apply Changes${selected.length > 1 ? " to Both Bands" : ""}`}
                 </button>
                 {isBusy && (
-                  <p className="text-center text-xs text-amber-600">
+                  <p className="text-center text-xs text-[#b7791f] dark:text-amber-600">
                     Do not close this window while changes are being applied.
                   </p>
                 )}
                 {!isBusy && saveState === "idle" && (
-                  <p className="text-center text-xs text-zinc-700">
+                  <p className="text-center text-xs text-[#8a8a83] dark:text-zinc-700">
                     {hasOnlyBroadcast
                       ? "Selenium will navigate to Wi-Fi Settings → Advanced and update broadcast toggles."
                       : hasBoth

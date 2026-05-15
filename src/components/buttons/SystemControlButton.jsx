@@ -19,6 +19,13 @@ const OVERLAY_TEXT = {
   WORKING: "Working...",
 };
 
+const BUTTON_CLASSES = {
+  "control-btn":
+    "flex items-center justify-center gap-3 w-full px-6 py-4 rounded-md text-sm font-medium transition-all cursor-pointer bg-transparent border border-[#cec8bc] hover:bg-[#d3cec4] dark:bg-transparent dark:border-[#222222] dark:hover:bg-[#2f2f2f33]",
+  "btn-reboot":
+    "flex items-center justify-center gap-2 w-full px-6 py-3 rounded-md text-sm font-medium transition-all cursor-pointer text-[#c44955] bg-[rgba(196,73,85,0.1)] border border-[rgba(196,73,85,0.24)] hover:bg-[rgba(196,73,85,0.16)] dark:text-[#f87171] dark:bg-[#7f1d1d1a] dark:border-[#7f1d1d4d] dark:hover:bg-[#7f1d1d33]",
+};
+
 const getCommandById = (commands, commandId) =>
   commands.find((candidate) => candidate.id === commandId);
 
@@ -105,6 +112,7 @@ const SystemControlButton = ({
   const disabledTitle = backendDisabled
     ? backendError || "Command backend offline."
     : undefined;
+  const buttonClass = BUTTON_CLASSES[command.buttonClass] || command.buttonClass;
 
   const removePendingCommand = () => {
     setPendingCommandIds?.((prev) =>
@@ -145,7 +153,7 @@ const SystemControlButton = ({
   return (
     <>
       <button
-        className={`${command.buttonClass} disabled:opacity-60 disabled:cursor-not-allowed`}
+        className={`${buttonClass} disabled:opacity-60 disabled:cursor-not-allowed`}
         onClick={handleClick}
         disabled={disabled}
         type="button"

@@ -2,15 +2,15 @@ import { log, clear, history } from "../../assets/icons";
 
 const LogHeader = ({ onClearLogs, activeTab, onTabChange }) => {
   return (
-    <div className="flex items-center justify-between px-6 py-4 border border-card-black bg-card-black rounded-lg rounded-b-none">
+    <div className="flex items-center justify-between px-6 py-4 border border-[#cec8bc] bg-[#f5f3ed] dark:border-[#222222] dark:bg-[#050505] rounded-lg rounded-b-none">
       {/* Tabs */}
       <div className="flex items-center gap-1">
         <button
           onClick={() => onTabChange("log")}
           className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-sm transition-all cursor-pointer ${
             activeTab === "log"
-              ? "bg-zinc-800 text-gray-200"
-              : "text-zinc-600 hover:text-zinc-400 hover:bg-zinc-900"
+              ? "bg-[#ddd9d0] text-[#24241f] dark:bg-zinc-800 dark:text-gray-200"
+              : "text-[#8a8a83] hover:text-[#666660] hover:bg-[#f0ede6] dark:text-zinc-600 dark:hover:text-zinc-400 dark:hover:bg-zinc-900"
           }`}
         >
           <img
@@ -25,8 +25,8 @@ const LogHeader = ({ onClearLogs, activeTab, onTabChange }) => {
           onClick={() => onTabChange("history")}
           className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-sm transition-all cursor-pointer ${
             activeTab === "history"
-              ? "bg-zinc-800 text-gray-200"
-              : "text-zinc-600 hover:text-zinc-400 hover:bg-zinc-900"
+              ? "bg-[#ddd9d0] text-[#24241f] dark:bg-zinc-800 dark:text-gray-200"
+              : "text-[#8a8a83] hover:text-[#666660] hover:bg-[#f0ede6] dark:text-zinc-600 dark:hover:text-zinc-400 dark:hover:bg-zinc-900"
           }`}
         >
           <img

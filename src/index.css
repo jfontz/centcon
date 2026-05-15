@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:is(.dark *));
 
 @layer base {
 
@@ -146,15 +147,26 @@
 
   /* ── SCROLLBAR ───────────────────────────────────── */
   .log-scrollbar::-webkit-scrollbar       { width: 8px; }
-  .log-scrollbar::-webkit-scrollbar-track { background: #0b0b0b; }
+  .log-scrollbar::-webkit-scrollbar-track { background: #ded8cc; }
 
   .log-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #2a2a2a;
+    background-color: #bfb8ab;
     border-radius: 6px;
-    border: 2px solid #0b0b0b;
+    border: 2px solid #ded8cc;
   }
 
   .log-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #ada596;
+  }
+
+  .dark .log-scrollbar::-webkit-scrollbar-track { background: #0b0b0b; }
+
+  .dark .log-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #2a2a2a;
+    border: 2px solid #0b0b0b;
+  }
+
+  .dark .log-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: #3a3a3a;
   }
 }

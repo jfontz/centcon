@@ -63,14 +63,14 @@ const Login = () => {
   }, [countdown]);
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#e9e6df] dark:bg-black flex items-center justify-center px-4">
       <div className="w-full max-w-md space-y-8">
         {/* Logo */}
         <div className="text-center flex flex-col gap-2">
-          <h1 className="text-base sm:text-xl font-light tracking-[0.2em] text-white mb-2">
+          <h1 className="text-base sm:text-xl font-light tracking-[0.2em] text-[#1a1a1a] dark:text-white mb-2">
             CENTCON
           </h1>
-          <p className="text-[#858585] text-xs tracking-[0.3em]">
+          <p className="text-[#666660] dark:text-[#858585] text-xs tracking-[0.3em]">
             CENTRAL CONTROL NETWORK
           </p>
         </div>
@@ -86,7 +86,7 @@ const Login = () => {
               pattern="[A-Z0-9]+"
               value={pin}
               onChange={(e) => setPin(e.target.value.toUpperCase())}
-              className="w-[60%] px-4 py-3 bg-black border border-white/15 rounded-md text-white text-center text-md tracking-widest focus:outline-none focus:border-white/30 transition-colors"
+              className="w-[60%] px-4 py-3 bg-[#f6f3ed] dark:bg-black border border-[#cec8bc] dark:border-white/15 rounded-md text-[#24241f] dark:text-white text-center text-md tracking-widest focus:outline-none focus:border-[#a8a191] dark:focus:border-white/30 transition-colors"
               placeholder="••••"
               maxLength={4}
               autoFocus
@@ -94,17 +94,14 @@ const Login = () => {
             />
           </div>
 
-          <div className="h-5 text-red-400 text-sm text-center">
+          <div className="h-5 text-[#c44955] dark:text-red-400 text-sm text-center">
             {countdown > 0 ? `${RATE_LIMITED_MESSAGE} ${countdown}s` : error}
           </div>
 
           <button
             type="submit"
             disabled={loading || pin.length === 0 || countdown > 0}
-            className="group w-full py-3 text-white font-medium rounded-md 
-             hover:text-gray-300 transition-colors 
-             disabled:opacity-50 disabled:cursor-not-allowed 
-             cursor-pointer flex items-center justify-center gap-3"
+            className="group w-full py-3 text-[#24241f] dark:text-white font-medium rounded-md hover:text-[#666660] dark:hover:text-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-3"
           >
             {loading ? (
               VERIFYING_MESSAGE

@@ -359,7 +359,7 @@ const LogPanel = () => {
   };
 
   return (
-    <div className="h-full max-h-[40vh] sm:max-h-[45vh] lg:max-h-[calc(100vh-10rem)] flex flex-col lg:sticky lg:top-28 bg-black text-gray-300 text-sm overflow-hidden rounded-lg">
+    <div className="h-full max-h-[40vh] sm:max-h-[45vh] lg:max-h-[calc(100vh-10rem)] flex flex-col lg:sticky lg:top-28 bg-[#f5f3ed] text-[#4f4f49] dark:bg-black dark:text-gray-300 text-sm overflow-hidden rounded-lg">
       <LogHeader
         onClearLogs={clearLogs}
         activeTab={activeTab}
@@ -374,7 +374,7 @@ const LogPanel = () => {
         />
       ) : (
         <div
-          className="flex-1 overflow-y-auto log-scrollbar border-l border-r border-b border-card-black rounded-lg rounded-t-none"
+          className="flex-1 overflow-y-auto log-scrollbar border-l border-r border-b border-[#cec8bc] dark:border-[#222222] rounded-lg rounded-t-none"
           style={{ scrollbarGutter: "stable" }}
         >
           <HistoryView refreshTick={sortedLogs.length} />

@@ -14,11 +14,11 @@ const RANGES = [
 ];
 
 const SEVERITY_COLORS = {
-  0: { bar: "#1f1f1f", label: "Clean", text: "text-zinc-500" },
-  1: { bar: "#2563eb", label: "Reboot", text: "text-blue-400" },
-  2: { bar: "#d97706", label: "Warning", text: "text-yellow-400" },
-  3: { bar: "#dc2626", label: "Outage", text: "text-red-400" },
-  4: { bar: "#dc2626", label: "Fiber Lost", text: "text-red-400" },
+  0: { barClass: "bg-[#d2cdc2] dark:bg-[#1f1f1f]", label: "Clean", text: "text-[#666660] dark:text-zinc-500" },
+  1: { barClass: "bg-[#326dcf] dark:bg-[#2563eb]", label: "Reboot", text: "text-[#326dcf] dark:text-blue-400" },
+  2: { barClass: "bg-[#b7791f] dark:bg-[#d97706]", label: "Warning", text: "text-[#b7791f] dark:text-yellow-400" },
+  3: { barClass: "bg-[#c44955] dark:bg-[#dc2626]", label: "Outage", text: "text-[#c44955] dark:text-red-400" },
+  4: { barClass: "bg-[#c44955] dark:bg-[#dc2626]", label: "Fiber Lost", text: "text-[#c44955] dark:text-red-400" },
 };
 
 /**
@@ -41,15 +41,15 @@ const getEventColor = (type, text = "") => {
     case "los":
     case "internet":
     case "unreachable":
-      if (isRestored) return "text-green-400";
-      if (isLost) return "text-red-400";
-      return "text-zinc-400"; // fallback for ambiguous text
+      if (isRestored) return "text-[#218c4f] dark:text-green-400";
+      if (isLost) return "text-[#c44955] dark:text-red-400";
+      return "text-[#4f4f49] dark:text-zinc-400"; // fallback for ambiguous text
     case "reboot":
-      return "text-blue-400";
+      return "text-[#326dcf] dark:text-blue-400";
     case "warning":
-      return "text-yellow-400";
+      return "text-[#b7791f] dark:text-yellow-400";
     default:
-      return "text-zinc-400";
+      return "text-[#4f4f49] dark:text-zinc-400";
   }
 };
 
@@ -110,13 +110,13 @@ const HistoryView = ({ refreshTick }) => {
     <div className="flex flex-col gap-4 p-4">
       {/* Summary row */}
       <div className="flex items-center justify-between">
-        <span className="text-xs uppercase tracking-widest text-zinc-600">
+        <span className="text-xs uppercase tracking-widest text-[#666660] dark:text-zinc-600">
           {cleanPct}% clean · {totalOutages} event
           {totalOutages !== 1 ? "s" : ""} recorded
         </span>
         <button
           onClick={() => setShowClearModal(true)}
-          className="text-xs text-zinc-700 hover:text-zinc-400 transition-colors uppercase tracking-widest cursor-pointer"
+          className="text-xs text-[#8a8a83] hover:text-[#666660] dark:text-zinc-700 dark:hover:text-zinc-400 transition-colors uppercase tracking-widest cursor-pointer"
         >
           Clear
         </button>
@@ -135,8 +135,8 @@ const HistoryView = ({ refreshTick }) => {
               }}
               className={`px-2 py-0.5 rounded text-xs uppercase tracking-widest transition-colors cursor-pointer ${
                 rangeIdx === i
-                  ? "bg-zinc-700 text-zinc-200"
-                  : "text-zinc-600 hover:text-zinc-400"
+                  ? "bg-[#ddd9d0] text-[#24241f] dark:bg-zinc-700 dark:text-zinc-200"
+                  : "text-[#666660] hover:text-[#4f4f49] dark:text-zinc-600 dark:hover:text-zinc-400"
               }`}
             >
               {r.label}
@@ -155,8 +155,8 @@ const HistoryView = ({ refreshTick }) => {
                 }}
                 className={`px-2 py-0.5 rounded text-xs tracking-widest transition-colors cursor-pointer ${
                   safeBucketIdx === i
-                    ? "bg-zinc-700 text-zinc-200"
-                    : "text-zinc-600 hover:text-zinc-400"
+                    ? "bg-[#ddd9d0] text-[#24241f] dark:bg-zinc-700 dark:text-zinc-200"
+                    : "text-[#666660] hover:text-[#4f4f49] dark:text-zinc-600 dark:hover:text-zinc-400"
                 }`}
               >
                 {b}
@@ -179,17 +179,17 @@ const HistoryView = ({ refreshTick }) => {
             >
               {items.map((bucket, i) => {
                 const bucketIndex = offset + i;
-                const color =
-                  SEVERITY_COLORS[bucket.worstSeverity]?.bar ?? "#1f1f1f";
+                const colorClass =
+                  SEVERITY_COLORS[bucket.worstSeverity]?.barClass ??
+                  "bg-[#d2cdc2] dark:bg-[#1f1f1f]";
                 const isActive = activeBucket === bucketIndex;
 
                 return (
                   <div
                     key={bucket.start}
-                    className="flex-1 rounded-sm cursor-pointer transition-opacity"
+                    className={`flex-1 rounded-sm cursor-pointer transition-opacity ${colorClass}`}
                     style={{
                       height: bucket.worstSeverity === 0 ? "60%" : "100%",
-                      backgroundColor: color,
                       opacity: activeBucket !== null && !isActive ? 0.4 : 1,
                       minWidth: "2px",
                     }}
@@ -205,7 +205,7 @@ const HistoryView = ({ refreshTick }) => {
             </div>
 
             {splitIntoTwoRows && (
-              <div className="flex justify-between text-xs text-zinc-700">
+              <div className="flex justify-between text-xs text-[#8a8a83] dark:text-zinc-700">
                 <span>{fmt(items[0].start, range.label)}</span>
                 <span>{fmt(items[items.length - 1].end, range.label)}</span>
               </div>
@@ -216,7 +216,7 @@ const HistoryView = ({ refreshTick }) => {
 
       {/* X-axis labels — derived from actual bucket boundaries */}
       {!splitIntoTwoRows && (
-        <div className="flex justify-between text-xs text-zinc-700 -mt-2">
+        <div className="flex justify-between text-xs text-[#8a8a83] dark:text-zinc-700 -mt-2">
           <span>{fmt(buckets[0].start, range.label)}</span>
           <span>{fmt(buckets[buckets.length - 1].end, range.label)}</span>
         </div>
@@ -226,11 +226,10 @@ const HistoryView = ({ refreshTick }) => {
       <div className="flex gap-4 flex-wrap">
         {Object.entries(SEVERITY_COLORS)
           .filter(([k]) => k !== "4")
-          .map(([severity, { bar, label, text }]) => (
+          .map(([severity, { barClass, label, text }]) => (
             <div key={severity} className="flex items-center gap-1.5">
               <div
-                className="w-2 h-2 rounded-sm shrink-0"
-                style={{ backgroundColor: bar }}
+                className={`w-2 h-2 rounded-sm shrink-0 ${barClass}`}
               />
               <span className={`text-xs uppercase tracking-wider ${text}`}>
                 {label}
@@ -239,8 +238,8 @@ const HistoryView = ({ refreshTick }) => {
           ))}
         {/* Restored is a direction, not a severity — show separately */}
         <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-sm shrink-0 bg-green-500" />
-          <span className="text-xs uppercase tracking-wider text-green-400">
+          <div className="w-2 h-2 rounded-sm shrink-0 bg-[#218c4f] dark:bg-green-500" />
+          <span className="text-xs uppercase tracking-wider text-[#218c4f] dark:text-green-400">
             Restored
           </span>
         </div>
@@ -248,17 +247,17 @@ const HistoryView = ({ refreshTick }) => {
 
       {/* Selected/hovered bucket detail */}
       {activeBucket !== null && (
-        <div className="border border-zinc-800 rounded-md p-3 flex flex-col gap-2 bg-zinc-950">
-          <span className="text-xs uppercase tracking-widest text-zinc-600">
+        <div className="border border-[#cec8bc] rounded-md p-3 flex flex-col gap-2 bg-[#f0ede6] dark:border-zinc-800 dark:bg-zinc-950">
+          <span className="text-xs uppercase tracking-widest text-[#666660] dark:text-zinc-600">
             {fmt(buckets[activeBucket].start, range.label)} —{" "}
             {fmt(buckets[activeBucket].end, range.label)}
           </span>
           {buckets[activeBucket].events.length === 0 ? (
-            <span className="text-xs text-zinc-600">No events — all clear</span>
+            <span className="text-xs text-[#666660] dark:text-zinc-600">No events — all clear</span>
           ) : (
             buckets[activeBucket].events.map((e) => (
               <div key={e.id} className="flex gap-2 items-start">
-                <span className="text-xs text-zinc-600 shrink-0">
+                <span className="text-xs text-[#666660] dark:text-zinc-600 shrink-0">
                   {new Date(e.ts).toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",

@@ -72,24 +72,24 @@ export default function DeviceListModal({ open, onClose, devices = [] }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-60 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/35 dark:bg-black/80 backdrop-blur-sm z-60 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden z-60 shadow-2xl flex flex-col"
+        className="relative w-full max-w-lg bg-[#f7f4ee] border border-[#cec8bc] dark:bg-zinc-950 dark:border-zinc-800 rounded-xl overflow-hidden z-60 shadow-2xl flex flex-col"
         style={{ maxHeight: "calc(100dvh - 8rem)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-900">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#cec8bc] dark:border-zinc-900">
           <div>
-            <h2 className="text-sm font-semibold text-white tracking-wide">
+            <h2 className="text-sm font-semibold text-[#1a1a1a] dark:text-white tracking-wide">
               Connected Devices
             </h2>
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <p className="text-xs text-[#666660] dark:text-zinc-500 mt-0.5">
               {devices.length} device{devices.length !== 1 ? "s" : ""} connected
               {unknownCount > 0 && (
-                <span className="text-amber-400 ml-1">
+                <span className="text-[#b7791f] dark:text-amber-400 ml-1">
                   · {unknownCount} not marked as trusted
                 </span>
               )}
@@ -97,7 +97,7 @@ export default function DeviceListModal({ open, onClose, devices = [] }) {
           </div>
           <button
             onClick={onClose}
-            className="text-zinc-600 hover:text-zinc-300 transition-colors text-lg leading-none cursor-pointer"
+            className="text-[#666660] hover:text-[#24241f] dark:text-zinc-600 dark:hover:text-zinc-300 transition-colors text-lg leading-none cursor-pointer"
           >
             ✕
           </button>
@@ -106,14 +106,14 @@ export default function DeviceListModal({ open, onClose, devices = [] }) {
         {/* Device list */}
         <div className="overflow-y-auto log-scrollbar flex flex-col gap-4 p-5">
           {devices.length === 0 ? (
-            <p className="text-zinc-600 text-sm text-center py-4">
+            <p className="text-[#666660] dark:text-zinc-600 text-sm text-center py-4">
               No devices currently connected.
             </p>
           ) : (
             sortedBands.map((band) => (
               <div key={band} className="flex flex-col gap-2">
                 {/* Band label */}
-                <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-zinc-500">
+                <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-[#666660] dark:text-zinc-500">
                   {band} — {grouped[band].length} device
                   {grouped[band].length !== 1 ? "s" : ""}
                 </span>
@@ -128,19 +128,19 @@ export default function DeviceListModal({ open, onClose, devices = [] }) {
                       layout
                       className={`flex items-center justify-between px-3 py-2.5 rounded-md border transition-colors ${
                         isTrusted
-                          ? "bg-zinc-900/60 border-zinc-800"
-                          : "bg-zinc-900 border-amber-900/40"
+                          ? "bg-[rgba(33,140,79,0.08)] border-[rgba(33,140,79,0.24)] dark:bg-zinc-900/60 dark:border-zinc-800"
+                          : "bg-[#f0ede6] border-[rgba(123,123,116,0.24)] dark:bg-zinc-900 dark:border-amber-900/40"
                       }`}
                     >
                       <div className="flex flex-col gap-0.5 min-w-0">
                         <span
                           className={`text-sm truncate ${
-                            isTrusted ? "text-zinc-300" : "text-white"
+                            isTrusted ? "text-[#4f4f49] dark:text-zinc-300" : "text-[#24241f] dark:text-white"
                           }`}
                         >
                           {device.hostname}
                         </span>
-                        <span className="text-[11px] text-zinc-600">
+                        <span className="text-[11px] text-[#8a8a83] dark:text-zinc-600">
                           {device.ip}
                         </span>
                       </div>
@@ -148,8 +148,8 @@ export default function DeviceListModal({ open, onClose, devices = [] }) {
                         onClick={() => toggleTrusted(key)}
                         className={`ml-3 shrink-0 text-[10px] px-2.5 py-1 rounded font-bold tracking-wider transition-all cursor-pointer border ${
                           isTrusted
-                            ? "bg-zinc-800 text-zinc-500 border-zinc-700 hover:border-zinc-500 hover:text-zinc-300"
-                            : "bg-amber-950/40 text-amber-400 border-amber-800/60 hover:bg-amber-950/70"
+                            ? "bg-[rgba(33,140,79,0.12)] text-[#218c4f] border-[rgba(33,140,79,0.24)] hover:border-[#218c4f] hover:text-[#218c4f] dark:bg-zinc-800 dark:text-zinc-500 dark:border-zinc-700 dark:hover:border-zinc-500 dark:hover:text-zinc-300"
+                            : "bg-[#f0ede6] text-[#7b7b74] border-[rgba(123,123,116,0.24)] hover:bg-[#ddd9d0] dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60 dark:hover:bg-amber-950/70"
                         }`}
                       >
                         {isTrusted ? "TRUSTED" : "UNKNOWN"}
@@ -163,8 +163,8 @@ export default function DeviceListModal({ open, onClose, devices = [] }) {
         </div>
 
         {/* Footer hint */}
-        <div className="px-5 py-3 border-t border-zinc-900">
-          <p className="text-[11px] text-zinc-600">
+        <div className="px-5 py-3 border-t border-[#cec8bc] dark:border-zinc-900">
+          <p className="text-[11px] text-[#666660] dark:text-zinc-600">
             Trusted status is saved locally on this machine. Click a device to
             toggle.
           </p>
