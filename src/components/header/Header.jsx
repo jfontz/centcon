@@ -33,21 +33,21 @@ const Header = () => {
     <header
       className={`fixed top-0 left-0 right-0 z-50 border-b border-[#cec8bc] dark:border-white/10 backdrop-blur-md transition-colors duration-300 ${headerBg}`}
     >
-      <div className="max-w-450 mx-auto px-6 h-16 sm:h-20 flex items-center justify-between">
+      <div className="max-w-450 mx-auto px-6 py-3 sm:h-20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
         {/* Left: Branding & Meta Info */}
-        <div className="flex items-center gap-3 sm:gap-6">
+        <div className="flex items-center gap-3 sm:gap-6 justify-center sm:justify-start">
           <h1 className="text-base sm:text-xl font-light tracking-[0.2em] text-[#1a1a1a] dark:text-white">
             CENTCON
           </h1>
           <div className="h-4 w-px bg-[#cec8bc] dark:bg-white/10 hidden md:block"></div>
           <MetaInfo
-            className="hidden md:flex items-center gap-3 text-xs tracking-wider font-medium text-[#666660] dark:text-zinc-400 opacity-60"
+            className="hidden lg:flex items-center gap-3 text-xs tracking-wider font-medium text-[#666660] dark:text-zinc-400 opacity-60"
             lastUpdated={lastUpdated}
           />
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center justify-center sm:justify-end gap-2 sm:gap-4 w-full sm:w-auto">
           <StatusBadge status={status} rebootState={rebootState} />
 
           <HeaderButton
@@ -82,7 +82,7 @@ const Header = () => {
 
       {/* Mobile Meta Info Bar */}
       <MetaInfo
-        className="md:hidden border-t border-[#cec8bc] dark:border-white/10 bg-[rgba(245,243,237,0.86)] dark:bg-black/60 max-w-450 mx-auto px-3 py-2 flex items-center justify-center gap-3 text-[10px] tracking-wider font-medium text-[#666660] dark:text-zinc-400 opacity-60"
+        className="lg:hidden border-t border-[#cec8bc] dark:border-white/10 bg-[rgba(245,243,237,0.86)] dark:bg-black/60 max-w-450 mx-auto px-3 py-2 flex items-center justify-center gap-3 text-[10px] tracking-wider font-medium text-[#666660] dark:text-zinc-400 opacity-60"
         lastUpdated={lastUpdated}
       />
     </header>
