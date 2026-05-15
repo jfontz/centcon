@@ -128,14 +128,16 @@ export default function DeviceListModal({ open, onClose, devices = [] }) {
                       layout
                       className={`flex items-center justify-between px-3 py-2.5 rounded-md border transition-colors ${
                         isTrusted
-                          ? "bg-[rgba(33,140,79,0.08)] border-[rgba(33,140,79,0.24)] dark:bg-zinc-900/60 dark:border-zinc-800"
-                          : "bg-[#f0ede6] border-[rgba(123,123,116,0.24)] dark:bg-zinc-900 dark:border-amber-900/40"
+                          ? "bg-[#f0ede6] border-[rgba(123,123,116,0.24)] dark:bg-zinc-900/60 dark:border-zinc-800"
+                          : "bg-[#e5e1d5] border-[rgba(160,120,20,0.32)] dark:bg-zinc-900 dark:border-amber-900/40"
                       }`}
                     >
                       <div className="flex flex-col gap-0.5 min-w-0">
                         <span
                           className={`text-sm truncate ${
-                            isTrusted ? "text-[#4f4f49] dark:text-zinc-300" : "text-[#24241f] dark:text-white"
+                            isTrusted
+                              ? "text-[#4f4f49] dark:text-zinc-300"
+                              : "text-[#3a3520] dark:text-white"
                           }`}
                         >
                           {device.hostname}
@@ -148,8 +150,8 @@ export default function DeviceListModal({ open, onClose, devices = [] }) {
                         onClick={() => toggleTrusted(key)}
                         className={`ml-3 shrink-0 text-[10px] px-2.5 py-1 rounded font-bold tracking-wider transition-all cursor-pointer border ${
                           isTrusted
-                            ? "bg-[rgba(33,140,79,0.12)] text-[#218c4f] border-[rgba(33,140,79,0.24)] hover:border-[#218c4f] hover:text-[#218c4f] dark:bg-zinc-800 dark:text-zinc-500 dark:border-zinc-700 dark:hover:border-zinc-500 dark:hover:text-zinc-300"
-                            : "bg-[#f0ede6] text-[#7b7b74] border-[rgba(123,123,116,0.24)] hover:bg-[#ddd9d0] dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60 dark:hover:bg-amber-950/70"
+                            ? "bg-[#f0ede6] text-[#7b7b74] border-[rgba(33,140,79,0.24)] hover:border-[#5b5b56] hover:text-[#7b7b74] dark:bg-zinc-800 dark:text-zinc-500 dark:border-zinc-700 dark:hover:border-zinc-500 dark:hover:text-zinc-300"
+                            : "bg-[#d7ca91] text-[#4a4020] border-[rgba(160,120,20,0.4)] hover:bg-[#c9bb7c] hover:text-[#3a3218] dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60 dark:hover:bg-amber-950/70"
                         }`}
                       >
                         {isTrusted ? "TRUSTED" : "UNKNOWN"}
