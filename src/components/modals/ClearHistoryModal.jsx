@@ -1,5 +1,6 @@
 // src/components/modals/ClearHistoryModal.jsx
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { warning } from "../../assets/icons";
 
 const ClearHistoryModal = ({ isOpen, onClose, onConfirm }) => {
@@ -18,9 +19,9 @@ const ClearHistoryModal = ({ isOpen, onClose, onConfirm }) => {
 
   if (!isOpen) return null;
 
-  return (
+  const modal = (
     <div
-      className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/35 dark:bg-black/50 backdrop-blur-sm animate-[modal-fade-in_0.25s_ease-out] font-sans"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/35 dark:bg-black/50 backdrop-blur-sm animate-[modal-fade-in_0.25s_ease-out] font-sans"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -68,6 +69,8 @@ const ClearHistoryModal = ({ isOpen, onClose, onConfirm }) => {
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 };
 
 export default ClearHistoryModal;

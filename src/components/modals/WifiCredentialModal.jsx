@@ -433,7 +433,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
 
   return (
     <div
-      className={`fixed inset-0 bg-black/35 dark:bg-black/80 backdrop-blur-sm z-40 flex items-center justify-center p-4 ${isBusy ? "cursor-not-allowed" : ""}`}
+      className={`fixed inset-0 bg-black/35 dark:bg-black/80 backdrop-blur-sm z-60 flex items-center justify-center p-4 ${isBusy ? "cursor-not-allowed" : ""}`}
       onClick={handleClose}
     >
       <div
