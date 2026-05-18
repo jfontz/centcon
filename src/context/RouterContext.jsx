@@ -55,12 +55,27 @@ export const RouterProvider = ({ children }) => {
   const [commandBackendOnline, setCommandBackendOnline] = useState(true);
   const [commandBackendError, setCommandBackendError] = useState("");
   const [commands, setCommands] = useState([]);
+  const refreshPaused = (() => {
+    const activeCommandId = commandState?.command;
+    const isTerminal = ["FAILED", "ONLINE", "SUCCEEDED", "IDLE"].includes(
+      commandState?.state,
+    );
+
+    if (activeCommandId && !isTerminal) {
+      const commandDef = commands.find((command) => command.id === activeCommandId);
+      if (commandDef?.pausesRefresh) return true;
+    }
+
+    if (commandStatuses["wifi-credentials"]?.active) return true;
+
+    return false;
+  })();
 
   // Timer ref for debounced offline detection, cancelled if SSE reconnects
   // before the grace period expires.
   const offlineTimerRef = useRef(null);
 
-  const routerState = useRouterData(commandState);
+  const routerState = useRouterData({ commandState, refreshPaused });
 
   const markBackendOnline = () => {
     // Cancel any pending offline timer, this was a transient blip
@@ -181,6 +196,7 @@ export const RouterProvider = ({ children }) => {
       value={{
         ...routerState,
         refreshing: routerState.refreshing,
+        refreshPaused,
         commands,
         commandState,
         commandStatuses,

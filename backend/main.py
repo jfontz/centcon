@@ -60,6 +60,7 @@ COMMAND_DEFINITIONS = {
         "blocksOthers": True,
         "allowWhileBusy": False,
         "disableSelf": True,
+        "pausesRefresh": True,
         "workflow": run_reboot_workflow,
     },
     "login": {
@@ -71,6 +72,7 @@ COMMAND_DEFINITIONS = {
         "blocksOthers": False,
         "allowWhileBusy": True,
         "disableSelf": True,
+        "pausesRefresh": False,
         "workflow": run_login_workflow,
     },
     "wifi-credentials": {
@@ -82,6 +84,7 @@ COMMAND_DEFINITIONS = {
         "blocksOthers": False,
         "allowWhileBusy": False,
         "disableSelf": True,
+        "pausesRefresh": True,
         "workflow": None,  # handled by /commands/wifi-credentials
     },
 }
@@ -217,6 +220,7 @@ async def list_commands():
         "commands": [
             {
                 "id": command_id,
+                "pausesRefresh": definition["pausesRefresh"],
                 "label": definition["label"],
                 "buttonClass": definition["buttonClass"],
                 "icon": definition["icon"],

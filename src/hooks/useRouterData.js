@@ -4,8 +4,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { routerApi } from "../services/routerDataApi";
 
 export const useRouterData = (
-  commandState = { state: "IDLE", command: null },
+  { commandState, refreshPaused } = {},
 ) => {
+  void commandState;
+
   const autoRefreshInterval =
     Number(import.meta.env.VITE_AUTO_REFRESH_INTERVAL) || 60000;
   const [data, setData] = useState(null);
@@ -20,24 +22,15 @@ export const useRouterData = (
   const intervalRef = useRef(null);
   const isRebootingRef = useRef(false);
 
-  const isRebooting =
-    commandState?.command === "reboot" &&
-    [
-      "LOGGING_IN",
-      "NAVIGATING",
-      "REBOOTING",
-      "WAITING",
-      "CHECKING_CONNECTION",
-    ].includes(commandState?.state);
+  const isRefreshPaused = refreshPaused ?? false;
 
   // Keep ref in sync so fetchData can read it without being recreated
-  isRebootingRef.current = isRebooting;
+  isRebootingRef.current = isRefreshPaused;
 
   const fetchData = useCallback(async () => {
-    // Pause telemetry refresh while reboot workflow is in progress to avoid
-    // spamming "offline" readings while the router is intentionally unreachable.
+    // Pause telemetry refresh while an active command holds the refresh lock.
     if (isRebootingRef.current) {
-      console.log("Auto-refresh paused during reboot");
+      console.log("Auto-refresh paused — active command holds refresh");
       return;
     }
 
@@ -103,7 +96,7 @@ export const useRouterData = (
       setLoading(false);
       setRefreshing(false);
     }
-  }, []); // stable — reads isRebooting via ref
+  }, []); // stable — reads refresh pause state via ref
 
   // Initial fetch — only on mount
   useEffect(() => {
@@ -112,14 +105,14 @@ export const useRouterData = (
     }
   }, [fetchData]);
 
-  // Auto-refresh — restarts only when reboot state or interval changes
+  // Auto-refresh — restarts only when refresh pause state or interval changes
   useEffect(() => {
     if (!autoRefreshInterval) return;
 
     if (intervalRef.current) clearInterval(intervalRef.current);
 
-    if (isRebooting) {
-      console.log("Auto-refresh paused during reboot");
+    if (isRefreshPaused) {
+      console.log("Auto-refresh paused — active command holds refresh");
       return;
     }
 
@@ -128,7 +121,7 @@ export const useRouterData = (
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [autoRefreshInterval, fetchData, isRebooting]);
+  }, [autoRefreshInterval, fetchData, isRefreshPaused]);
 
   return {
     data,
