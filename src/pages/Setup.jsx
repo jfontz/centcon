@@ -376,7 +376,7 @@ const Setup = ({ setupData, onComplete }) => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 rounded-md bg-[#24241f] text-[#f7f4ee] dark:bg-white dark:text-black text-sm font-bold tracking-[0.2em] uppercase transition-all hover:bg-[#4f4f49] dark:hover:bg-zinc-200 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full py-2.5 rounded-md bg-[#24241f] text-[#f7f4ee] dark:bg-white dark:text-black text-sm font-bold tracking-[0.2em] uppercase transition-all hover:bg-[#4f4f49] dark:hover:bg-zinc-200 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? "Saving..." : "Complete Setup"}
               </button>
