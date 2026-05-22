@@ -8,6 +8,7 @@ import {
   navigate,
   load,
   action,
+  connected,
 } from "../assets/icons";
 
 const ICON_CLASSES = "w-4 h-4 inline-block pointer-events-none select-none";
@@ -18,6 +19,7 @@ const ICON_MAP = {
   info: info,
   success: check,
   progress: hourglass,
+  connected: connected,
   checking: load,
   action: action,
   error: error,

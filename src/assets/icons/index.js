@@ -25,6 +25,7 @@ import action from "./action.svg";
 import history from "./history.svg";
 import lightMode from "./light-mode.svg";
 import darkMode from "./dark-mode.svg";
+import connected from "./connected.svg";
 
 export {
   check,
@@ -54,4 +55,5 @@ export {
   history,
   lightMode,
   darkMode,
+  connected,
 };

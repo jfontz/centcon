@@ -229,7 +229,7 @@ const LogPanel = () => {
                 ? "2.4GHz"
                 : d.interface;
           newLogs.push({
-            type: "progress",
+            type: "connected",
             text: `Device connected: ${d.hostname} (${band})`,
             timestamp,
             id: crypto.randomUUID(),

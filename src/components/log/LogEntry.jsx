@@ -17,6 +17,7 @@ const LogEntry = ({ log, getIcon }) => {
           ${log.type === "header" ? "text-[#24241f] dark:text-white" : ""}
           ${log.type === "success" ? "text-[#218c4f] dark:text-green-400" : ""}
           ${log.type === "progress" ? "text-[#326dcf] dark:text-blue-400" : ""}
+          ${log.type === "connected" ? "text-[#326dcf] dark:text-blue-400" : ""}
           ${log.type === "action" ? "text-[#666660] dark:text-gray-400" : ""}
           ${log.type === "error" ? "text-[#c44955] dark:text-red-400" : ""}
           ${log.type === "warning" ? "text-[#b7791f] dark:text-yellow-400" : ""}
