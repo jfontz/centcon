@@ -38,7 +38,7 @@ const Login = () => {
       const result = await verifyPin(pin);
 
       if (result.ok) {
-        login();
+        login(result.token);
       } else {
         setError(INVALID_PIN_MESSAGE);
         setPin("");

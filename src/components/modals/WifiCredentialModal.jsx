@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "../../context/RouterContext";
+import { useAuth } from "../../context/AuthContext";
 import { triggerWifiCredentials } from "../../services/commandApi";
 import { routerApi } from "../../services/routerDataApi";
 import {
@@ -200,6 +201,7 @@ const BandGrid = ({
 
 export default function WiFiCredentialModal({ open, onClose }) {
   const { commandLogs, commandState } = useRouter();
+  const { token } = useAuth();
 
   const [loadState, setLoadState] = useState("idle");
   const [wlanInfo, setWlanInfo] = useState(null);
@@ -385,7 +387,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
     setBroadcastIntents({});
 
     try {
-      await triggerWifiCredentials(targets);
+      await triggerWifiCredentials(targets, token);
     } catch {
       setSaveState("error");
     }

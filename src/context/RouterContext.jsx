@@ -3,6 +3,10 @@
  * Manages router telemetry plus command state, logs, and available controls.
  * Uses frontend command config and backend SSE updates for command status.
  *
+ * All command API calls and the SSE connection now carry the JWT issued after
+ * PIN verification. The token is read from AuthContext and is available for the
+ * full 8-hour session.
+ *
  * Fix: transient SSE disconnect false-offline race condition
  * -----------------------------------------------------------
  * When Selenium closes Chrome, the SSE connection drops briefly (1–3s) and
@@ -18,6 +22,7 @@
  */
 
 import { createContext, useContext, useState, useEffect, useRef } from "react";
+import { useAuth } from "./AuthContext";
 import { useRouterData } from "../hooks/useRouterData";
 import {
   connectToCommandEvents,
@@ -49,12 +54,15 @@ const BACKEND_OFFLINE_MESSAGE =
 const OFFLINE_DEBOUNCE_MS = 4000;
 
 export const RouterProvider = ({ children }) => {
+  const { token } = useAuth();
+
   const [commandState, setCommandState] = useState(initialCommandState);
   const [commandLogs, setCommandLogs] = useState([]);
   const [commandStatuses, setCommandStatuses] = useState({});
   const [commandBackendOnline, setCommandBackendOnline] = useState(true);
   const [commandBackendError, setCommandBackendError] = useState("");
   const [commands, setCommands] = useState([]);
+
   const refreshPaused = (() => {
     const activeCommandId = commandState?.command;
     const isTerminal = ["FAILED", "ONLINE", "SUCCEEDED", "IDLE"].includes(
@@ -62,7 +70,9 @@ export const RouterProvider = ({ children }) => {
     );
 
     if (activeCommandId && !isTerminal) {
-      const commandDef = commands.find((command) => command.id === activeCommandId);
+      const commandDef = commands.find(
+        (command) => command.id === activeCommandId,
+      );
       if (commandDef?.pausesRefresh) return true;
     }
 
@@ -78,7 +88,6 @@ export const RouterProvider = ({ children }) => {
   const routerState = useRouterData({ commandState, refreshPaused });
 
   const markBackendOnline = () => {
-    // Cancel any pending offline timer, this was a transient blip
     if (offlineTimerRef.current) {
       clearTimeout(offlineTimerRef.current);
       offlineTimerRef.current = null;
@@ -88,7 +97,6 @@ export const RouterProvider = ({ children }) => {
   };
 
   const scheduleMarkBackendOffline = () => {
-    // Already have a timer running, don't stack another.
     if (offlineTimerRef.current) return;
 
     offlineTimerRef.current = setTimeout(() => {
@@ -105,13 +113,14 @@ export const RouterProvider = ({ children }) => {
     };
   }, []);
 
+  // Fetch command list whenever the backend comes online or the token changes.
   useEffect(() => {
     let cancelled = false;
     if (!commandBackendOnline) return;
 
     const loadCommands = async () => {
       try {
-        const list = await fetchCommands();
+        const list = await fetchCommands(token);
         if (!cancelled) setCommands(list);
       } catch {
         if (!cancelled) setCommands([]);
@@ -123,8 +132,10 @@ export const RouterProvider = ({ children }) => {
     return () => {
       cancelled = true;
     };
-  }, [commandBackendOnline]);
+  }, [commandBackendOnline, token]);
 
+  // Open SSE connection. Re-opens automatically if the token changes (e.g. after
+  // re-login in the same tab), though in practice the token lasts 8 hours.
   useEffect(() => {
     const eventSource = connectToCommandEvents(
       (event) => {
@@ -172,15 +183,19 @@ export const RouterProvider = ({ children }) => {
       },
       {
         onOpen: markBackendOnline,
-        onError: scheduleMarkBackendOffline, // debounced, not immediate
+        onError: scheduleMarkBackendOffline,
+        token,
       },
     );
+
     return () => eventSource.close();
-  }, []);
+    // Re-open the SSE connection if the token changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   const triggerCommand = async (commandId) => {
     try {
-      const res = await apiTriggerCommand(commandId);
+      const res = await apiTriggerCommand(commandId, token);
       markBackendOnline();
       return res;
     } catch (error) {

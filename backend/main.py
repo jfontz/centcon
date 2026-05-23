@@ -18,15 +18,19 @@ import asyncio
 import json
 import os
 import re
+import secrets
 from typing import Literal, Optional
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, field_validator, model_validator
 from collections import defaultdict
 import time
+
+from jose import JWTError, jwt
 
 from state_manager import get_state, subscribe, unsubscribe, event_stream, emit
 from selenium_reboot import run_reboot_workflow
@@ -40,7 +44,90 @@ from setup_utils import (
     REQUIRED_VARS,
 )
 
+# ---------------------------------------------------------------------------
+# JWT helpers
+# ---------------------------------------------------------------------------
+JWT_ALGORITHM = "HS256"
+# Token lifetime mirrors the frontend 8-hour session so both sides expire together.
+JWT_EXPIRE_SECONDS = 8 * 60 * 60
+
+
+def _get_or_create_jwt_secret() -> str:
+    """
+    Return the JWT signing secret from the environment.
+    If JWT_SECRET is absent from .env, generate a cryptographically random one,
+    persist it to the .env file so it survives restarts, and return it.
+    This runs once at startup; no internet access required.
+    """
+    secret = os.getenv("JWT_SECRET", "")
+    if secret:
+        return secret
+
+    # Generate a 256-bit URL-safe secret and write it to .env
+    secret = secrets.token_urlsafe(32)
+    env_path = _root / ".env"
+    try:
+        with open(env_path, "a") as f:
+            f.write(f"\nJWT_SECRET={secret}\n")
+        os.environ["JWT_SECRET"] = secret
+    except OSError:
+        # .env not writable — use the in-memory secret for this run only.
+        # The token will be invalid after restart if this keeps failing.
+        pass
+    return secret
+
+
+_JWT_SECRET = _get_or_create_jwt_secret()
+
+_http_bearer = HTTPBearer(auto_error=False)
+
+
+def _issue_token() -> str:
+    """Sign and return a new JWT valid for JWT_EXPIRE_SECONDS."""
+    payload = {
+        "sub": "centcon",
+        "exp": int(time.time()) + JWT_EXPIRE_SECONDS,
+        "iat": int(time.time()),
+    }
+    return jwt.encode(payload, _JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def _decode_token(token: str) -> dict:
+    """Decode and validate a JWT. Raises JWTError on any failure."""
+    return jwt.decode(token, _JWT_SECRET, algorithms=[JWT_ALGORITHM])
+
+
+async def verify_token(
+    credentials: HTTPAuthorizationCredentials = Depends(_http_bearer),
+    req: Request = None,
+) -> dict:
+    """
+    FastAPI dependency — validates Bearer token from Authorization header
+    OR a ?token= query param (required for EventSource which cannot set headers).
+    Raises 401 on missing/invalid/expired token.
+    """
+    token: str | None = None
+
+    # 1. Try Authorization: Bearer <token> header first
+    if credentials and credentials.credentials:
+        token = credentials.credentials
+
+    # 2. Fall back to ?token= query param (EventSource only)
+    if not token and req is not None:
+        token = req.query_params.get("token")
+
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        return _decode_token(token)
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+
+# ---------------------------------------------------------------------------
 # Command definitions
+# ---------------------------------------------------------------------------
 # Each entry defines a Selenium-backed command exposed to the frontend.
 # The frontend reads this list from GET /commands and renders buttons accordingly.
 # - workflow:       async function to run when the command is triggered
@@ -136,7 +223,9 @@ app.add_middleware(
 )
 
 
+# ---------------------------------------------------------------------------
 # Request models
+# ---------------------------------------------------------------------------
 class SetupRequest(BaseModel):
     ROUTER_IP: str
     ROUTER_USERNAME: str
@@ -148,7 +237,9 @@ class PinVerifyRequest(BaseModel):
     pin: str
 
 
-# Setup endpoints
+# ---------------------------------------------------------------------------
+# Setup endpoints  (no auth required — needed before login exists)
+# ---------------------------------------------------------------------------
 @app.get("/api/setup-needed")
 async def setup_needed():
     """Check if first-run setup is required."""
@@ -203,7 +294,9 @@ async def setup_complete(request: SetupRequest):
         raise HTTPException(status_code=500, detail=f"Setup failed: {str(e)}")
 
 
+# ---------------------------------------------------------------------------
 # Command helpers
+# ---------------------------------------------------------------------------
 async def _run_command_then_clear(command_id: str):
     """Run a registered command workflow and clear its in-progress marker when done."""
     try:
@@ -214,7 +307,7 @@ async def _run_command_then_clear(command_id: str):
 
 
 @app.get("/commands")
-async def list_commands():
+async def list_commands(_claims: dict = Depends(verify_token)):
     """Return available Selenium-backed commands for the dashboard controls."""
     return {
         "commands": [
@@ -235,7 +328,9 @@ async def list_commands():
     }
 
 
+# ---------------------------------------------------------------------------
 # Wi-Fi credentials endpoint
+# ---------------------------------------------------------------------------
 # This command is not in COMMAND_DEFINITIONS because it requires dynamic input
 # (target SSIDs, new names/passwords, broadcast intents) collected from the modal.
 # It uses its own request model with strict server-side validation.
@@ -252,12 +347,15 @@ class WifiTarget(BaseModel):
     The band consistency validator ensures freq, ssid_index, and router_index agree
     so no inconsistent state can reach Selenium.
     """
-    ssid_index: int                                          # 0–7 (position in wlan_info array)
-    freq: Literal["2.4", "5"]                               # Wi-Fi band
-    router_index: str                                         # "1"–"8" (displayed SSID number on router)
-    new_name: str = ""                                       # New SSID name, empty = keep current
-    new_pass: str = ""                                       # New password, empty = keep current
-    broadcast_intent: Optional[Literal["enable", "disable"]] = None  # None = no broadcast change
+
+    ssid_index: int  # 0–7 (position in wlan_info array)
+    freq: Literal["2.4", "5"]  # Wi-Fi band
+    router_index: str  # "1"–"8" (displayed SSID number on router)
+    new_name: str = ""  # New SSID name, empty = keep current
+    new_pass: str = ""  # New password, empty = keep current
+    broadcast_intent: Optional[Literal["enable", "disable"]] = (
+        None  # None = no broadcast change
+    )
 
     @field_validator("ssid_index")
     @classmethod
@@ -332,12 +430,17 @@ class WifiCredentialsRequest(BaseModel):
 
 
 @app.post("/commands/wifi-credentials")
-async def start_wifi_credentials(request: WifiCredentialsRequest):
+async def start_wifi_credentials(
+    request: WifiCredentialsRequest,
+    _claims: dict = Depends(verify_token),
+):
     """Start the Wi-Fi credentials Selenium workflow with target SSIDs and new values."""
     command_id = "wifi-credentials"
 
     if command_id in command_in_progress:
-        raise HTTPException(status_code=409, detail=f"{command_id} {ERR_ALREADY_IN_PROGRESS}")
+        raise HTTPException(
+            status_code=409, detail=f"{command_id} {ERR_ALREADY_IN_PROGRESS}"
+        )
 
     # Block if a blocking command (e.g. reboot) is already running
     active_blockers = [
@@ -346,7 +449,9 @@ async def start_wifi_credentials(request: WifiCredentialsRequest):
         if COMMAND_DEFINITIONS.get(active_id, {}).get("blocksOthers")
     ]
     if active_blockers:
-        raise HTTPException(status_code=409, detail=f"{active_blockers[0]} {ERR_BLOCKING_ACTIVE}")
+        raise HTTPException(
+            status_code=409, detail=f"{active_blockers[0]} {ERR_BLOCKING_ACTIVE}"
+        )
 
     command_in_progress.add(command_id)
 
@@ -364,12 +469,14 @@ async def start_wifi_credentials(request: WifiCredentialsRequest):
                 timeout=WIFI_WORKFLOW_TIMEOUT,
             )
         except asyncio.TimeoutError:
-            await emit({
-                "type": "state",
-                "state": "FAILED",
-                "message": "Workflow timed out — Selenium took too long on a step.",
-                "command": "wifi-credentials",
-            })
+            await emit(
+                {
+                    "type": "state",
+                    "state": "FAILED",
+                    "message": "Workflow timed out — Selenium took too long on a step.",
+                    "command": "wifi-credentials",
+                }
+            )
         finally:
             command_in_progress.discard(command_id)
 
@@ -381,9 +488,14 @@ async def start_wifi_credentials(request: WifiCredentialsRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ---------------------------------------------------------------------------
 # Generic command endpoint
+# ---------------------------------------------------------------------------
 @app.post("/commands/{command_id}")
-async def start_command(command_id: str):
+async def start_command(
+    command_id: str,
+    _claims: dict = Depends(verify_token),
+):
     """Start a registered Selenium command in the background."""
     if command_id not in COMMAND_DEFINITIONS:
         raise HTTPException(status_code=404, detail=ERR_UNKNOWN_COMMAND)
@@ -438,24 +550,22 @@ async def start_command(command_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ---------------------------------------------------------------------------
 # SSE events endpoint
+# ---------------------------------------------------------------------------
 @app.get("/events")
-async def events():
+async def events(req: Request, _claims: dict = Depends(verify_token)):
     """
     Server-Sent Events endpoint for realtime dashboard updates.
 
+    Because EventSource cannot send custom headers, the JWT is passed as a
+    ?token= query parameter and validated by the verify_token dependency.
+
     Event payload types:
     - state:     {type, state, message, countdown?}
-                 Workflow state machine updates. Also used to pause/resume
-                 frontend auto-refresh during reboot.
     - log:       {type, level, message, timestamp}
-                 Timeline entries for the log panel.
     - countdown: {type, countdown}
-                 Remaining seconds in the reboot wait period.
-                 Drives the StatusBadge only — not logged to the log panel
-                 to avoid spamming it every second.
     - heartbeat: {type}
-                 Keep-alive ping emitted when no other events have occurred recently.
     """
 
     async def generate():
@@ -475,28 +585,39 @@ async def events():
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",  # prevents nginx from buffering SSE responses
+            "X-Accel-Buffering": "no",
         },
     )
 
 
+# ---------------------------------------------------------------------------
 # Utility endpoints
+# ---------------------------------------------------------------------------
 @app.get("/state")
-async def state():
+async def state(_claims: dict = Depends(verify_token)):
     """Current command state — fallback polling endpoint for environments that cannot use SSE."""
     return get_state()
 
 
 @app.post("/verify-pin")
 async def verify_pin(request: PinVerifyRequest, req: Request):
-    """Verify the CENTCON access PIN. Rate-limited to 5 attempts per 60 seconds."""
+    """
+    Verify the CENTCON access PIN.
+    On success, issues a signed JWT the frontend must include on all subsequent requests.
+    Rate-limited to 5 attempts per 60 seconds.
+    """
     if _is_rate_limited(req.client.host):
-        raise HTTPException(status_code=429, detail="Too many attempts. Try again in a minute.")
+        raise HTTPException(
+            status_code=429, detail="Too many attempts. Try again in a minute."
+        )
 
     centcon_pin = os.getenv("CENTCON_PIN", "")
     if request.pin.upper() == centcon_pin.upper():
-        return {"ok": True, "message": "PIN verified"}
+        token = _issue_token()
+        return {"ok": True, "message": "PIN verified", "token": token}
+
     return {"ok": False, "message": "Invalid PIN"}
+
 
 def _is_rate_limited(ip: str) -> bool:
     now = time.time()

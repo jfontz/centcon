@@ -4,7 +4,7 @@
  * Manages authentication state with time-based session expiry.
  *
  * Session design:
- * - Duration: 8 hours from last login
+ * - Duration: 8 hours from last login (mirrors JWT expiry on the backend)
  * - Storage: sessionStorage — clears automatically when the tab is closed,
  *   persists across refreshes within the same tab session
  * - Expiry check: on mount + every 60 seconds via interval
@@ -13,7 +13,8 @@
  *
  * Provides:
  * - isAuthenticated: Whether the session is valid right now
- * - login / logout: Explicit auth state changes
+ * - token: The JWT returned by /verify-pin (null when logged out)
+ * - login(token) / logout: Explicit auth state changes
  * - showLogin: Whether to display login UI (from backend config)
  * - configLoaded: Whether auth config has been fetched
  */
@@ -30,6 +31,7 @@ import { getAuthConfig } from "../services/authAPI";
 const AuthContext = createContext(null);
 
 const SESSION_KEY = "centcon_auth_expires";
+const TOKEN_KEY = "centcon_auth_token";
 const SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // 8 hours
 const EXPIRY_CHECK_INTERVAL_MS = 60 * 1000; // check every 60 seconds
 
@@ -39,18 +41,27 @@ const isSessionValid = () => {
   return Date.now() < parseInt(expires, 10);
 };
 
-const setSession = () => {
+const setSession = (token) => {
   const expires = Date.now() + SESSION_DURATION_MS;
   sessionStorage.setItem(SESSION_KEY, expires.toString());
+  if (token) {
+    sessionStorage.setItem(TOKEN_KEY, token);
+  }
 };
 
 const clearSession = () => {
   sessionStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem(TOKEN_KEY);
 };
+
+const getStoredToken = () => sessionStorage.getItem(TOKEN_KEY);
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() =>
     isSessionValid(),
+  );
+  const [token, setToken] = useState(() =>
+    isSessionValid() ? getStoredToken() : null,
   );
   const [showLogin, setShowLogin] = useState(true);
   const [configLoaded, setConfigLoaded] = useState(false);
@@ -59,6 +70,7 @@ export const AuthProvider = ({ children }) => {
   const logout = useCallback(() => {
     clearSession();
     setIsAuthenticated(false);
+    setToken(null);
   }, []);
 
   // Periodic expiry check — catches tabs left open past the 8-hour window
@@ -81,9 +93,11 @@ export const AuthProvider = ({ children }) => {
         const config = await getAuthConfig();
         setShowLogin(config.showLogin);
 
-        // If login is disabled by backend config, bypass auth entirely
+        // If login is disabled by backend config, bypass auth entirely.
+        // We have no token in this case — commands are still gated by the
+        // backend's own CENTCON_SHOW_LOGIN guard, not by a JWT.
         if (!config.showLogin) {
-          setSession();
+          setSession(null);
           setIsAuthenticated(true);
         }
       } catch (error) {
@@ -97,8 +111,13 @@ export const AuthProvider = ({ children }) => {
     loadConfig();
   }, []);
 
-  const login = () => {
-    setSession();
+  /**
+   * Call after a successful /verify-pin response.
+   * @param {string} jwtToken - The token returned by the backend.
+   */
+  const login = (jwtToken) => {
+    setSession(jwtToken);
+    setToken(jwtToken);
     setIsAuthenticated(true);
   };
 
@@ -106,6 +125,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         isAuthenticated,
+        token,
         login,
         logout,
         showLogin,
