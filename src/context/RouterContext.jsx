@@ -29,6 +29,7 @@ import {
   fetchCommands,
   triggerCommand as apiTriggerCommand,
 } from "../services/commandApi";
+import { BACKEND_URL } from "../services/apiConfig";
 
 const RouterContext = createContext(null);
 
@@ -155,7 +156,6 @@ export const RouterProvider = ({ children }) => {
       // 401 on /events would only trip the offline debounce and show the wrong
       // message to the user.
       try {
-        const { BACKEND_URL } = await import("../services/apiConfig");
         const probe = await fetch(`${BACKEND_URL}/state`, {
           headers: { Authorization: `Bearer ${token}` },
         });
