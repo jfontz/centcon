@@ -5,6 +5,7 @@ Handles 2.4 GHz and 5 GHz SSIDs independently in a single session with one save.
 
 import asyncio
 import os
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -16,6 +17,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from state_manager import emit, reset_state
+from workflow_errors import _AlreadyReportedError
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT_DIR / ".env")
@@ -50,6 +52,7 @@ def _run_wifi_credentials_blocking(
     username: str,
     password: str,
     targets: list[dict],
+    cancel_event: threading.Event,
 ) -> None:
     """
     targets: list of dicts, each with:
@@ -60,6 +63,9 @@ def _run_wifi_credentials_blocking(
         new_pass    (str)  new password, or "" to keep current
         broadcast_intent (str | None) "enable" | "disable" | None
     """
+
+    def _cancelled() -> bool:
+        return cancel_event.is_set()
 
     def _emit_sync(event: dict):
         payload = {**event, "command": COMMAND_ID}
@@ -155,11 +161,15 @@ def _run_wifi_credentials_blocking(
             intent = t.get("broadcast_intent")
             if not intent:
                 continue
+            if _cancelled():
+                return
             router_index = str(t["router_index"])
             if _reconcile_broadcast_toggle(driver, router_index, intent):
                 any_changed = True
 
         if any_changed:
+            if _cancelled():
+                return
             confirm_btn = driver.find_element(
                 By.CSS_SELECTOR, "input.button.-primary[value='Confirm']"
             )
@@ -184,6 +194,7 @@ def _run_wifi_credentials_blocking(
             )
 
     driver = None
+    current_step = "initializing"  # updated throughout so exception messages have context
     wait_time = 15
     has_cred_changes = any(t.get("new_name") or t.get("new_pass") for t in targets)
     has_broadcast_intents = any(t.get("broadcast_intent") for t in targets)
@@ -203,12 +214,20 @@ def _run_wifi_credentials_blocking(
         driver.implicitly_wait(wait_time)
         wait = WebDriverWait(driver, wait_time)
 
+        if _cancelled():
+            return
+
         # ── State: starting ──────────────────────────────────────────────────
+        current_step = "opening browser"
         _emit_sync({"type": "state", "state": "RUNNING", "message": "Opening browser"})
         _log("header", "Wi-Fi credential change started")
 
         # ── Login ────────────────────────────────────────────────────────────
         driver.get(router_url)
+        if _cancelled():
+            return
+
+        current_step = "logging in"
         _emit_sync({"type": "state", "state": "LOGGING_IN", "message": "Logging into router"})
 
         wait.until(EC.presence_of_element_located((By.ID, "username")))
@@ -232,12 +251,19 @@ def _run_wifi_credentials_blocking(
             driver.quit()
             return
 
+        if _cancelled():
+            return
+
         if has_cred_changes:
             # ── Navigate to Wi-Fi Basic ──────────────────────────────────────────
+            current_step = "navigating to Wi-Fi Settings"
             _emit_sync({"type": "state", "state": "RUNNING", "message": "Navigating to Wi-Fi Settings"})
             driver.get(router_url + "wifi_globe.cgi?basic")
             wait.until(EC.presence_of_element_located((By.ID, ID_24G_WIFI_NAME)))
             _log("navigate", "Opened Wi-Fi Settings → Basic")
+
+            if _cancelled():
+                return
 
             # ── Separate targets by band ─────────────────────────────────────────
             target_24g = next((t for t in targets if t["freq"] == "2.4" and (t.get("new_name") or t.get("new_pass"))), None)
@@ -248,6 +274,8 @@ def _run_wifi_credentials_blocking(
                 router_index = str(target_24g["router_index"])
                 if router_index != DEFAULT_SSID_24G:
                     _expand_advanced_settings(driver, wait, "2.4 GHz")
+                    if _cancelled():
+                        return
                     _emit_sync({"type": "state", "state": "RUNNING", "message": f"Selecting 2.4 GHz SSID {router_index}"})
                     _select_ssid_via_selectize(driver, wait, ID_24G_SSID_NUM, router_index, ID_24G_WIFI_NAME)
                     _log("info", f"2.4 GHz SSID {router_index} selected")
@@ -262,11 +290,16 @@ def _run_wifi_credentials_blocking(
                     _fill_field(driver, ID_24G_WIFI_PASS, target_24g["new_pass"])
                     _log("info", f"2.4 GHz SSID {router_index} — password updated")
 
+            if _cancelled():
+                return
+
             # ── Handle 5 GHz ────────────────────────────────────────────────────
             if target_5g:
                 router_index = str(target_5g["router_index"])
                 if router_index != DEFAULT_SSID_5G:
                     _expand_advanced_settings(driver, wait, "5 GHz")
+                    if _cancelled():
+                        return
                     _emit_sync({"type": "state", "state": "RUNNING", "message": f"Selecting 5 GHz SSID {router_index}"})
                     _select_ssid_via_selectize(driver, wait, ID_5G_SSID_NUM, router_index, ID_5G_WIFI_NAME)
                     _log("info", f"5 GHz SSID {router_index} selected")
@@ -281,7 +314,11 @@ def _run_wifi_credentials_blocking(
                     _fill_field(driver, ID_5G_WIFI_PASS, target_5g["new_pass"])
                     _log("info", f"5 GHz SSID {router_index} — password updated")
 
+            if _cancelled():
+                return
+
             # ── Save Changes ─────────────────────────────────────────────────────
+            current_step = "saving changes"
             _emit_sync({"type": "state", "state": "RUNNING", "message": "Saving changes"})
             _log("progress", "Clicking Save Changes — waiting for router to apply")
 
@@ -296,9 +333,16 @@ def _run_wifi_credentials_blocking(
             wait_save.until(EC.presence_of_element_located((By.ID, ID_24G_WIFI_NAME)))
             _log("success", "Changes saved successfully")
 
+        if _cancelled():
+            return
+
         if has_broadcast_intents:
+            current_step = "updating broadcast settings"
             _emit_sync({"type": "state", "state": "RUNNING", "message": "Updating broadcast settings"})
             _handle_advanced_broadcast(driver, wait, router_url, targets)
+
+        if _cancelled():
+            return
 
         _emit_sync({"type": "state", "state": "ONLINE", "message": "Wi-Fi credentials updated"})
         driver.quit()
@@ -318,8 +362,14 @@ def _run_wifi_credentials_blocking(
             _log("warning", "Workflow cancelled — browser was closed")
         else:
             clean_msg = str(e).split("Stacktrace:")[0].strip()
+            # An empty Selenium message usually means the page unloaded while the
+            # browser was waiting — typically the router restarting its web server
+            # after a save. Provide a human-readable description instead of the
+            # raw empty "Message: " line.
+            if not clean_msg or clean_msg.lower() in ("message:", "message: "):
+                clean_msg = f"Browser lost the page during '{current_step}' — the router may have restarted its web interface (this can be normal after saving)"
             _emit_sync({"type": "state", "state": "FAILED", "message": clean_msg})
-            _log("error", f"Browser error: {clean_msg}")
+            _log("error", f"Browser error during '{current_step}': {clean_msg}")
 
         if driver:
             try:
@@ -339,7 +389,10 @@ def _run_wifi_credentials_blocking(
                 pass
 
 
-async def run_wifi_credentials_workflow(targets: list[dict]) -> None:
+async def run_wifi_credentials_workflow(
+    targets: list[dict],
+    cancel_event: threading.Event,
+) -> None:
     import concurrent.futures
 
     router_url = os.getenv("ROUTER_URL")
@@ -347,7 +400,17 @@ async def run_wifi_credentials_workflow(targets: list[dict]) -> None:
     password = os.getenv("ROUTER_PASSWORD")
 
     if not router_url or not username or not password:
-        raise RuntimeError("Missing router credentials in .env")
+        # Emit terminal FAILED before raising. Raise _AlreadyReportedError so
+        # the caller knows not to emit a second, generic FAILED message.
+        await emit(
+            {
+                "type": "state",
+                "state": "FAILED",
+                "message": "Missing router credentials — check .env",
+                "command": COMMAND_ID,
+            }
+        )
+        raise _AlreadyReportedError("Missing router credentials in .env")
 
     reset_state()
     loop = asyncio.get_running_loop()
@@ -356,6 +419,6 @@ async def run_wifi_credentials_workflow(targets: list[dict]) -> None:
     await loop.run_in_executor(
         executor,
         lambda: _run_wifi_credentials_blocking(
-            loop, router_url, username, password, targets
+            loop, router_url, username, password, targets, cancel_event
         ),
     )

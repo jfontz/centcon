@@ -19,6 +19,7 @@ import json
 import os
 import re
 import secrets
+import threading
 from typing import Literal, Optional
 from contextlib import asynccontextmanager
 
@@ -95,6 +96,11 @@ def _issue_token() -> str:
 def _decode_token(token: str) -> dict:
     """Decode and validate a JWT. Raises JWTError on any failure."""
     return jwt.decode(token, _JWT_SECRET, algorithms=[JWT_ALGORITHM])
+
+
+# Imported from workflow_errors to avoid circular imports — the Selenium workflow
+# modules also import this sentinel, and they are themselves imported by main.py.
+from workflow_errors import _AlreadyReportedError
 
 
 async def verify_token(
@@ -322,10 +328,29 @@ async def setup_complete(request: SetupRequest):
 # Command helpers
 # ---------------------------------------------------------------------------
 async def _run_command_then_clear(command_id: str):
-    """Run a registered command workflow and clear its in-progress marker when done."""
+    """
+    Run a registered command workflow and clear its in-progress marker when done.
+    If the workflow raises an unexpected exception, emit a terminal FAILED SSE
+    state before clearing so the UI is never left waiting indefinitely.
+    _AlreadyReportedError is swallowed silently — the workflow already emitted
+    its own specific FAILED message and re-emitting would overwrite it.
+    """
     try:
         workflow = COMMAND_DEFINITIONS[command_id]["workflow"]
         await workflow()
+    except _AlreadyReportedError:
+        # FAILED was already emitted by the workflow — do not overwrite it.
+        pass
+    except Exception as e:
+        # Emit terminal FAILED so the UI unlocks regardless of how the workflow died.
+        await emit(
+            {
+                "type": "state",
+                "state": "FAILED",
+                "message": f"Unexpected error: {str(e).split('Stacktrace:')[0].strip()}",
+                "command": command_id,
+            }
+        )
     finally:
         command_in_progress.discard(command_id)
 
@@ -482,22 +507,50 @@ async def start_wifi_credentials(
     # Convert validated Pydantic models to plain dicts for the Selenium workflow
     targets_payload = [target.dict() for target in request.targets]
 
-    # Timeout matches the frontend modal timeout — if Selenium hangs on a step,
-    # the backend fails cleanly and emits FAILED so the modal unlocks.
-    WIFI_WORKFLOW_TIMEOUT = 90  # seconds
+    # Cancel event for the Selenium worker thread. Threading.Event is the only
+    # reliable way to signal a worker thread from asyncio — asyncio.wait_for
+    # cancels the coroutine wrapper but cannot stop a thread already running in
+    # run_in_executor. The workflow checks this event at safe points between steps.
+    cancel_event = threading.Event()
+
+    # Raised to 120s so normal slow runs complete without a false timeout.
+    #
+    # Known limitation: cancellation is cooperative, not preemptive.
+    # When this timeout fires, command_in_progress is cleared immediately and
+    # cancel_event is set, but the Selenium worker thread may still be blocked
+    # inside a long WebDriverWait (up to 30s on the save step). A second command
+    # could therefore start while the first thread is still winding down.
+    # Fully closing this would require restructuring Selenium to poll cancel_event
+    # inside every wait loop, which is outside the scope of this patch.
+    WIFI_WORKFLOW_TIMEOUT = 120  # seconds
 
     async def run():
         try:
             await asyncio.wait_for(
-                run_wifi_credentials_workflow(targets_payload),
+                run_wifi_credentials_workflow(targets_payload, cancel_event),
                 timeout=WIFI_WORKFLOW_TIMEOUT,
             )
         except asyncio.TimeoutError:
+            # Signal the worker thread to abort at its next safe checkpoint.
+            cancel_event.set()
             await emit(
                 {
                     "type": "state",
                     "state": "FAILED",
                     "message": "Workflow timed out — Selenium took too long on a step.",
+                    "command": "wifi-credentials",
+                }
+            )
+        except _AlreadyReportedError:
+            # FAILED was already emitted by the workflow — do not overwrite it.
+            cancel_event.set()
+        except Exception as e:
+            cancel_event.set()
+            await emit(
+                {
+                    "type": "state",
+                    "state": "FAILED",
+                    "message": f"Unexpected error: {str(e).split('Stacktrace:')[0].strip()}",
                     "command": "wifi-credentials",
                 }
             )
