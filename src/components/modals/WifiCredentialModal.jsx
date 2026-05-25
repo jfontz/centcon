@@ -200,8 +200,8 @@ const BandGrid = ({
 );
 
 export default function WiFiCredentialModal({ open, onClose }) {
-  const { commandLogs, commandState } = useRouter();
-  const { token } = useAuth();
+  const { commandLogs, commandState, commandStatuses } = useRouter();
+  const { token, logout } = useAuth();
 
   const [loadState, setLoadState] = useState("idle");
   const [wlanInfo, setWlanInfo] = useState(null);
@@ -216,11 +216,18 @@ export default function WiFiCredentialModal({ open, onClose }) {
   const seenActiveStateRef = useRef(false);
   const saveTimeoutRef = useRef(null);
 
-  const isBusy = saveState === "saving";
+  // True while the local save button triggered a run AND while the backend
+  // SSE reports wifi-credentials as still active — whichever lasts longer.
+  // This prevents the modal from unlocking mid-run if the frontend timeout
+  // fires before Selenium actually finishes.
+  const backendStillRunning =
+    commandStatuses?.["wifi-credentials"]?.active === true;
+  const isBusy = saveState === "saving" || backendStillRunning;
 
-  // Auto-unlock the modal if no terminal SSE state arrives within this window.
-  // Covers network loss mid-operation where SSE never delivers FAILED/ONLINE.
-  const WORKFLOW_TIMEOUT_MS = 90000; // 90 seconds
+  // Generous timeout — only fires if SSE is completely dead and the backend
+  // never emits a terminal state. Real runs finish well within this window;
+  // it's a last-resort unlock, not a progress deadline.
+  const WORKFLOW_TIMEOUT_MS = 180000; // 3 minutes
 
   // Fetch real SSID names when modal opens
   useEffect(() => {
@@ -248,7 +255,9 @@ export default function WiFiCredentialModal({ open, onClose }) {
     if (newLogs.length > 0) setLogs(newLogs);
   }, [commandLogs, saveState]);
 
-  // Detect completion or failure from commandState
+  // Detect completion or failure from commandState.
+  // Only transition out of "saving" on a terminal SSE state — never on timeout
+  // alone if the backend still reports the command as active.
   useEffect(() => {
     if (saveState !== "saving") return;
     if (!commandState || commandState.command !== "wifi-credentials") return;
@@ -362,7 +371,9 @@ export default function WiFiCredentialModal({ open, onClose }) {
     logStartIndexRef.current = commandLogs.length;
     seenActiveStateRef.current = false;
 
-    // Start timeout — if no terminal SSE state arrives in time, unlock the modal
+    // Last-resort unlock — only fires if SSE is dead for the entire window.
+    // Does not unlock if the backend SSE still shows the command as active
+    // (backendStillRunning keeps isBusy true regardless of saveState).
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
       setSaveState((current) => (current === "saving" ? "error" : current));
@@ -388,8 +399,16 @@ export default function WiFiCredentialModal({ open, onClose }) {
 
     try {
       await triggerWifiCredentials(targets, token);
-    } catch {
-      setSaveState("error");
+    } catch (err) {
+      if (err?.status === 401) {
+        // Token is invalid or expired — force re-authentication.
+        // Close the modal first so the login screen isn't obscured.
+        clearTimeout(saveTimeoutRef.current);
+        onClose();
+        logout();
+      } else {
+        setSaveState("error");
+      }
     }
   };
 
@@ -459,6 +478,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
               {isBusy && "Selenium is applying changes — do not close"}
               {saveState === "saved" && "Changes applied successfully"}
               {saveState === "error" &&
+                !backendStillRunning &&
                 "Something went wrong — check the log below"}
             </p>
           </div>
@@ -652,7 +672,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                       Complete
                     </span>
                   )}
-                  {saveState === "error" && (
+                  {saveState === "error" && !backendStillRunning && (
                     <span className="text-xs text-[#c44955] dark:text-red-500">Failed</span>
                   )}
                 </div>
@@ -686,7 +706,7 @@ export default function WiFiCredentialModal({ open, onClose }) {
                 {currentStatusText && (
                   <p
                     className={`text-xs px-1
-                    ${saveState === "saved" ? "text-[#218c4f] dark:text-emerald-500" : saveState === "error" ? "text-[#c44955] dark:text-red-400" : "text-[#666660] dark:text-zinc-500"}`}
+                    ${saveState === "saved" ? "text-[#218c4f] dark:text-emerald-500" : saveState === "error" && !backendStillRunning ? "text-[#c44955] dark:text-red-400" : "text-[#666660] dark:text-zinc-500"}`}
                   >
                     {currentStatusText}
                   </p>
