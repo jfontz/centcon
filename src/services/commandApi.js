@@ -6,13 +6,19 @@ const COMMAND_API_BASE = BACKEND_URL;
 /**
  * Connect to the SSE command-events stream.
  *
+ * Event types:
+ * - 'state': { type, state, message, countdown?, command? }
+ * - 'log': { type, level, message, timestamp, command? }
+ * - 'countdown': { type, countdown, command? }
+ * - 'heartbeat': { type }
+ *
  * Because the browser's EventSource API cannot send custom headers, the JWT is
- * passed as a ?token= query parameter. The backend's verify_token dependency
- * accepts this as a fallback when no Authorization header is present.
+ * passed as a ?token= query parameter. The backend's verify_token_sse accepts
+ * this fallback only for /events, not for any other protected route.
  *
  * @param {function(object): void} onEvent - callback for each parsed event payload
  * @param {{ onOpen?: function, onError?: function, token?: string }} options
- * @returns {EventSource} — call .close() on unmount
+ * @returns {EventSource} Call .close() on unmount.
  */
 export const connectToCommandEvents = (
   onEvent,
@@ -58,8 +64,11 @@ export const fetchCommands = async (token) => {
   });
   const data = await response.json();
   if (!response.ok) {
-    const message = data?.detail || data?.message || "Failed to load commands";
-    throw new Error(message);
+    const err = new Error(
+      data?.detail || data?.message || "Failed to load commands",
+    );
+    err.status = response.status;
+    throw err;
   }
   return data?.commands || [];
 };
@@ -77,15 +86,16 @@ export const triggerCommand = async (commandId, token) => {
   });
   const data = await response.json();
   if (!response.ok) {
-    const message = data?.detail || data?.message || "Command failed";
-    throw new Error(message);
+    const err = new Error(data?.detail || data?.message || "Command failed");
+    err.status = response.status;
+    throw err;
   }
   return data;
 };
 
 /**
  * Trigger the Wi-Fi credentials Selenium workflow.
- * @param {Array} targets
+ * @param {Array<{ssid_index: number, freq: string, router_index: string, new_name: string, new_pass: string, broadcast_intent?: string | null}>} targets
  * @param {string} token - JWT from AuthContext
  * @returns {Promise<{ ok: boolean, message?: string }>}
  */
@@ -100,8 +110,9 @@ export const triggerWifiCredentials = async (targets, token) => {
   );
   const data = await response.json();
   if (!response.ok) {
-    const message = data?.detail || data?.message || "Command failed";
-    throw new Error(message);
+    const err = new Error(data?.detail || data?.message || "Command failed");
+    err.status = response.status;
+    throw err;
   }
   return data;
 };

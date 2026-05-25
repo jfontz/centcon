@@ -9,7 +9,10 @@
  *   persists across refreshes within the same tab session
  * - Expiry check: on mount + every 60 seconds via interval
  * - No inactivity timeout — session runs for the full 8 hours regardless
- *   of whether the user is active
+ *
+ * Stale session guard: both the expiry timestamp AND a token must be present
+ * for isSessionValid() to return true. A pre-JWT session (expiry present but
+ * no token) is treated as expired and cleared on mount.
  *
  * Provides:
  * - isAuthenticated: Whether the session is valid right now
@@ -35,9 +38,15 @@ const TOKEN_KEY = "centcon_auth_token";
 const SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // 8 hours
 const EXPIRY_CHECK_INTERVAL_MS = 60 * 1000; // check every 60 seconds
 
+/**
+ * A session is only valid when BOTH the expiry timestamp is in the future
+ * AND a token is present. This prevents pre-JWT sessions (expiry stored but
+ * no token) from being treated as authenticated after the JWT upgrade.
+ */
 const isSessionValid = () => {
   const expires = sessionStorage.getItem(SESSION_KEY);
-  if (!expires) return false;
+  const token = sessionStorage.getItem(TOKEN_KEY);
+  if (!expires || !token) return false;
   return Date.now() < parseInt(expires, 10);
 };
 

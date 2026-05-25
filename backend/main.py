@@ -102,8 +102,32 @@ async def verify_token(
     req: Request = None,
 ) -> dict:
     """
-    FastAPI dependency — validates Bearer token from Authorization header
-    OR a ?token= query param (required for EventSource which cannot set headers).
+    FastAPI dependency — validates Bearer token from Authorization header only.
+    Used by all protected routes except /events.
+    Raises 401 on missing/invalid/expired token.
+    """
+    token: str | None = None
+
+    if credentials and credentials.credentials:
+        token = credentials.credentials
+
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        return _decode_token(token)
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+
+async def verify_token_sse(
+    credentials: HTTPAuthorizationCredentials = Depends(_http_bearer),
+    req: Request = None,
+) -> dict:
+    """
+    Like verify_token but also accepts a ?token= query parameter.
+    Restricted to /events — EventSource cannot send Authorization headers,
+    so the JWT must be passed in the URL for that endpoint only.
     Raises 401 on missing/invalid/expired token.
     """
     token: str | None = None
@@ -554,18 +578,26 @@ async def start_command(
 # SSE events endpoint
 # ---------------------------------------------------------------------------
 @app.get("/events")
-async def events(req: Request, _claims: dict = Depends(verify_token)):
+async def events(req: Request, _claims: dict = Depends(verify_token_sse)):
     """
     Server-Sent Events endpoint for realtime dashboard updates.
 
-    Because EventSource cannot send custom headers, the JWT is passed as a
-    ?token= query parameter and validated by the verify_token dependency.
+    Uses verify_token_sse (not verify_token) so the JWT can be passed as
+    ?token= since EventSource cannot send custom headers. All other protected
+    routes require the Authorization header exclusively.
 
     Event payload types:
     - state:     {type, state, message, countdown?}
+                 Workflow state machine updates. Also used to pause/resume
+                 frontend auto-refresh during reboot.
     - log:       {type, level, message, timestamp}
+                 Timeline entries for the log panel.
     - countdown: {type, countdown}
+                 Remaining seconds in the reboot wait period.
+                 Drives the StatusBadge only — not logged to the log panel
+                 to avoid spamming it every second.
     - heartbeat: {type}
+                 Keep-alive ping emitted when no other events have occurred recently.
     """
 
     async def generate():
