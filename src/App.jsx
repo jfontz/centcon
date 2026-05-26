@@ -56,7 +56,7 @@ function Dashboard() {
 }
 
 function AppContent() {
-  const { isAuthenticated, showLogin, configLoaded } = useAuth();
+  const { isAuthenticated, configLoaded } = useAuth();
   const [setupData, setSetupData] = useState(null);
   const [setupChecked, setSetupChecked] = useState(false);
 
@@ -98,12 +98,11 @@ function AppContent() {
     return <Setup setupData={setupData} onComplete={handleSetupComplete} />;
   }
 
-  // If login is disabled OR user is authenticated, show dashboard
-  if (!showLogin || isAuthenticated) {
+  // Show dashboard if authenticated, otherwise show login
+  if (isAuthenticated) {
     return <Dashboard />;
   }
 
-  // Otherwise show login page
   return <Login />;
 }
 

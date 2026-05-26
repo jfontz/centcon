@@ -1,7 +1,6 @@
 """
 FastAPI app for CENTCON: setup (/api/setup-*), command execution (/commands),
-state streaming (/events), state polling (/state), PIN verification (/verify-pin),
-and auth configuration (/auth-config).
+state streaming (/events), state polling (/state), PIN verification (/verify-pin).
 """
 
 from pathlib import Path
@@ -711,13 +710,3 @@ def _is_rate_limited(ip: str) -> bool:
         return True
     _pin_attempts[ip].append(now)
     return False
-
-
-@app.get("/auth-config")
-async def auth_config():
-    """Return authentication configuration — whether the login screen is enabled."""
-    show_login = os.getenv("CENTCON_SHOW_LOGIN", "true").lower() == "true"
-    return {
-        "showLogin": show_login,
-        "message": "Login enabled" if show_login else "Login disabled",
-    }

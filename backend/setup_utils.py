@@ -46,8 +46,6 @@ SETUP_VARS = {
         "desc": "Allowed frontend origins",
         "default": "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000",
     },
-    # Authentication
-    "CENTCON_SHOW_LOGIN": {"desc": "Show login page on startup", "default": "true"},
     # Selenium
     "REBOOT_SELENIUM_HEADLESS": {
         "desc": "Run browser in headless mode for reboot automation",

@@ -18,8 +18,7 @@
  * - isAuthenticated: Whether the session is valid right now
  * - token: The JWT returned by /verify-pin (null when logged out)
  * - login(token) / logout: Explicit auth state changes
- * - showLogin: Whether to display login UI (from backend config)
- * - configLoaded: Whether auth config has been fetched
+ * - configLoaded: Whether the backend connection was confirmed on mount
  */
 
 import {
@@ -29,7 +28,6 @@ import {
   useEffect,
   useCallback,
 } from "react";
-import { getAuthConfig } from "../services/authAPI";
 
 const AuthContext = createContext(null);
 
@@ -72,7 +70,9 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() =>
     isSessionValid() ? getStoredToken() : null,
   );
-  const [showLogin, setShowLogin] = useState(true);
+  // configLoaded signals that the initial session check is done and the app
+  // can render. Previously this waited for /auth-config; now it resolves
+  // immediately since PIN is always required and there is no remote config.
   const [configLoaded, setConfigLoaded] = useState(false);
 
   // Expire the session and redirect to login
@@ -95,29 +95,10 @@ export const AuthProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, [isAuthenticated, logout]);
 
-  // Fetch auth config on mount
+  // Mark config as loaded on mount — no remote fetch needed since PIN is
+  // always required and there is no CENTCON_SHOW_LOGIN toggle.
   useEffect(() => {
-    const loadConfig = async () => {
-      try {
-        const config = await getAuthConfig();
-        setShowLogin(config.showLogin);
-
-        // If login is disabled by backend config, bypass auth entirely.
-        // We have no token in this case — commands are still gated by the
-        // backend's own CENTCON_SHOW_LOGIN guard, not by a JWT.
-        if (!config.showLogin) {
-          setSession(null);
-          setIsAuthenticated(true);
-        }
-      } catch (error) {
-        console.error("Failed to load auth config:", error);
-        setShowLogin(true);
-      } finally {
-        setConfigLoaded(true);
-      }
-    };
-
-    loadConfig();
+    setConfigLoaded(true);
   }, []);
 
   /**
@@ -137,7 +118,6 @@ export const AuthProvider = ({ children }) => {
         token,
         login,
         logout,
-        showLogin,
         configLoaded,
       }}
     >

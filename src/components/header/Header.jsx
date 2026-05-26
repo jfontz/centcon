@@ -16,7 +16,7 @@ const REBOOT_BUSY_STATES = [
 
 const Header = () => {
   const { status, refresh, refreshing, lastUpdated, rebootState } = useRouter();
-  const { logout: handleLogout, showLogin } = useAuth();
+  const { logout: handleLogout } = useAuth();
   const { theme, toggle } = useTheme();
 
   const isRebooting =
@@ -68,15 +68,12 @@ const Header = () => {
             title={isRebooting ? "Cannot refresh while rebooting" : "Refresh status"}
           />
 
-          {/* Only show logout button if login is enabled */}
-          {showLogin && (
-            <HeaderButton
-              icon={logout}
-              label="Logout"
-              variant="logout"
-              onClick={handleLogout}
-            />
-          )}
+          <HeaderButton
+            icon={logout}
+            label="Logout"
+            variant="logout"
+            onClick={handleLogout}
+          />
         </div>
       </div>
 
