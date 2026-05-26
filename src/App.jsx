@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import MainLayout from "./components/ui/MainLayout";
 import SystemControls from "./components/SystemControls";
 import SystemStatus from "./components/SystemStatus";
@@ -20,7 +21,13 @@ function Dashboard() {
          - On Desktop (lg): 12 columns. 
            Left side takes 7 or 8 columns. Right side takes the rest.
       */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <motion.div
+          className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+        >
           {/* LEFT COLUMN (Controls + Status) */}
           <div className="lg:col-span-8 flex flex-col gap-6">
             {/* Top: System Controls */}
@@ -49,14 +56,14 @@ function Dashboard() {
           <div className="hidden lg:flex lg:col-span-4 h-full flex-col">
             <LogPanel />
           </div>
-        </div>
+        </motion.div>
       </MainLayout>
     </RouterProvider>
   );
 }
 
 function AppContent() {
-  const { isAuthenticated, showLogin, configLoaded } = useAuth();
+  const { isAuthenticated, configLoaded } = useAuth();
   const [setupData, setSetupData] = useState(null);
   const [setupChecked, setSetupChecked] = useState(false);
 
@@ -98,13 +105,11 @@ function AppContent() {
     return <Setup setupData={setupData} onComplete={handleSetupComplete} />;
   }
 
-  // If login is disabled OR user is authenticated, show dashboard
-  if (!showLogin || isAuthenticated) {
-    return <Dashboard />;
-  }
-
-  // Otherwise show login page
-  return <Login />;
+  return (
+    <AnimatePresence mode="wait">
+      {isAuthenticated ? <Dashboard key="dashboard" /> : <Login key="login" />}
+    </AnimatePresence>
+  );
 }
 
 function App() {

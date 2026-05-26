@@ -75,13 +75,7 @@ def _build_driver() -> webdriver.Chrome:
     return webdriver.Chrome(options=options)
 
 
-def _login_to_router(
-    driver: webdriver.Chrome,
-    router_url: str,
-    username: str,
-    password: str,
-) -> None:
-    """Open the router page and submit the login form."""
+def _login_to_router(driver, router_url, username, password):
     driver.get(router_url)
 
     WebDriverWait(driver, WAIT_TIME_SECONDS).until(
@@ -101,17 +95,14 @@ def _login_to_router(
     driver.find_element(By.ID, LOGIN_BUTTON_ID).click()
 
 
-def _emit_waiting_feedback(emit_state, emit_countdown, log_progress) -> None:
-    """Emit the initial WAITING state once the reboot command is considered sent."""
+def _emit_waiting_feedback(emit_state, emit_countdown, log_progress):
     waiting_message = _build_waiting_message(COUNTDOWN_SECONDS)
     log_progress("progress", waiting_message)
     emit_state("WAITING", waiting_message)
     emit_countdown(COUNTDOWN_SECONDS)
 
 
-def _start_delayed_driver_shutdown(driver: webdriver.Chrome) -> None:
-    """Delay browser shutdown so the router has time to process the reboot request."""
-
+def _start_delayed_driver_shutdown(driver):
     def _quit_driver_delayed(drv):
         time.sleep(DRIVER_QUIT_DELAY_SECONDS)
         try:
@@ -190,18 +181,14 @@ async def _wait_for_router_online(router_url: str) -> bool:
 
 def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
     """
-    Run Selenium in a worker thread and emit events back into the main asyncio loop.
-    Returns ROUTER_URL if the reboot command was issued successfully, else None.
+    Run Selenium in a worker thread. Returns ROUTER_URL on success, None on any failure.
+    Emits FAILED SSE state on missing env so the UI always gets a terminal signal.
     """
 
     # Load env here
     router_url = os.getenv("ROUTER_URL")
     username = os.getenv("ROUTER_USERNAME")
     password = os.getenv("ROUTER_PASSWORD")
-
-    if not router_url or not username or not password:
-        # Wizard can continue without crashing
-        return None
 
     def _emit_sync(ev: dict):
         payload = {**ev, "command": COMMAND_ID}
@@ -222,13 +209,17 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
 
     def _log(level: str, message: str):
         _emit_sync(
-            {
-                "type": "log",
-                "level": level,
-                "message": message,
-                "timestamp": _log_ts(),
-            }
+            {"type": "log", "level": level, "message": message, "timestamp": _log_ts()}
         )
+
+    if not router_url or not username or not password:
+        # Emit terminal FAILED so the UI unlocks cleanly — never silently return None.
+        _emit_state("FAILED", "Missing router credentials — check .env")
+        _log(
+            "error",
+            "Reboot aborted: ROUTER_URL, ROUTER_USERNAME, or ROUTER_PASSWORD missing from .env",
+        )
+        return None
 
     driver = None
 
@@ -251,7 +242,7 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
             _emit_state("LOGGING_IN", "Login successful")
         except TimeoutException:
             _log("error", "Login failed")
-            _emit_state("FAILED", "Login failed", 0)
+            _emit_state("FAILED", "Login failed")
             driver.quit()
             return None
 
@@ -285,7 +276,7 @@ def _run_selenium_blocking(main_loop: asyncio.AbstractEventLoop) -> str | None:
         return router_url
 
     except Exception as e:
-        _emit_state("FAILED", str(e), 0)
+        _emit_state("FAILED", str(e))
         _log("error", str(e))
         return None
     finally:

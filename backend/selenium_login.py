@@ -20,8 +20,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from state_manager import emit, reset_state
+from workflow_errors import _AlreadyReportedError
 
-# Load environment
 ROOT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT_DIR / ".env")
 COMMAND_ID = "login"
@@ -180,15 +180,22 @@ async def run_login_workflow() -> None:
     password = os.getenv("ROUTER_PASSWORD")
 
     if not router_url or not username or not password:
-        raise RuntimeError("Missing router credentials in .env")
+        # Emit terminal FAILED before raising. Raise _AlreadyReportedError so
+        # the caller (_run_command_then_clear) knows not to emit a second message.
+        await emit(
+            {
+                "type": "state",
+                "state": "FAILED",
+                "message": "Missing router credentials — check .env",
+                "command": COMMAND_ID,
+            }
+        )
+        raise _AlreadyReportedError("Missing router credentials in .env")
 
     reset_state()
     loop = asyncio.get_running_loop()
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-
-    # Pass env vars into blocking function
-    future = loop.run_in_executor(
+    await loop.run_in_executor(
         executor,
         lambda: _run_login_blocking(loop, router_url, username, password),
     )
-    await future

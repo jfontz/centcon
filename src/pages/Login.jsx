@@ -2,10 +2,10 @@
  * Login Page Component
  * Handles user PIN authentication.
  * Displays login form and communicates with AuthContext to manage authentication state.
- * Only visible when login is enabled in the backend configuration.
  */
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import { verifyPin } from "../services/authAPI";
 import { login as loginIcon } from "../assets/icons";
@@ -38,7 +38,7 @@ const Login = () => {
       const result = await verifyPin(pin);
 
       if (result.ok) {
-        login();
+        login(result.token);
       } else {
         setError(INVALID_PIN_MESSAGE);
         setPin("");
@@ -64,7 +64,13 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-[#e9e6df] dark:bg-black flex items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-8">
+      <motion.div
+        className="w-full max-w-md space-y-8"
+        initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
+        transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+      >
         {/* Logo */}
         <div className="text-center flex flex-col gap-2">
           <h1 className="text-base sm:text-xl font-light tracking-[0.2em] text-[#1a1a1a] dark:text-white mb-2">
@@ -119,7 +125,7 @@ const Login = () => {
             )}
           </button>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 };
