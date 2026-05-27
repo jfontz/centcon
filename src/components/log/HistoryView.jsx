@@ -3,7 +3,7 @@ import {
   readHistory,
   bucketEvents,
   clearHistory,
-  SEVERITY,
+  isRestoredHistoryEvent,
 } from "../../utils/historyStorage";
 import ClearHistoryModal from "../modals/ClearHistoryModal";
 
@@ -28,10 +28,7 @@ const SEVERITY_COLORS = {
  */
 const getEventColor = (type, text = "") => {
   const t = text.toLowerCase();
-  const isRestored =
-    t.includes("restored") ||
-    t.includes("back online") ||
-    t.includes("connection restored");
+  const isRestored = isRestoredHistoryEvent(type, text);
   const isLost =
     t.includes("lost") ||
     t.includes("unreachable") ||
@@ -180,8 +177,10 @@ const HistoryView = ({ refreshTick }) => {
               {items.map((bucket, i) => {
                 const bucketIndex = offset + i;
                 const colorClass =
-                  SEVERITY_COLORS[bucket.worstSeverity]?.barClass ??
-                  "bg-[#d2cdc2] dark:bg-[#1f1f1f]";
+                  bucket.isRestoredOnly
+                    ? "bg-[#218c4f] dark:bg-green-500"
+                    : (SEVERITY_COLORS[bucket.worstSeverity]?.barClass ??
+                      "bg-[#d2cdc2] dark:bg-[#1f1f1f]");
                 const isActive = activeBucket === bucketIndex;
 
                 return (

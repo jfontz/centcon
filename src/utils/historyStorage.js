@@ -9,6 +9,12 @@ export const HISTORY_TYPES = {
   WARNING: "warning",
 };
 
+const RESTORED_TYPES = new Set([
+  HISTORY_TYPES.LOS,
+  HISTORY_TYPES.INTERNET,
+  HISTORY_TYPES.UNREACHABLE,
+]);
+
 // Severity order for bucket coloring (higher = worse)
 export const SEVERITY = {
   reboot: 1,
@@ -25,6 +31,16 @@ export const readHistory = () => {
   } catch {
     return [];
   }
+};
+
+export const isRestoredHistoryEvent = (type, text = "") => {
+  if (!RESTORED_TYPES.has(type)) return false;
+
+  const normalizedText = String(text).toLowerCase();
+  return (
+    normalizedText.includes("restored") ||
+    normalizedText.includes("back online")
+  );
 };
 
 const pruneOld = (events) => {
@@ -88,7 +104,7 @@ export const clearHistory = () => {
  * Buckets events into N slots covering the given time range.
  * Snaps to clean clock boundaries so buckets align to e.g. 1:00–2:00 PM
  * instead of rolling offsets like 1:37–2:37 PM.
- * Returns array of { start, end, events[], worstSeverity }
+ * Returns array of { start, end, events[], worstSeverity, isRestoredOnly }
  */
 export const bucketEvents = (events, rangeMs, bucketCount) => {
   const now = Date.now();
@@ -103,10 +119,19 @@ export const bucketEvents = (events, rangeMs, bucketCount) => {
     const bStart = start + i * bucketMs;
     const bEnd = bStart + bucketMs;
     const bEvents = events.filter((e) => e.ts >= bStart && e.ts < bEnd);
+    const isRestoredOnly =
+      bEvents.length > 0 &&
+      bEvents.every((e) => isRestoredHistoryEvent(e.type, e.text));
     const worstSeverity = bEvents.reduce(
       (max, e) => Math.max(max, SEVERITY[e.type] ?? 0),
       0,
     );
-    return { start: bStart, end: bEnd, events: bEvents, worstSeverity };
+    return {
+      start: bStart,
+      end: bEnd,
+      events: bEvents,
+      worstSeverity,
+      isRestoredOnly,
+    };
   });
 };
