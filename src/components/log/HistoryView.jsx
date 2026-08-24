@@ -91,10 +91,12 @@ const HistoryView = ({ refreshTick }) => {
 
   const activeBucket = selectedBucket ?? hoveredBucket;
 
-  const totalOutages = events.filter(
-    (e) =>
-      e.type === "los" || e.type === "internet" || e.type === "unreachable",
-  ).length;
+  const totalOutages = buckets
+    .flatMap((b) => b.events)
+    .filter(
+      (e) =>
+        e.type === "los" || e.type === "internet" || e.type === "unreachable",
+    ).length;
 
   const cleanPct = buckets.length
     ? Math.round(
